@@ -27,3 +27,7 @@ Route::prefix('nhpr/register')->name('nhpr.register.')->group(function () {
     Route::post('/documents/fetch', [NhprRegistrationController::class, 'fetchDocuments'])->name('documents.fetch');
     Route::post('/documents/upload', [NhprRegistrationController::class, 'uploadDocuments'])->name('documents.upload');
 });
+
+Route::get('/nhpr/track', [NhprRegistrationController::class, 'showTracker'])->name('nhpr.track.show');
+Route::post('/nhpr/track', [NhprRegistrationController::class, 'trackStatus'])->name('nhpr.track.post');
+

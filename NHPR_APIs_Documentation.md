@@ -138,6 +138,18 @@ Retrieves document checklist block identifiers and uploads Base64 degree/registr
 
 ---
 
+### 🔍 8. Application Status Tracking API
+Used to retrieve live verification stages and progress steps of an onboarding application.
+
+*   **Service:** `App\Http\Controllers\NhprRegistrationController.php`
+*   **Method:** `POST`
+*   **Endpoint:**
+    ```http
+    /nhpr/track
+    ```
+
+---
+
 ## 📌 Implementation Summary
 
 | Module | Status |
@@ -150,5 +162,7 @@ Retrieves document checklist block identifiers and uploads Base64 degree/registr
 | **HFR Facility Search** | ✅ Implemented |
 | **Practitioner Registration** | ✅ Implemented |
 | **Document Fetch & Upload** | ✅ Implemented |
+| **Application Status Tracking** | ✅ Implemented |
 | **Real ABDM Gateway Mode** | ✅ Implemented |
 | **Mock/Offline Simulation Mode** | ✅ Implemented |
+

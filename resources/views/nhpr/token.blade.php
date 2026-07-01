@@ -530,6 +530,11 @@
             <span class="nav-item-label">Gateway Token</span>
         </a>
 
+        <a href="{{ route('nhpr.track.show') }}" class="nav-item">
+            <div class="nav-icon-wrap"><i class="fas fa-binoculars"></i></div>
+            <span class="nav-item-label">Track Status</span>
+        </a>
+
         <div class="sidebar-footer">
             <div class="env-badge">
                 <span class="dot"></span>

@@ -967,8 +967,8 @@
             <div class="sidebar-nav">
                 <a href="{{ route('nhpr.register.wizard') }}" class="nav-item active"><i
                         class="fa-solid fa-user-doctor"></i> HPR Onboarding</a>
-                <a href="{{ route('nhpr.token.show') }}" class="nav-item"><i class="fa-solid fa-key"></i> Gateway
-                    Token</a>
+                <a href="{{ route('nhpr.token.show') }}" class="nav-item"><i class="fa-solid fa-key"></i> Gateway Token</a>
+                <a href="{{ route('nhpr.track.show') }}" class="nav-item"><i class="fa-solid fa-binoculars"></i> Track Status</a>
             </div>
         </div>
 

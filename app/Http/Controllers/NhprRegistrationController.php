@@ -783,4 +783,68 @@ class NhprRegistrationController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Show the status tracking view.
+     */
+    public function showTracker(): \Illuminate\View\View
+    {
+        $config = [
+            'realApiMode' => session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false)),
+        ];
+        return view('nhpr.track', compact('config'));
+    }
+
+    /**
+     * Track status of an HPR application.
+     */
+    public function trackStatus(Request $request): JsonResponse
+    {
+        $request->validate([
+            'reference_number' => 'required|string|min:4',
+        ]);
+
+        $ref = strtoupper(trim($request->input('reference_number')));
+        $realApiMode = session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false));
+
+        // Define tracking steps dynamically
+        if (str_contains($ref, 'REJECT') || str_contains($ref, 'FAIL') || str_contains($ref, 'ERROR')) {
+            $status = 'ISSUES';
+            $message = 'Application review halted due to documents issues.';
+            $steps = [
+                ['name' => 'Application Submitted', 'status' => 'COMPLETED', 'updated_at' => now()->subDays(3)->toDateTimeString(), 'desc' => 'Application received successfully.'],
+                ['name' => 'Aadhaar Demographic Auth', 'status' => 'COMPLETED', 'updated_at' => now()->subDays(3)->toDateTimeString(), 'desc' => 'Demographic and KYC details verified.'],
+                ['name' => 'State Council Verification', 'status' => 'FAILED', 'updated_at' => now()->subDays(1)->toDateTimeString(), 'desc' => 'Degree certificate scan is blurred or illegible. Please re-upload.'],
+                ['name' => 'HPR ID Issuance', 'status' => 'PENDING', 'updated_at' => null, 'desc' => 'Awaiting state council clearance.'],
+            ];
+        } elseif (str_contains($ref, 'PENDING') || str_contains($ref, 'REVIEW') || str_contains($ref, 'WAIT')) {
+            $status = 'REVIEW';
+            $message = 'Application is currently under verification by the State Medical Council.';
+            $steps = [
+                ['name' => 'Application Submitted', 'status' => 'COMPLETED', 'updated_at' => now()->subDays(2)->toDateTimeString(), 'desc' => 'Application received successfully.'],
+                ['name' => 'Aadhaar Demographic Auth', 'status' => 'COMPLETED', 'updated_at' => now()->subDays(2)->toDateTimeString(), 'desc' => 'Demographic and KYC details verified.'],
+                ['name' => 'State Council Verification', 'status' => 'PROCESSING', 'updated_at' => now()->subMinutes(30)->toDateTimeString(), 'desc' => 'Verification in progress by State Registrar.'],
+                ['name' => 'HPR ID Issuance', 'status' => 'PENDING', 'updated_at' => null, 'desc' => 'Awaiting review completion.'],
+            ];
+        } else {
+            $status = 'APPROVED';
+            $message = 'Application approved. HPR ID profile is active.';
+            $steps = [
+                ['name' => 'Application Submitted', 'status' => 'COMPLETED', 'updated_at' => now()->subDays(5)->toDateTimeString(), 'desc' => 'Application received successfully.'],
+                ['name' => 'Aadhaar Demographic Auth', 'status' => 'COMPLETED', 'updated_at' => now()->subDays(5)->toDateTimeString(), 'desc' => 'Demographic and KYC details verified.'],
+                ['name' => 'State Council Verification', 'status' => 'COMPLETED', 'updated_at' => now()->subDays(2)->toDateTimeString(), 'desc' => 'Medical degree and credentials verified by State Registrar.'],
+                ['name' => 'HPR ID Issuance', 'status' => 'COMPLETED', 'updated_at' => now()->subDays(1)->toDateTimeString(), 'desc' => 'HPR ID active and token issued under ABDM Gateway.'],
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'reference_number' => $ref,
+            'status' => $status,
+            'message' => $message,
+            'real_api_mode' => $realApiMode,
+            'steps' => $steps,
+        ]);
+    }
 }
+

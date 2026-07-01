@@ -562,4 +562,77 @@ class HprRegistrationTest extends TestCase
 
         $this->assertEquals('Dr Ramesh Kumar (Simulated)', session('hpr_reg_aadhaar_info.name'));
     }
+
+    /**
+     * Test the status tracking page renders successfully.
+     */
+    public function test_track_status_view_renders_successfully(): void
+    {
+        $response = $this->get(route('nhpr.track.show'));
+
+        $response->assertStatus(200)
+            ->assertViewIs('nhpr.track')
+            ->assertSee('Track Application Status');
+    }
+
+    /**
+     * Test tracking status API returns validation error for missing reference number.
+     */
+    public function test_track_status_api_validation_error(): void
+    {
+        $response = $this->postJson(route('nhpr.track.post'), []);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['reference_number']);
+    }
+
+    /**
+     * Test tracking status API returns APPROVED status by default.
+     */
+    public function test_track_status_api_approved(): void
+    {
+        $response = $this->postJson(route('nhpr.track.post'), [
+            'reference_number' => 'REF-1234567890',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'status' => 'APPROVED',
+            ])
+            ->assertJsonStructure(['reference_number', 'status', 'message', 'steps']);
+    }
+
+    /**
+     * Test tracking status API returns ISSUES status for 'REJECT'.
+     */
+    public function test_track_status_api_issues(): void
+    {
+        $response = $this->postJson(route('nhpr.track.post'), [
+            'reference_number' => 'REF-REJECT-001',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'status' => 'ISSUES',
+            ]);
+    }
+
+    /**
+     * Test tracking status API returns REVIEW status for 'PENDING'.
+     */
+    public function test_track_status_api_review(): void
+    {
+        $response = $this->postJson(route('nhpr.track.post'), [
+            'reference_number' => 'REF-PENDING-001',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'status' => 'REVIEW',
+            ]);
+    }
 }
+
