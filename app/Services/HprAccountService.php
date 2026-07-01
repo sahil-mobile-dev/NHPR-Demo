@@ -247,4 +247,78 @@ class HprAccountService
             throw $e;
         }
     }
+
+    /**
+     * Fetch registered details of a healthcare professional (ABDM tracking status).
+     *
+     * @param  string  $hprId  HPR ID (e.g. 71-XXXX-XXXX-XXXX).
+     * @return array Status check details from ABDM index.
+     *
+     * @throws Exception If API request fails.
+     */
+    public function fetchProfessionalDetails(string $hprId): array
+    {
+        $token = $this->gatewayService->getValidToken();
+        if (empty($token)) {
+            throw new Exception('HPR Account Service: Failed to fetch gateway authorization token.');
+        }
+
+        $apiUrl = config('services.nhpr.api_url');
+        $xCmId = config('services.nhpr.x_cm_id');
+        $endpoint = rtrim($apiUrl, '/').'/v4/int/apis/v1/doctors/fetch-professional-info';
+
+        $requestId = (string) Str::uuid();
+        $timestamp = now()->toIso8601String();
+
+        $headers = [
+            'Authorization' => 'Bearer '.$token,
+            'REQUEST-ID' => $requestId,
+            'TIMESTAMP' => $timestamp,
+            'X-CM-ID' => $xCmId,
+            'Content-Type' => 'application/json',
+        ];
+
+        $payload = [
+            'practitioner' => [
+                'id' => $hprId,
+                'name' => '',
+                'contactNumber' => '',
+                'state' => '',
+                'registrationNumber' => '',
+            ],
+        ];
+
+        Log::info('HPR Account Request: Fetch Professional Details', [
+            'url' => $endpoint,
+            'request_id' => $requestId,
+            'body' => $payload,
+        ]);
+
+        try {
+            $response = Http::when(! config('services.nhpr.verify_ssl'), fn ($q) => $q->withoutVerifying())
+                ->withHeaders($headers)
+                ->timeout(10)
+                ->retry(3, 100, throw: false)
+                ->post($endpoint, $payload);
+
+            $statusCode = $response->status();
+            $body = $response->json();
+
+            Log::info('HPR Account Response: Fetch Professional Details', [
+                'status' => $statusCode,
+                'body' => $body,
+            ]);
+
+            if ($response->successful()) {
+                return $body;
+            }
+
+            $message = $body['error']['message'] ?? $body['message'] ?? 'Unable to retrieve HPR details.';
+            throw new Exception("HPR Fetch professional details failed (HTTP {$statusCode}): {$message}");
+        } catch (Exception $e) {
+            Log::error('HPR Account Service Exception in fetchProfessionalDetails: '.$e->getMessage());
+            throw $e;
+        }
+    }
 }
+

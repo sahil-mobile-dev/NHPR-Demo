@@ -591,6 +591,8 @@ class HprRegistrationTest extends TestCase
      */
     public function test_track_status_api_approved(): void
     {
+        session(['nhpr_real_api_mode' => false]);
+
         $response = $this->postJson(route('nhpr.track.post'), [
             'reference_number' => 'REF-1234567890',
         ]);
@@ -608,6 +610,8 @@ class HprRegistrationTest extends TestCase
      */
     public function test_track_status_api_issues(): void
     {
+        session(['nhpr_real_api_mode' => false]);
+
         $response = $this->postJson(route('nhpr.track.post'), [
             'reference_number' => 'REF-REJECT-001',
         ]);
@@ -624,6 +628,8 @@ class HprRegistrationTest extends TestCase
      */
     public function test_track_status_api_review(): void
     {
+        session(['nhpr_real_api_mode' => false]);
+
         $response = $this->postJson(route('nhpr.track.post'), [
             'reference_number' => 'REF-PENDING-001',
         ]);
@@ -632,6 +638,38 @@ class HprRegistrationTest extends TestCase
             ->assertJson([
                 'success' => true,
                 'status' => 'REVIEW',
+            ]);
+    }
+
+    /**
+     * Test tracking status API in real mode makes HTTP requests and maps response correctly.
+     */
+    public function test_track_status_api_real_mode(): void
+    {
+        session(['nhpr_real_api_mode' => true]);
+
+        Http::fake([
+            'https://mock-api.abdm.gov.in/v4/int/apis/v1/doctors/fetch-professional-info' => Http::response([
+                'practitioners' => [
+                    [
+                        'hpr_id' => '71-1234-5678-9012',
+                        'application_status' => 'Approved',
+                        'is_council_verified' => 'Approved',
+                        'is_work_verified' => 'Approved',
+                    ]
+                ]
+            ], 200),
+        ]);
+
+        $response = $this->postJson(route('nhpr.track.post'), [
+            'reference_number' => '71-1234-5678-9012',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'status' => 'APPROVED',
+                'real_api_mode' => true,
             ]);
     }
 }

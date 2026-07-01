@@ -807,7 +807,86 @@ class NhprRegistrationController extends Controller
         $ref = strtoupper(trim($request->input('reference_number')));
         $realApiMode = session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false));
 
-        // Define tracking steps dynamically
+        if ($realApiMode) {
+            try {
+                $result = $this->hprService->fetchProfessionalDetails($ref);
+                
+                // Parse nested array if present: "practitioners": [ [ { ... } ] ]
+                $practitioners = $result['practitioners'] ?? [];
+                if (isset($practitioners[0]) && is_array($practitioners[0])) {
+                    $practitioner = $practitioners[0][0] ?? $practitioners[0] ?? null;
+                } else {
+                    $practitioner = $practitioners[0] ?? null;
+                }
+
+                if (empty($practitioner)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'No active practitioner found with the given HPR ID.',
+                    ], 404);
+                }
+
+                $appStatus = $practitioner['application_status'] ?? 'Pending';
+                $councilVerified = $practitioner['is_council_verified'] ?? 'Submitted';
+                $workVerified = $practitioner['is_work_verified'] ?? 'Submitted';
+
+                // Map overall status to APPROVED, REVIEW, or ISSUES
+                $status = 'REVIEW';
+                $message = 'Application is currently under verification.';
+                if ($appStatus === 'Approved') {
+                    $status = 'APPROVED';
+                    $message = 'Application approved. HPR ID profile is active.';
+                } elseif ($councilVerified === 'Rejected') {
+                    $status = 'ISSUES';
+                    $message = 'Application review halted due to medical council verification rejection.';
+                }
+
+                // Map steps timeline
+                $steps = [
+                    [
+                        'name' => 'Application Submitted',
+                        'status' => 'COMPLETED',
+                        'updated_at' => now()->subDays(2)->toDateTimeString(),
+                        'desc' => 'Application received successfully.'
+                    ],
+                    [
+                        'name' => 'Aadhaar Demographic Auth',
+                        'status' => 'COMPLETED',
+                        'updated_at' => now()->subDays(2)->toDateTimeString(),
+                        'desc' => 'Demographic and KYC details verified.'
+                    ],
+                    [
+                        'name' => 'State Council Verification',
+                        'status' => ($councilVerified === 'Approved') ? 'COMPLETED' : (($councilVerified === 'Rejected') ? 'FAILED' : 'PROCESSING'),
+                        'updated_at' => ($councilVerified === 'Approved' || $councilVerified === 'Rejected') ? now()->subDays(1)->toDateTimeString() : null,
+                        'desc' => ($councilVerified === 'Approved') ? 'Verified by State Medical Council.' : (($councilVerified === 'Rejected') ? 'Rejected by State Registrar. Check credentials/documents.' : 'Pending Medical Council verification.')
+                    ],
+                    [
+                        'name' => 'HPR ID Issuance',
+                        'status' => ($appStatus === 'Approved') ? 'COMPLETED' : 'PENDING',
+                        'updated_at' => ($appStatus === 'Approved') ? now()->toDateTimeString() : null,
+                        'desc' => ($appStatus === 'Approved') ? 'HPR ID active and verified under ABDM Gateway.' : 'Awaiting council review completion.'
+                    ]
+                ];
+
+                return response()->json([
+                    'success' => true,
+                    'reference_number' => $ref,
+                    'status' => $status,
+                    'message' => $message,
+                    'real_api_mode' => true,
+                    'steps' => $steps,
+                ]);
+
+            } catch (Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ABDM Gateway Status Error: ' . $e->getMessage(),
+                ], 500);
+            }
+        }
+
+        // Define tracking steps dynamically for mock mode
         if (str_contains($ref, 'REJECT') || str_contains($ref, 'FAIL') || str_contains($ref, 'ERROR')) {
             $status = 'ISSUES';
             $message = 'Application review halted due to documents issues.';
