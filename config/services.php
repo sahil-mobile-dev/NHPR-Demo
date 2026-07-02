@@ -45,4 +45,9 @@ return [
         'real_api_mode' => env('NHPR_REAL_API_MODE', false),
     ],
 
+    'abha' => [
+        'base_url' => env('ABHA_BASE_URL', 'https://abhasbx.abdm.gov.in/abha/api'),
+        'phr_url' => env('ABHA_PHR_URL', 'https://abhasbx.abdm.gov.in/abha/api/v3/phr/web'),
+    ],
+
 ];

@@ -110,4 +110,39 @@ class AbdmEncryptionHelper
             throw new Exception('ABDM Encryption: Data encryption failed: '.$e->getMessage());
         }
     }
+
+    /**
+     * Encrypt sensitive data using RSA with OAEP padding (corresponds to RSA/ECB/OAEPWithSHA-1AndMGF1Padding).
+     * Required for ABHA v3 APIs.
+     *
+     * @param  string  $data  The raw string data to encrypt.
+     * @return string Base64 encoded encrypted cipher.
+     *
+     * @throws Exception If RSA public encryption fails.
+     */
+    public static function encryptOaep(string $data): string
+    {
+        try {
+            $pemCert = self::getPublicCertificate();
+
+            $publicKey = openssl_pkey_get_public($pemCert);
+            if ($publicKey === false) {
+                throw new Exception('ABDM Encryption: Invalid public key structure.');
+            }
+
+            $encryptedData = '';
+            // Encrypt using RSA with OAEP Padding (corresponds to RSA/ECB/OAEPWithSHA-1AndMGF1Padding)
+            $success = openssl_public_encrypt($data, $encryptedData, $publicKey, OPENSSL_PKCS1_OAEP_PADDING);
+
+            if (! $success) {
+                throw new Exception('ABDM Encryption: OpenSSL OAEP encryption failed.');
+            }
+
+            return base64_encode($encryptedData);
+
+        } catch (Exception $e) {
+            Log::error('ABDM OAEP Encryption failed: '.$e->getMessage());
+            throw new Exception('ABDM Encryption: OAEP Data encryption failed: '.$e->getMessage());
+        }
+    }
 }

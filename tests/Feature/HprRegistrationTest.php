@@ -656,8 +656,8 @@ class HprRegistrationTest extends TestCase
                         'application_status' => 'Approved',
                         'is_council_verified' => 'Approved',
                         'is_work_verified' => 'Approved',
-                    ]
-                ]
+                    ],
+                ],
             ], 200),
         ]);
 
@@ -673,4 +673,3 @@ class HprRegistrationTest extends TestCase
             ]);
     }
 }
-

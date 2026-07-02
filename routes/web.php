@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AbhaController;
 use App\Http\Controllers\NhprController;
 use App\Http\Controllers\NhprRegistrationController;
 use Illuminate\Support\Facades\Route;
@@ -31,3 +32,23 @@ Route::prefix('nhpr/register')->name('nhpr.register.')->group(function () {
 Route::get('/nhpr/track', [NhprRegistrationController::class, 'showTracker'])->name('nhpr.track.show');
 Route::post('/nhpr/track', [NhprRegistrationController::class, 'trackStatus'])->name('nhpr.track.post');
 
+Route::prefix('abha')->name('abha.')->group(function () {
+    Route::get('/', [AbhaController::class, 'showDashboard'])->name('dashboard');
+    Route::get('/create', [AbhaController::class, 'showCreator'])->name('create');
+    Route::post('/create/request-otp', [AbhaController::class, 'enrollRequestOtp'])->name('create.request-otp');
+    Route::post('/create/verify-otp', [AbhaController::class, 'enrollVerifyOtp'])->name('create.verify-otp');
+    Route::post('/create/request-mobile-otp', [AbhaController::class, 'enrollRequestMobileOtp'])->name('create.request-mobile-otp');
+    Route::post('/create/verify-mobile-otp', [AbhaController::class, 'enrollVerifyMobileOtp'])->name('create.verify-mobile-otp');
+    Route::post('/card/download', [AbhaController::class, 'downloadCard'])->name('card.download');
+
+    Route::get('/find', [AbhaController::class, 'showFinder'])->name('find');
+    Route::post('/find/search-mobile', [AbhaController::class, 'findSearchByMobile'])->name('find.search-mobile');
+    Route::post('/find/select', [AbhaController::class, 'findSelectProfile'])->name('find.select');
+
+    Route::get('/verify', [AbhaController::class, 'showVerifier'])->name('verify');
+    Route::post('/verify/search', [AbhaController::class, 'verifySearch'])->name('verify.search');
+    Route::post('/verify/request-otp', [AbhaController::class, 'verifyRequestOtp'])->name('verify.request-otp');
+    Route::post('/verify/confirm', [AbhaController::class, 'verifyConfirm'])->name('verify.confirm');
+    Route::post('/verify/qr', [AbhaController::class, 'verifyQrCodePost'])->name('verify.qr');
+    Route::post('/verify/demographics', [AbhaController::class, 'verifyDemographicsPost'])->name('verify.demographics');
+});

@@ -787,11 +787,12 @@ class NhprRegistrationController extends Controller
     /**
      * Show the status tracking view.
      */
-    public function showTracker(): \Illuminate\View\View
+    public function showTracker(): View
     {
         $config = [
             'realApiMode' => session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false)),
         ];
+
         return view('nhpr.track', compact('config'));
     }
 
@@ -810,7 +811,7 @@ class NhprRegistrationController extends Controller
         if ($realApiMode) {
             try {
                 $result = $this->hprService->fetchProfessionalDetails($ref);
-                
+
                 // Parse nested array if present: "practitioners": [ [ { ... } ] ]
                 $practitioners = $result['practitioners'] ?? [];
                 if (isset($practitioners[0]) && is_array($practitioners[0])) {
@@ -847,26 +848,26 @@ class NhprRegistrationController extends Controller
                         'name' => 'Application Submitted',
                         'status' => 'COMPLETED',
                         'updated_at' => now()->subDays(2)->toDateTimeString(),
-                        'desc' => 'Application received successfully.'
+                        'desc' => 'Application received successfully.',
                     ],
                     [
                         'name' => 'Aadhaar Demographic Auth',
                         'status' => 'COMPLETED',
                         'updated_at' => now()->subDays(2)->toDateTimeString(),
-                        'desc' => 'Demographic and KYC details verified.'
+                        'desc' => 'Demographic and KYC details verified.',
                     ],
                     [
                         'name' => 'State Council Verification',
                         'status' => ($councilVerified === 'Approved') ? 'COMPLETED' : (($councilVerified === 'Rejected') ? 'FAILED' : 'PROCESSING'),
                         'updated_at' => ($councilVerified === 'Approved' || $councilVerified === 'Rejected') ? now()->subDays(1)->toDateTimeString() : null,
-                        'desc' => ($councilVerified === 'Approved') ? 'Verified by State Medical Council.' : (($councilVerified === 'Rejected') ? 'Rejected by State Registrar. Check credentials/documents.' : 'Pending Medical Council verification.')
+                        'desc' => ($councilVerified === 'Approved') ? 'Verified by State Medical Council.' : (($councilVerified === 'Rejected') ? 'Rejected by State Registrar. Check credentials/documents.' : 'Pending Medical Council verification.'),
                     ],
                     [
                         'name' => 'HPR ID Issuance',
                         'status' => ($appStatus === 'Approved') ? 'COMPLETED' : 'PENDING',
                         'updated_at' => ($appStatus === 'Approved') ? now()->toDateTimeString() : null,
-                        'desc' => ($appStatus === 'Approved') ? 'HPR ID active and verified under ABDM Gateway.' : 'Awaiting council review completion.'
-                    ]
+                        'desc' => ($appStatus === 'Approved') ? 'HPR ID active and verified under ABDM Gateway.' : 'Awaiting council review completion.',
+                    ],
                 ];
 
                 return response()->json([
@@ -881,7 +882,7 @@ class NhprRegistrationController extends Controller
             } catch (Exception $e) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'ABDM Gateway Status Error: ' . $e->getMessage(),
+                    'message' => 'ABDM Gateway Status Error: '.$e->getMessage(),
                 ], 500);
             }
         }
@@ -926,4 +927,3 @@ class NhprRegistrationController extends Controller
         ]);
     }
 }
-
