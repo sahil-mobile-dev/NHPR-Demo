@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AbhaController;
 use App\Http\Controllers\HipController;
+use App\Http\Controllers\HiuController;
 use App\Http\Controllers\NhprController;
 use App\Http\Controllers\NhprRegistrationController;
 use Illuminate\Support\Facades\Route;
@@ -66,6 +67,22 @@ Route::prefix('hip')->name('hip.')->group(function () {
     Route::post('/simulator/trigger-discovery', [HipController::class, 'simulateDiscovery'])->name('simulator.discovery');
 });
 
+// Health Information User (HIU) Portal
+Route::prefix('hiu')->name('hiu.')->group(function () {
+    Route::get('/', [HiuController::class, 'showDashboard'])->name('dashboard');
+    Route::post('/consent/request', [HiuController::class, 'requestConsent'])->name('consent.request');
+    Route::post('/consent/fetch/{id}', [HiuController::class, 'fetchArtefact'])->name('consent.fetch');
+    Route::post('/health-information/request', [HiuController::class, 'requestHealthData'])->name('health-information.request');
+    Route::get('/records/{abha_address}', [HiuController::class, 'showRecords'])->name('records');
+    Route::post('/consent/revoke/{consentId}', [HiuController::class, 'revokeConsentLocal'])->name('consent.revoke');
+
+    // Simulations
+    Route::post('/simulator/approve-consent', [HiuController::class, 'simulateApproveConsent'])->name('simulator.approve-consent');
+    Route::post('/simulator/deny-consent', [HiuController::class, 'simulateDenyConsent'])->name('simulator.deny-consent');
+    Route::post('/simulator/revoke-consent', [HiuController::class, 'simulateRevokeConsent'])->name('simulator.revoke-consent');
+    Route::post('/simulator/push-health-data', [HiuController::class, 'simulatePushHealthData'])->name('simulator.push-health-data');
+});
+
 // Official ABDM Gateway Callback Routes
 Route::prefix('v3')->group(function () {
     Route::post('/hip/discover', [HipController::class, 'apiDiscover']);
@@ -73,4 +90,9 @@ Route::prefix('v3')->group(function () {
     Route::post('/hip/link/confirm', [HipController::class, 'apiLinkConfirm']);
     Route::post('/consents/hip/notify', [HipController::class, 'apiConsentNotify']);
     Route::post('/health-information/hip/request', [HipController::class, 'apiHealthRequest']);
+
+    // HIU Callbacks
+    Route::post('/consent/on-init', [HiuController::class, 'apiConsentOnInit']);
+    Route::post('/consent/notify', [HiuController::class, 'apiConsentNotify']);
+    Route::post('/health-information/on-request', [HiuController::class, 'apiReceiveHealthData']);
 });

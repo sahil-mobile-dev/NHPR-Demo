@@ -570,6 +570,9 @@
                 <a href="{{ route('hip.dashboard') }}" class="nav-item">
                     <i class="fa-solid fa-notes-medical"></i> HIMS Records (HIP)
                 </a>
+                <a href="{{ route('hiu.dashboard') }}" class="nav-item">
+                    <i class="fa-solid fa-shield-halved"></i> HIU Portal
+                </a>
                 <a href="{{ route('hip.consents') }}" class="nav-item active">
                     <i class="fa-solid fa-file-shield"></i> Consent & Security Hub
                 </a>

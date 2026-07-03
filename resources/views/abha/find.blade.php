@@ -603,6 +603,17 @@
             </div>
 
             <div class="sidebar-nav">
+                <div class="nav-grp-title">HIMS Clinical Care</div>
+                <a href="{{ route('hip.dashboard') }}" class="nav-item">
+                    <i class="fa-solid fa-notes-medical"></i> HIMS Records (HIP)
+                </a>
+                <a href="{{ route('hiu.dashboard') }}" class="nav-item">
+                    <i class="fa-solid fa-shield-halved"></i> HIU Portal
+                </a>
+                <a href="{{ route('hip.consents') }}" class="nav-item">
+                    <i class="fa-solid fa-file-shield"></i> Consent & Security Hub
+                </a>
+
                 <div class="nav-grp-title">ABDM Milestone 1</div>
                 <a href="{{ route('abha.dashboard') }}" class="nav-item">
                     <i class="fa-solid fa-chart-line"></i> ABHA Dashboard

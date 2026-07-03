@@ -965,6 +965,32 @@
             </div>
 
             <div class="sidebar-nav">
+                <div class="nav-grp-title">HIMS Clinical Care</div>
+                <a href="{{ route('hip.dashboard') }}" class="nav-item">
+                    <i class="fa-solid fa-notes-medical"></i> HIMS Records (HIP)
+                </a>
+                <a href="{{ route('hiu.dashboard') }}" class="nav-item">
+                    <i class="fa-solid fa-shield-halved"></i> HIU Portal
+                </a>
+                <a href="{{ route('hip.consents') }}" class="nav-item">
+                    <i class="fa-solid fa-file-shield"></i> Consent & Security Hub
+                </a>
+
+                <div class="nav-grp-title">ABDM Milestone 1</div>
+                <a href="{{ route('abha.dashboard') }}" class="nav-item">
+                    <i class="fa-solid fa-chart-line"></i> ABHA Dashboard
+                </a>
+                <a href="{{ route('abha.create') }}" class="nav-item">
+                    <i class="fa-solid fa-user-plus"></i> Create ABHA Number
+                </a>
+                <a href="{{ route('abha.find') }}" class="nav-item">
+                    <i class="fa-solid fa-magnifying-glass"></i> Find Existing ABHA
+                </a>
+                <a href="{{ route('abha.verify') }}" class="nav-item">
+                    <i class="fa-solid fa-address-card"></i> Verify ABHA Address
+                </a>
+
+                <div class="nav-grp-title">HPR Onboarding</div>
                 <a href="{{ route('nhpr.register.wizard') }}" class="nav-item active"><i
                         class="fa-solid fa-user-doctor"></i> HPR Onboarding</a>
                 <a href="{{ route('nhpr.token.show') }}" class="nav-item"><i class="fa-solid fa-key"></i> Gateway Token</a>

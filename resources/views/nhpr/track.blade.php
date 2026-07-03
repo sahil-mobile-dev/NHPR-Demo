@@ -376,6 +376,19 @@
             </div>
         </div>
 
+        <a href="{{ route('hip.dashboard') }}" class="nav-item">
+            <div class="nav-icon-wrap"><i class="fas fa-notes-medical"></i></div>
+            <span class="nav-item-label">HIP Dashboard</span>
+        </a>
+        <a href="{{ route('hiu.dashboard') }}" class="nav-item">
+            <div class="nav-icon-wrap"><i class="fas fa-shield-halved"></i></div>
+            <span class="nav-item-label">HIU Portal</span>
+        </a>
+        <a href="{{ route('abha.dashboard') }}" class="nav-item">
+            <div class="nav-icon-wrap"><i class="fas fa-chart-line"></i></div>
+            <span class="nav-item-label">ABHA Dashboard</span>
+        </a>
+
         <a href="{{ route('nhpr.register.wizard') }}" class="nav-item">
             <div class="nav-icon-wrap"><i class="fas fa-user-plus"></i></div>
             <span class="nav-item-label">HPR Onboarding</span>

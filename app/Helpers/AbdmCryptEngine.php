@@ -21,7 +21,7 @@ class AbdmCryptEngine
      */
     public static function generateKeypair(): array
     {
-        $configFilePath = function_exists('config_path') ? config_path('openssl.cnf') : __DIR__ . '/../../config/openssl.cnf';
+        $configFilePath = function_exists('config_path') ? config_path('openssl.cnf') : __DIR__.'/../../config/openssl.cnf';
 
         $config = [
             'curve_name' => 'prime256v1',
