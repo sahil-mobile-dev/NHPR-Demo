@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AbhaController;
+use App\Http\Controllers\HipController;
 use App\Http\Controllers\NhprController;
 use App\Http\Controllers\NhprRegistrationController;
 use Illuminate\Support\Facades\Route;
@@ -51,4 +52,25 @@ Route::prefix('abha')->name('abha.')->group(function () {
     Route::post('/verify/confirm', [AbhaController::class, 'verifyConfirm'])->name('verify.confirm');
     Route::post('/verify/qr', [AbhaController::class, 'verifyQrCodePost'])->name('verify.qr');
     Route::post('/verify/demographics', [AbhaController::class, 'verifyDemographicsPost'])->name('verify.demographics');
+});
+
+Route::prefix('hip')->name('hip.')->group(function () {
+    Route::get('/', [HipController::class, 'showDashboard'])->name('dashboard');
+    Route::post('/record/create', [HipController::class, 'createRecordStore'])->name('record.create');
+    Route::post('/link', [HipController::class, 'linkContextPost'])->name('link');
+
+    // HIMS Consent & Security Audit Portal
+    Route::get('/consents', [HipController::class, 'showConsentsAndAuditLogs'])->name('consents');
+    Route::post('/consents/register', [HipController::class, 'simulateConsent'])->name('consents.register');
+    Route::post('/consents/exchange', [HipController::class, 'simulateHealthRequest'])->name('consents.exchange');
+    Route::post('/simulator/trigger-discovery', [HipController::class, 'simulateDiscovery'])->name('simulator.discovery');
+});
+
+// Official ABDM Gateway Callback Routes
+Route::prefix('v3')->group(function () {
+    Route::post('/hip/discover', [HipController::class, 'apiDiscover']);
+    Route::post('/hip/link/init', [HipController::class, 'apiLinkInit']);
+    Route::post('/hip/link/confirm', [HipController::class, 'apiLinkConfirm']);
+    Route::post('/consents/hip/notify', [HipController::class, 'apiConsentNotify']);
+    Route::post('/health-information/hip/request', [HipController::class, 'apiHealthRequest']);
 });

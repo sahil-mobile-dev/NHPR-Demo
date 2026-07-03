@@ -526,16 +526,17 @@
                     "Content-Type": "application/json",
                     "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 },
-                body: JSON.stringify({ mode: useSimulatedMode ? 'simulated' : 'real' })
+                body: JSON.stringify({ real_api_mode: useSimulatedMode ? 0 : 1 })
             })
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
                     const statusText = document.getElementById('gateway-mode-status-text');
-                    statusText.innerText = "Mode: " + (data.mode === 'real' ? 'REAL API' : 'SIMULATION');
+                    const isReal = data.real_api_mode;
+                    statusText.innerText = "Mode: " + (isReal ? 'REAL API' : 'SIMULATION');
                     
                     // Show confirmation feedback
-                    alert("Gateway mode switched to: " + (data.mode === 'real' ? 'REAL API' : 'SIMULATION'));
+                    alert("Gateway mode switched to: " + (isReal ? 'REAL API' : 'SIMULATION'));
                     window.location.reload();
                 } else {
                     alert("Failed to switch gateway mode.");
