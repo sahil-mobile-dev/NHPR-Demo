@@ -426,6 +426,9 @@
                 <a href="{{ route('hip.dashboard') }}" class="nav-item">
                     <i class="fa-solid fa-notes-medical"></i> HIMS Records (HIP)
                 </a>
+                <a href="{{ route('hip.milestone2') }}" class="nav-item">
+                    <i class="fa-solid fa-map-location-dot"></i> ABDM Milestone 2 Map
+                </a>
                 <a href="{{ route('hiu.dashboard') }}" class="nav-item">
                     <i class="fa-solid fa-shield-halved"></i> HIU Portal
                 </a>

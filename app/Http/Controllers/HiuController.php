@@ -907,4 +907,48 @@ class HiuController extends Controller
             ],
         ];
     }
+
+    /**
+     * Callback: Patient care context on-discover (Gateway callback to HIU)
+     * POST /api/v3/hiu/patient/care-context/on-discover
+     */
+    public function apiPatientCareContextOnDiscover(Request $request): JsonResponse
+    {
+        Log::info('ABDM Callback: Patient Care Context On-Discover (HIU)', $request->all());
+
+        return response()->json(['status' => 'ACCEPTED'], 202);
+    }
+
+    /**
+     * Callback: Patient care context on-init (Gateway callback to HIU)
+     * POST /api/v3/hiu/patient/care-context/on-init
+     */
+    public function apiPatientCareContextOnInit(Request $request): JsonResponse
+    {
+        Log::info('ABDM Callback: Patient Care Context On-Init (HIU)', $request->all());
+
+        return response()->json(['status' => 'ACCEPTED'], 202);
+    }
+
+    /**
+     * Callback: Patient care context on-confirm (Gateway callback to HIU)
+     * POST /api/v3/hiu/patient/care-context/on-confirm
+     */
+    public function apiPatientCareContextOnConfirm(Request $request): JsonResponse
+    {
+        Log::info('ABDM Callback: Patient Care Context On-Confirm (HIU)', $request->all());
+
+        return response()->json(['status' => 'ACCEPTED'], 202);
+    }
+
+    /**
+     * Callback: Patient profile on-share (Gateway callback to HIU)
+     * POST /api/v3/hiu/patient/on-share
+     */
+    public function apiPatientOnShare(Request $request): JsonResponse
+    {
+        Log::info('ABDM Callback: Patient On-Share (HIU)', $request->all());
+
+        return response()->json(['status' => 'ACCEPTED'], 202);
+    }
 }

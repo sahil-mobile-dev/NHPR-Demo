@@ -55,6 +55,21 @@ class HipController extends Controller
     }
 
     /**
+     * Display the ABDM Milestone 2 Features dashboard/mapping.
+     */
+    public function milestone2Features(): View
+    {
+        $stats = [
+            'contexts_count' => CareContext::count(),
+            'consents_count' => ConsentArtefact::count(),
+            'records_count' => HealthRecord::count(),
+            'audits_count' => SecurityAuditLog::count(),
+        ];
+
+        return view('hip.milestone2', compact('stats'));
+    }
+
+    /**
      * Create a clinical record, compile to FHIR, and save to database.
      */
     public function createRecordStore(Request $request): JsonResponse
@@ -555,6 +570,68 @@ class HipController extends Controller
                 }
             }
         }
+
+        return response()->json(['status' => 'ACCEPTED'], 202);
+    }
+
+    /**
+     * Callback: Link token on-generate (Gateway callback to HIP)
+     * POST /api/v3/hip/token/on-generate-token
+     */
+    public function apiLinkTokenOnGenerate(Request $request): JsonResponse
+    {
+        Log::info('ABDM Callback: Link Token On-Generate', $request->all());
+
+        return response()->json(['status' => 'ACCEPTED'], 202);
+    }
+
+    /**
+     * Callback: Link care context response (Gateway callback to HIP)
+     * POST /api/v3/link/on-carecontext
+     */
+    public function apiLinkOnCareContext(Request $request): JsonResponse
+    {
+        Log::info('ABDM Callback: Link On Care Context', $request->all());
+
+        if (! $request->has('error')) {
+            $abhaAddress = $request->input('abhaAddress') ?? $request->input('patient.id');
+            if ($abhaAddress) {
+                CareContext::where('patient_abha_address', $abhaAddress)->update(['is_linked' => true]);
+            }
+        }
+
+        return response()->json(['status' => 'ACCEPTED'], 202);
+    }
+
+    /**
+     * Callback: Notify care context update response (Gateway callback to HIP)
+     * POST /api/v3/links/context/on-notify
+     */
+    public function apiLinkContextOnNotify(Request $request): JsonResponse
+    {
+        Log::info('ABDM Callback: Link Context On-Notify', $request->all());
+
+        return response()->json(['status' => 'ACCEPTED'], 202);
+    }
+
+    /**
+     * Callback: Patients SMS Notify response (Gateway callback to HIP)
+     * POST /api/v3/patients/sms/on-notify
+     */
+    public function apiPatientsSmsOnNotify(Request $request): JsonResponse
+    {
+        Log::info('ABDM Callback: Patients SMS On-Notify', $request->all());
+
+        return response()->json(['status' => 'ACCEPTED'], 202);
+    }
+
+    /**
+     * Callback: Patient profile share request (Gateway callback to HIP)
+     * POST /api/v3/hip/patient/share
+     */
+    public function apiPatientShare(Request $request): JsonResponse
+    {
+        Log::info('ABDM Callback: Patient Share', $request->all());
 
         return response()->json(['status' => 'ACCEPTED'], 202);
     }

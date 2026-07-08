@@ -57,6 +57,7 @@ Route::prefix('abha')->name('abha.')->group(function () {
 
 Route::prefix('hip')->name('hip.')->group(function () {
     Route::get('/', [HipController::class, 'showDashboard'])->name('dashboard');
+    Route::get('/milestone2', [HipController::class, 'milestone2Features'])->name('milestone2');
     Route::post('/record/create', [HipController::class, 'createRecordStore'])->name('record.create');
     Route::post('/link', [HipController::class, 'linkContextPost'])->name('link');
 
@@ -84,15 +85,45 @@ Route::prefix('hiu')->name('hiu.')->group(function () {
 });
 
 // Official ABDM Gateway Callback Routes
-Route::prefix('v3')->group(function () {
+$callbackRoutes = function () {
+    // HIP Discovery Callbacks
     Route::post('/hip/discover', [HipController::class, 'apiDiscover']);
+    Route::post('/hip/patient/care-context/discover', [HipController::class, 'apiDiscover']);
+
+    // HIP Linking Callbacks
     Route::post('/hip/link/init', [HipController::class, 'apiLinkInit']);
+    Route::post('/hip/link/care-context/init', [HipController::class, 'apiLinkInit']);
     Route::post('/hip/link/confirm', [HipController::class, 'apiLinkConfirm']);
+    Route::post('/hip/link/care-context/confirm', [HipController::class, 'apiLinkConfirm']);
+
+    // HIP Consent Callbacks
     Route::post('/consents/hip/notify', [HipController::class, 'apiConsentNotify']);
+    Route::post('/consent/request/hip/notify', [HipController::class, 'apiConsentNotify']);
+
+    // HIP Data Flow Request Callbacks
     Route::post('/health-information/hip/request', [HipController::class, 'apiHealthRequest']);
+    Route::post('/hip/health-information/request', [HipController::class, 'apiHealthRequest']);
+
+    // New HIP Certification Webhooks
+    Route::post('/hip/token/on-generate-token', [HipController::class, 'apiLinkTokenOnGenerate']);
+    Route::post('/link/on-carecontext', [HipController::class, 'apiLinkOnCareContext']);
+    Route::post('/link/on_carecontext', [HipController::class, 'apiLinkOnCareContext']);
+    Route::post('/links/context/on-notify', [HipController::class, 'apiLinkContextOnNotify']);
+    Route::post('/patients/sms/on-notify', [HipController::class, 'apiPatientsSmsOnNotify']);
+    Route::post('/hip/patient/share', [HipController::class, 'apiPatientShare']);
 
     // HIU Callbacks
     Route::post('/consent/on-init', [HiuController::class, 'apiConsentOnInit']);
     Route::post('/consent/notify', [HiuController::class, 'apiConsentNotify']);
     Route::post('/health-information/on-request', [HiuController::class, 'apiReceiveHealthData']);
-});
+    Route::post('/hiu/health-information/on-request', [HiuController::class, 'apiReceiveHealthData']);
+
+    // New HIU Certification Webhooks
+    Route::post('/hiu/patient/care-context/on-discover', [HiuController::class, 'apiPatientCareContextOnDiscover']);
+    Route::post('/hiu/patient/care-context/on-init', [HiuController::class, 'apiPatientCareContextOnInit']);
+    Route::post('/hiu/patient/care-context/on-confirm', [HiuController::class, 'apiPatientCareContextOnConfirm']);
+    Route::post('/hiu/patient/on-share', [HiuController::class, 'apiPatientOnShare']);
+};
+
+Route::prefix('v3')->group($callbackRoutes);
+Route::prefix('api/v3')->group($callbackRoutes);

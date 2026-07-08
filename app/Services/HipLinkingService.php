@@ -43,8 +43,8 @@ class HipLinkingService
             throw new Exception('HIP Linking Service: Failed to retrieve gateway authorization token.');
         }
 
-        $baseUrl = config('services.abha.base_url', 'https://abhasbx.abdm.gov.in/abha/api');
-        $endpoint = rtrim($baseUrl, '/').'/v3/hip/link/care-contexts';
+        $baseUrl = config('services.nhpr.base_url', 'https://dev.abdm.gov.in');
+        $endpoint = rtrim($baseUrl, '/').'/api/hiecm/hip/v3/link/carecontext';
         $xCmId = config('services.nhpr.x_cm_id', 'sbx');
 
         $requestId = (string) Str::uuid();
@@ -289,6 +289,161 @@ class HipLinkingService
             throw new Exception("ABDM Notify SMS failed (HTTP {$response->status()})");
         } catch (Exception $e) {
             Log::error('HIP Linking Service notifyPatientSms error: '.$e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Generate Link Token.
+     */
+    public function generateLinkToken(array $patientDetails): array
+    {
+        $token = $this->gatewayService->getValidToken();
+        if (empty($token)) {
+            throw new Exception('HIP Linking Service: Failed to retrieve gateway authorization token.');
+        }
+
+        $baseUrl = config('services.nhpr.base_url', 'https://dev.abdm.gov.in');
+        $endpoint = rtrim($baseUrl, '/').'/api/hiecm/v3/token/generate-token';
+        $xCmId = config('services.nhpr.x_cm_id', 'sbx');
+        $xHipId = session('nhpr_credential_client_id', config('services.nhpr.client_id', '100001'));
+
+        $requestId = (string) Str::uuid();
+        $timestamp = now()->toIso8601String();
+
+        $headers = [
+            'Authorization' => 'Bearer '.$token,
+            'REQUEST-ID' => $requestId,
+            'TIMESTAMP' => $timestamp,
+            'X-HIP-ID' => $xHipId,
+            'X-CM-ID' => $xCmId,
+            'Content-Type' => 'application/json',
+        ];
+
+        Log::info('HIP Request: Generate Link Token', [
+            'url' => $endpoint,
+            'request_id' => $requestId,
+            'body' => $patientDetails,
+        ]);
+
+        try {
+            $response = Http::when(! config('services.nhpr.verify_ssl'), fn ($q) => $q->withoutVerifying())
+                ->withHeaders($headers)
+                ->timeout(10)
+                ->post($endpoint, $patientDetails);
+
+            if ($response->successful()) {
+                return $response->json();
+            }
+
+            throw new Exception("ABDM Generate Link Token failed (HTTP {$response->status()})");
+        } catch (Exception $e) {
+            Log::error('HIP Linking Service generateLinkToken error: '.$e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Notify Care Context Update.
+     */
+    public function notifyCareContextUpdate(array $notification): array
+    {
+        $token = $this->gatewayService->getValidToken();
+        if (empty($token)) {
+            throw new Exception('HIP Linking Service: Failed to retrieve gateway authorization token.');
+        }
+
+        $baseUrl = config('services.nhpr.base_url', 'https://dev.abdm.gov.in');
+        $endpoint = rtrim($baseUrl, '/').'/api/hiecm/hip/v3/link/context/notify';
+        $xCmId = config('services.nhpr.x_cm_id', 'sbx');
+        $xHipId = session('nhpr_credential_client_id', config('services.nhpr.client_id', '100001'));
+
+        $requestId = (string) Str::uuid();
+        $timestamp = now()->toIso8601String();
+
+        $headers = [
+            'Authorization' => 'Bearer '.$token,
+            'REQUEST-ID' => $requestId,
+            'TIMESTAMP' => $timestamp,
+            'X-HIP-ID' => $xHipId,
+            'X-CM-ID' => $xCmId,
+            'Content-Type' => 'application/json',
+        ];
+
+        Log::info('HIP Request: Notify Care Context Update', [
+            'url' => $endpoint,
+            'request_id' => $requestId,
+            'body' => $notification,
+        ]);
+
+        try {
+            $response = Http::when(! config('services.nhpr.verify_ssl'), fn ($q) => $q->withoutVerifying())
+                ->withHeaders($headers)
+                ->timeout(10)
+                ->post($endpoint, $notification);
+
+            if ($response->successful()) {
+                return $response->json();
+            }
+
+            throw new Exception("ABDM Notify Care Context Update failed (HTTP {$response->status()})");
+        } catch (Exception $e) {
+            Log::error('HIP Linking Service notifyCareContextUpdate error: '.$e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * SMS Notify (v2.8 endpoint).
+     */
+    public function smsNotify(string $mobile, string $message): array
+    {
+        $token = $this->gatewayService->getValidToken();
+        if (empty($token)) {
+            throw new Exception('HIP Linking Service: Failed to retrieve gateway authorization token.');
+        }
+
+        $baseUrl = config('services.nhpr.base_url', 'https://dev.abdm.gov.in');
+        $endpoint = rtrim($baseUrl, '/').'/api/hiecm/hip/v3/link/patient/links/sms/notify2';
+        $xCmId = config('services.nhpr.x_cm_id', 'sbx');
+        $xHipId = session('nhpr_credential_client_id', config('services.nhpr.client_id', '100001'));
+
+        $requestId = (string) Str::uuid();
+        $timestamp = now()->toIso8601String();
+
+        $headers = [
+            'Authorization' => 'Bearer '.$token,
+            'REQUEST-ID' => $requestId,
+            'TIMESTAMP' => $timestamp,
+            'X-HIP-ID' => $xHipId,
+            'X-CM-ID' => $xCmId,
+            'Content-Type' => 'application/json',
+        ];
+
+        $payload = [
+            'phoneNo' => $mobile,
+            'message' => $message,
+        ];
+
+        Log::info('HIP Request: SMS Notify', [
+            'url' => $endpoint,
+            'request_id' => $requestId,
+            'body' => $payload,
+        ]);
+
+        try {
+            $response = Http::when(! config('services.nhpr.verify_ssl'), fn ($q) => $q->withoutVerifying())
+                ->withHeaders($headers)
+                ->timeout(10)
+                ->post($endpoint, $payload);
+
+            if ($response->successful()) {
+                return $response->json();
+            }
+
+            throw new Exception("ABDM SMS Notify failed (HTTP {$response->status()})");
+        } catch (Exception $e) {
+            Log::error('HIP Linking Service smsNotify error: '.$e->getMessage());
             throw $e;
         }
     }

@@ -380,6 +380,10 @@
             <div class="nav-icon-wrap"><i class="fas fa-notes-medical"></i></div>
             <span class="nav-item-label">HIP Dashboard</span>
         </a>
+        <a href="{{ route('hip.milestone2') }}" class="nav-item">
+            <div class="nav-icon-wrap"><i class="fas fa-map-location-dot"></i></div>
+            <span class="nav-item-label">ABDM Milestone 2 Map</span>
+        </a>
         <a href="{{ route('hiu.dashboard') }}" class="nav-item">
             <div class="nav-icon-wrap"><i class="fas fa-shield-halved"></i></div>
             <span class="nav-item-label">HIU Portal</span>
