@@ -542,6 +542,11 @@
             <span class="nav-item-label">HPR Onboarding</span>
         </a>
 
+        <a href="{{ route('nhpr.hfr.index') }}" class="nav-item">
+            <div class="nav-icon-wrap"><i class="fas fa-building-circle-check"></i></div>
+            <span class="nav-item-label">HFR Management</span>
+        </a>
+
         <a href="{{ route('nhpr.token.show') }}" class="nav-item active">
             <div class="nav-icon-wrap"><i class="fas fa-key"></i></div>
             <span class="nav-item-label">Gateway Token</span>

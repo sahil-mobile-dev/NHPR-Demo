@@ -996,8 +996,11 @@
                 <div class="nav-grp-title">HPR Onboarding</div>
                 <a href="{{ route('nhpr.register.wizard') }}" class="nav-item active"><i
                         class="fa-solid fa-user-doctor"></i> HPR Onboarding</a>
-                <a href="{{ route('nhpr.token.show') }}" class="nav-item"><i class="fa-solid fa-key"></i> Gateway Token</a>
-                <a href="{{ route('nhpr.track.show') }}" class="nav-item"><i class="fa-solid fa-binoculars"></i> Track Status</a>
+                <a href="{{ route('nhpr.hfr.index') }}" class="nav-item"><i class="fa-solid fa-building-circle-check"></i> HFR Management</a>
+                <a href="{{ route('nhpr.token.show') }}" class="nav-item"><i class="fa-solid fa-key"></i> Gateway
+                    Token</a>
+                <a href="{{ route('nhpr.track.show') }}" class="nav-item"><i class="fa-solid fa-binoculars"></i> Track
+                    Status</a>
             </div>
         </div>
 
@@ -1077,37 +1080,49 @@
                 <div class="form-panel active" id="panel-1">
                     <div class="panel-header">
                         <h2 class="panel-title"><i class="fa-solid fa-id-card"></i> Step 1: Aadhaar Authentication</h2>
-                        <p class="panel-sub">Authenticate your identity securely using the official ABDM Aadhaar authentication gateway.</p>
+                        <p class="panel-sub">Authenticate your identity securely using the official ABDM Aadhaar
+                            authentication gateway.</p>
                     </div>
 
                     <div class="card">
                         <div class="card-header">
-                            <span class="card-title"><i class="fa-solid fa-shield-halved"></i> ABDM Gateway Redirect</span>
+                            <span class="card-title"><i class="fa-solid fa-shield-halved"></i> ABDM Gateway
+                                Redirect</span>
                         </div>
                         <div class="card-body">
                             <div id="aadhaar-redirect-instructions">
                                 <p style="font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 16px;">
-                                    To verify your credentials, you will be redirected to the secure government authentication portal. Please make sure popups are allowed in your browser.
+                                    To verify your credentials, you will be redirected to the secure government
+                                    authentication portal. Please make sure popups are allowed in your browser.
                                 </p>
-                                <div style="background: rgba(245, 124, 0, 0.1); border: 1px solid rgba(245, 124, 0, 0.3); border-radius: 8px; padding: 14px; margin-bottom: 24px; display: flex; gap: 12px; align-items: flex-start;">
-                                    <i class="fa-solid fa-circle-info" style="color: var(--warning-light); font-size: 16px; margin-top: 2px;"></i>
+                                <div
+                                    style="background: rgba(245, 124, 0, 0.1); border: 1px solid rgba(245, 124, 0, 0.3); border-radius: 8px; padding: 14px; margin-bottom: 24px; display: flex; gap: 12px; align-items: flex-start;">
+                                    <i class="fa-solid fa-circle-info"
+                                        style="color: var(--warning-light); font-size: 16px; margin-top: 2px;"></i>
                                     <div style="font-size: 12px; color: var(--warning-light); line-height: 1.5;">
-                                        <strong>Note:</strong> Once you complete verification on the redirected tab, this portal will automatically detect your authentication status and advance to the next step. Do not close this window.
+                                        <strong>Note:</strong> Once you complete verification on the redirected tab,
+                                        this portal will automatically detect your authentication status and advance to
+                                        the next step. Do not close this window.
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Polling status container -->
-                            <div id="aadhaar-polling-indicator" style="display: none; text-align: center; padding: 24px 0;">
-                                <div style="margin-bottom: 16px;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 36px; color: var(--primary-light);"></i></div>
-                                <h4 style="font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 6px;">ABDM Authentication Pending</h4>
-                                <p style="font-size: 12px; color: var(--muted);">Please complete verification in the opened tab. Checking status...</p>
+                            <div id="aadhaar-polling-indicator"
+                                style="display: none; text-align: center; padding: 24px 0;">
+                                <div style="margin-bottom: 16px;"><i class="fa-solid fa-spinner fa-spin"
+                                        style="font-size: 36px; color: var(--primary-light);"></i></div>
+                                <h4 style="font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 6px;">ABDM
+                                    Authentication Pending</h4>
+                                <p style="font-size: 12px; color: var(--muted);">Please complete verification in the
+                                    opened tab. Checking status...</p>
                             </div>
                         </div>
                     </div>
 
                     <div class="btn-row" id="btn-step1-row">
-                        <button class="btn primary" id="btn-step1-action">Launch ABDM Aadhaar Verification <i class="fa-solid fa-arrow-up-right-from-square"></i></button>
+                        <button class="btn primary" id="btn-step1-action">Launch ABDM Aadhaar Verification <i
+                                class="fa-solid fa-arrow-up-right-from-square"></i></button>
                     </div>
                 </div>
 
@@ -1155,18 +1170,22 @@
                     {{-- Mobile Verification Card (required before HPR ID creation) --}}
                     <div class="card" id="mobile-verify-card" style="margin-top: 0;">
                         <div class="card-header">
-                            <span class="card-title"><i class="fa-solid fa-mobile-screen-button"></i> Mobile Number Verification</span>
+                            <span class="card-title"><i class="fa-solid fa-mobile-screen-button"></i> Mobile Number
+                                Verification</span>
                         </div>
                         <div class="card-body">
                             <p style="color: var(--muted); margin-bottom: 16px; font-size: 13px;">
-                                ABDM requires mobile verification before creating your HPR ID. Enter the mobile number linked to your Aadhaar.
+                                ABDM requires mobile verification before creating your HPR ID. Enter the mobile number
+                                linked to your Aadhaar.
                             </p>
 
                             <div class="grid-2" id="mobile-input-row">
                                 <div class="form-group">
                                     <label for="mobile-number">Mobile Number <span class="req">*</span></label>
-                                    <input type="tel" id="mobile-number" class="form-control" maxlength="10" placeholder="10-digit mobile number">
-                                    <div class="form-error" id="mobile-error">Please enter a valid 10-digit mobile number.</div>
+                                    <input type="tel" id="mobile-number" class="form-control" maxlength="10"
+                                        placeholder="10-digit mobile number">
+                                    <div class="form-error" id="mobile-error">Please enter a valid 10-digit mobile
+                                        number.</div>
                                 </div>
                                 <div class="form-group" style="display: flex; align-items: flex-end;">
                                     <button class="btn primary" id="btn-verify-mobile" style="width: 100%;">
@@ -1179,9 +1198,12 @@
                             <div id="mobile-otp-row" style="display: none; margin-top: 14px;">
                                 <div class="grid-2">
                                     <div class="form-group">
-                                        <label for="mobile-otp">OTP sent to your mobile <span class="req">*</span></label>
-                                        <input type="text" id="mobile-otp" class="form-control" maxlength="6" placeholder="6-digit OTP">
-                                        <div class="form-error" id="mobile-otp-error">Please enter the 6-digit OTP.</div>
+                                        <label for="mobile-otp">OTP sent to your mobile <span
+                                                class="req">*</span></label>
+                                        <input type="text" id="mobile-otp" class="form-control" maxlength="6"
+                                            placeholder="6-digit OTP">
+                                        <div class="form-error" id="mobile-otp-error">Please enter the 6-digit OTP.
+                                        </div>
                                     </div>
                                     <div class="form-group" style="display: flex; align-items: flex-end;">
                                         <button class="btn primary" id="btn-verify-mobile-otp" style="width: 100%;">
@@ -1192,9 +1214,12 @@
                             </div>
 
                             {{-- Success badge (shown after verification) --}}
-                            <div id="mobile-verified-badge" style="display: none; margin-top: 12px; padding: 10px 16px; background: rgba(72,199,142,0.12); border: 1px solid var(--success); border-radius: 8px; display: none; align-items: center; gap: 10px;">
+                            <div id="mobile-verified-badge"
+                                style="display: none; margin-top: 12px; padding: 10px 16px; background: rgba(72,199,142,0.12); border: 1px solid var(--success); border-radius: 8px; display: none; align-items: center; gap: 10px;">
                                 <i class="fa-solid fa-circle-check" style="color: var(--success);"></i>
-                                <span id="mobile-verified-text" style="font-size: 13px; font-weight: 600; color: var(--success);">Mobile verified successfully!</span>
+                                <span id="mobile-verified-text"
+                                    style="font-size: 13px; font-weight: 600; color: var(--success);">Mobile verified
+                                    successfully!</span>
                             </div>
                         </div>
                     </div>
@@ -1269,7 +1294,8 @@
                     </div>
 
                     <div class="btn-row">
-                        <button class="btn primary" id="btn-step3-action" disabled style="opacity:0.5; cursor: not-allowed;">
+                        <button class="btn primary" id="btn-step3-action" disabled
+                            style="opacity:0.5; cursor: not-allowed;">
                             Create HPR ID Profile <i class="fa-solid fa-arrow-right"></i>
                         </button>
                         <span id="mobile-verify-hint" style="font-size: 12px; color: var(--muted); margin-left: 10px;">
@@ -1281,8 +1307,10 @@
                 <!-- STEP 3 PANEL: Professional Academic & Facility Association Details -->
                 <div class="form-panel" id="panel-3">
                     <div class="panel-header">
-                        <h2 class="panel-title"><i class="fa-solid fa-graduation-cap"></i> Step 3: Professional Credentials & Facility Linkage</h2>
-                        <p class="panel-sub">Submit registration license credentials and map your associated healthcare facility.</p>
+                        <h2 class="panel-title"><i class="fa-solid fa-graduation-cap"></i> Step 3: Professional
+                            Credentials & Facility Linkage</h2>
+                        <p class="panel-sub">Submit registration license credentials and map your associated healthcare
+                            facility.</p>
                     </div>
 
                     <div class="card">
@@ -1318,9 +1346,11 @@
                                 </div>
                             </div>
 
-                            <div class="grid-2" id="doctor-license-validity-section" style="margin-top: 14px; display: none;">
+                            <div class="grid-2" id="doctor-license-validity-section"
+                                style="margin-top: 14px; display: none;">
                                 <div class="form-group">
-                                    <label for="license-status-select">License Validity Status <span class="req">*</span></label>
+                                    <label for="license-status-select">License Validity Status <span
+                                            class="req">*</span></label>
                                     <select id="license-status-select" class="form-control">
                                         <option value="Permanent">Permanent</option>
                                         <option value="Renewable">Renewable</option>
@@ -1328,9 +1358,11 @@
                                 </div>
 
                                 <div class="form-group" id="renewable-due-date-group" style="display: none;">
-                                    <label for="renewable-due-date">Renewable Due Date <span class="req">*</span></label>
+                                    <label for="renewable-due-date">Renewable Due Date <span
+                                            class="req">*</span></label>
                                     <input type="date" id="renewable-due-date" class="form-control">
-                                    <div class="form-error" id="renewable-due-date-error">Renewable due date is required.</div>
+                                    <div class="form-error" id="renewable-due-date-error">Renewable due date is
+                                        required.</div>
                                 </div>
                             </div>
 
@@ -1507,7 +1539,8 @@
                 <!-- STEP 4 PANEL: Document uploads checklist -->
                 <div class="form-panel" id="panel-4">
                     <div class="panel-header">
-                        <h2 class="panel-title"><i class="fa-solid fa-cloud-arrow-up"></i> Step 4: Certificate Documents Upload</h2>
+                        <h2 class="panel-title"><i class="fa-solid fa-cloud-arrow-up"></i> Step 4: Certificate Documents
+                            Upload</h2>
                         <p class="panel-sub">Upload verified digital copies of required academic and identification
                             licenses.</p>
                     </div>
@@ -1821,32 +1854,32 @@
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
                     body: JSON.stringify({ mobile: mobile })
                 })
-                .then(res => res.json())
-                .then(data => {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fa-solid fa-shield-check"></i> Verify Mobile';
+                    .then(res => res.json())
+                    .then(data => {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fa-solid fa-shield-check"></i> Verify Mobile';
 
-                    if (data.success && data.verified) {
-                        // Demographic match passed
-                        markMobileVerified(mobile);
-                        showToast('Mobile number verified via demographic check!');
-                    } else if (data.success && !data.verified) {
-                        // OTP fallback triggered
-                        isFallbackMobileOtpSent = true;
-                        document.getElementById('mobile-otp-row').style.display = 'block';
-                        document.getElementById('mobile-number').disabled = true;
-                        btn.disabled = true;
-                        btn.style.opacity = '0.5';
-                        showToast(data.message, 'warning');
-                    } else {
-                        showToast(data.message || 'Mobile verification failed.', 'error');
-                    }
-                })
-                .catch(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fa-solid fa-shield-check"></i> Verify Mobile';
-                    showToast('Mobile verification service error.', 'error');
-                });
+                        if (data.success && data.verified) {
+                            // Demographic match passed
+                            markMobileVerified(mobile);
+                            showToast('Mobile number verified via demographic check!');
+                        } else if (data.success && !data.verified) {
+                            // OTP fallback triggered
+                            isFallbackMobileOtpSent = true;
+                            document.getElementById('mobile-otp-row').style.display = 'block';
+                            document.getElementById('mobile-number').disabled = true;
+                            btn.disabled = true;
+                            btn.style.opacity = '0.5';
+                            showToast(data.message, 'warning');
+                        } else {
+                            showToast(data.message || 'Mobile verification failed.', 'error');
+                        }
+                    })
+                    .catch(() => {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fa-solid fa-shield-check"></i> Verify Mobile';
+                        showToast('Mobile verification service error.', 'error');
+                    });
             });
 
             document.getElementById('btn-verify-mobile-otp').addEventListener('click', function () {
@@ -1869,23 +1902,23 @@
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
                     body: JSON.stringify({ otp: otp })
                 })
-                .then(res => res.json())
-                .then(data => {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fa-solid fa-key"></i> Submit OTP';
+                    .then(res => res.json())
+                    .then(data => {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fa-solid fa-key"></i> Submit OTP';
 
-                    if (data.success) {
-                        markMobileVerified(mobile);
-                        showToast('Mobile OTP verified successfully!');
-                    } else {
-                        showToast(data.message || 'Invalid OTP. Please try again.', 'error');
-                    }
-                })
-                .catch(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fa-solid fa-key"></i> Submit OTP';
-                    showToast('OTP verification service error.', 'error');
-                });
+                        if (data.success) {
+                            markMobileVerified(mobile);
+                            showToast('Mobile OTP verified successfully!');
+                        } else {
+                            showToast(data.message || 'Invalid OTP. Please try again.', 'error');
+                        }
+                    })
+                    .catch(() => {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fa-solid fa-key"></i> Submit OTP';
+                        showToast('OTP verification service error.', 'error');
+                    });
             });
 
             // ==========================================
@@ -1908,34 +1941,34 @@
                         'X-CSRF-TOKEN': csrfToken
                     }
                 })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        activeTxnId = data.txnId;
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            activeTxnId = data.txnId;
 
-                        // Open gateway authentication link in popup/new tab
-                        window.open(data.url, '_blank');
+                            // Open gateway authentication link in popup/new tab
+                            window.open(data.url, '_blank');
 
-                        // Show polling state
-                        instructionsDiv.style.display = 'none';
-                        pollingDiv.style.display = 'block';
-                        btnStep1Row.style.display = 'none';
+                            // Show polling state
+                            instructionsDiv.style.display = 'none';
+                            pollingDiv.style.display = 'block';
+                            btnStep1Row.style.display = 'none';
 
-                        showToast('ABDM verification page launched in a new tab.');
+                            showToast('ABDM verification page launched in a new tab.');
 
-                        // Start polling auth status
-                        startPollingStatus();
-                    } else {
+                            // Start polling auth status
+                            startPollingStatus();
+                        } else {
+                            btnStep1.disabled = false;
+                            btnStep1.innerHTML = 'Launch ABDM Aadhaar Verification <i class="fa-solid fa-arrow-up-right-from-square"></i>';
+                            showToast(data.message, 'error');
+                        }
+                    })
+                    .catch(err => {
                         btnStep1.disabled = false;
                         btnStep1.innerHTML = 'Launch ABDM Aadhaar Verification <i class="fa-solid fa-arrow-up-right-from-square"></i>';
-                        showToast(data.message, 'error');
-                    }
-                })
-                .catch(err => {
-                    btnStep1.disabled = false;
-                    btnStep1.innerHTML = 'Launch ABDM Aadhaar Verification <i class="fa-solid fa-arrow-up-right-from-square"></i>';
-                    showToast('Failed to generate verification link. Try again.', 'error');
-                });
+                        showToast('Failed to generate verification link. Try again.', 'error');
+                    });
             });
 
             function startPollingStatus() {
@@ -1949,14 +1982,14 @@
                             'X-CSRF-TOKEN': csrfToken
                         }
                     })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success && data.authenticated) {
-                            clearInterval(pollingInterval);
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success && data.authenticated) {
+                                clearInterval(pollingInterval);
 
-                            if (data.isExistingUser) {
-                                showToast(data.message, 'warning');
-                                panels[1].innerHTML = `
+                                if (data.isExistingUser) {
+                                    showToast(data.message, 'warning');
+                                    panels[1].innerHTML = `
                                     <div class="card" style="border-color: var(--warning);">
                                         <div class="card-body text-center" style="padding: 40px; text-align: center;">
                                             <i class="fa-solid fa-circle-exclamation" style="font-size: 48px; color: var(--gold); margin-bottom: 16px;"></i>
@@ -1971,15 +2004,15 @@
                                         </div>
                                     </div>
                                 `;
-                            } else {
-                                showToast(data.message);
-                                loadUsernameSuggestionsAndProceed();
+                                } else {
+                                    showToast(data.message);
+                                    loadUsernameSuggestionsAndProceed();
+                                }
                             }
-                        }
-                    })
-                    .catch(err => {
-                        console.error('Error checking verification status:', err);
-                    });
+                        })
+                        .catch(err => {
+                            console.error('Error checking verification status:', err);
+                        });
                 }, 2000);
             }
 
@@ -2013,7 +2046,7 @@
                             document.getElementById('profile-gender').textContent = (data.demographics && data.demographics.gender) ? data.demographics.gender : '-';
                             document.getElementById('profile-yob').textContent = (data.demographics && data.demographics.yearOfBirth) ? data.demographics.yearOfBirth : '-';
                             document.getElementById('profile-state').textContent = (data.demographics && data.demographics.stateCode) ? data.demographics.stateCode : '-';
-                            
+
                             if (data.demographics && data.demographics.profilePhoto) {
                                 const photoContainer = document.getElementById('profile-photo-container');
                                 photoContainer.innerHTML = `<img src="data:image/jpeg;base64,${data.demographics.profilePhoto}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
@@ -2101,7 +2134,7 @@
                         showToast('HPR Creation service error.', 'error');
                     });
             });
-                           // ==========================================
+            // ==========================================
             // STEP 4 ACTION: Academic submissions
             // ==========================================
             const licenseStatusSelect = document.getElementById('license-status-select');
@@ -2247,18 +2280,18 @@
                         'X-CSRF-TOKEN': csrfToken
                     }
                 })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        select.innerHTML = '';
-                        data.ministries.forEach(min => {
-                            const opt = document.createElement('option');
-                            opt.value = min.name;
-                            opt.textContent = min.name;
-                            select.appendChild(opt);
-                        });
-                    }
-                });
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            select.innerHTML = '';
+                            data.ministries.forEach(min => {
+                                const opt = document.createElement('option');
+                                opt.value = min.name;
+                                opt.textContent = min.name;
+                                select.appendChild(opt);
+                            });
+                        }
+                    });
             }
 
             // Submit registration & transition to Step 6 (Document Fetch checklist)

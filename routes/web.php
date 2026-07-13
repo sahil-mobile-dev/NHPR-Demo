@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AbhaController;
+use App\Http\Controllers\HfrController;
 use App\Http\Controllers\HipController;
 use App\Http\Controllers\HiuController;
 use App\Http\Controllers\NhprController;
@@ -36,6 +37,13 @@ Route::prefix('nhpr/register')->name('nhpr.register.')->group(function () {
 
 Route::get('/nhpr/track', [NhprRegistrationController::class, 'showTracker'])->name('nhpr.track.show');
 Route::post('/nhpr/track', [NhprRegistrationController::class, 'trackStatus'])->name('nhpr.track.post');
+
+Route::prefix('nhpr/hfr')->name('nhpr.hfr.')->group(function () {
+    Route::get('/', [HfrController::class, 'index'])->name('index');
+    Route::post('/search', [HfrController::class, 'search'])->name('search');
+    Route::post('/create', [HfrController::class, 'store'])->name('create');
+    Route::post('/link', [HfrController::class, 'linkBridge'])->name('link');
+});
 
 Route::prefix('abha')->name('abha.')->group(function () {
     Route::get('/', [AbhaController::class, 'showDashboard'])->name('dashboard');
