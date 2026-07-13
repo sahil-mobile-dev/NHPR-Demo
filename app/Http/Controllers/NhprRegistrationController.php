@@ -612,7 +612,7 @@ class NhprRegistrationController extends Controller
     public function createHprId(Request $request): JsonResponse
     {
         $request->validate([
-            'username' => 'required|alpha_dash|min:4',
+            'username' => ['required', 'string', 'min:4', 'regex:/^[a-zA-Z0-9._-]+$/'],
             'password' => 'required|min:8',
             'email' => 'required|email',
             'category' => 'required|in:1,2,6', // 1=Doctor, 2=Nurse, 6=Pharmacist

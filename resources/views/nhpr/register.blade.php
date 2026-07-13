@@ -1152,7 +1152,54 @@
                         </div>
                     </div>
 
-                    <div class="card">
+                    {{-- Mobile Verification Card (required before HPR ID creation) --}}
+                    <div class="card" id="mobile-verify-card" style="margin-top: 0;">
+                        <div class="card-header">
+                            <span class="card-title"><i class="fa-solid fa-mobile-screen-button"></i> Mobile Number Verification</span>
+                        </div>
+                        <div class="card-body">
+                            <p style="color: var(--muted); margin-bottom: 16px; font-size: 13px;">
+                                ABDM requires mobile verification before creating your HPR ID. Enter the mobile number linked to your Aadhaar.
+                            </p>
+
+                            <div class="grid-2" id="mobile-input-row">
+                                <div class="form-group">
+                                    <label for="mobile-number">Mobile Number <span class="req">*</span></label>
+                                    <input type="tel" id="mobile-number" class="form-control" maxlength="10" placeholder="10-digit mobile number">
+                                    <div class="form-error" id="mobile-error">Please enter a valid 10-digit mobile number.</div>
+                                </div>
+                                <div class="form-group" style="display: flex; align-items: flex-end;">
+                                    <button class="btn primary" id="btn-verify-mobile" style="width: 100%;">
+                                        <i class="fa-solid fa-shield-check"></i> Verify Mobile
+                                    </button>
+                                </div>
+                            </div>
+
+                            {{-- OTP block (shown only when demographic fails) --}}
+                            <div id="mobile-otp-row" style="display: none; margin-top: 14px;">
+                                <div class="grid-2">
+                                    <div class="form-group">
+                                        <label for="mobile-otp">OTP sent to your mobile <span class="req">*</span></label>
+                                        <input type="text" id="mobile-otp" class="form-control" maxlength="6" placeholder="6-digit OTP">
+                                        <div class="form-error" id="mobile-otp-error">Please enter the 6-digit OTP.</div>
+                                    </div>
+                                    <div class="form-group" style="display: flex; align-items: flex-end;">
+                                        <button class="btn primary" id="btn-verify-mobile-otp" style="width: 100%;">
+                                            <i class="fa-solid fa-key"></i> Submit OTP
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Success badge (shown after verification) --}}
+                            <div id="mobile-verified-badge" style="display: none; margin-top: 12px; padding: 10px 16px; background: rgba(72,199,142,0.12); border: 1px solid var(--success); border-radius: 8px; display: none; align-items: center; gap: 10px;">
+                                <i class="fa-solid fa-circle-check" style="color: var(--success);"></i>
+                                <span id="mobile-verified-text" style="font-size: 13px; font-weight: 600; color: var(--success);">Mobile verified successfully!</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-top: 14px;">
                         <div class="card-header">
                             <span class="card-title"><i class="fa-solid fa-user-lock"></i> HPR Account Settings</span>
                         </div>
@@ -1222,8 +1269,12 @@
                     </div>
 
                     <div class="btn-row">
-                        <button class="btn primary" id="btn-step3-action">Create HPR ID Profile <i
-                                class="fa-solid fa-arrow-right"></i></button>
+                        <button class="btn primary" id="btn-step3-action" disabled style="opacity:0.5; cursor: not-allowed;">
+                            Create HPR ID Profile <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                        <span id="mobile-verify-hint" style="font-size: 12px; color: var(--muted); margin-left: 10px;">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Please verify your mobile number first.
+                        </span>
                     </div>
                 </div>
 
@@ -1731,6 +1782,111 @@
             let activeTxnId = '';
             let isFallbackMobileOtpSent = false;
             let verifiedAadhaarDemographics = {};
+            let mobileVerified = false;
+
+            // ==========================================
+            // STEP 2: Mobile Verification Handlers
+            // ==========================================
+            function markMobileVerified(mobile) {
+                mobileVerified = true;
+                document.getElementById('mobile-input-row').style.display = 'none';
+                document.getElementById('mobile-otp-row').style.display = 'none';
+                const badge = document.getElementById('mobile-verified-badge');
+                badge.style.display = 'flex';
+                document.getElementById('mobile-verified-text').textContent = 'Mobile ' + mobile + ' verified successfully!';
+
+                const btn = document.getElementById('btn-step3-action');
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                document.getElementById('mobile-verify-hint').style.display = 'none';
+            }
+
+            document.getElementById('btn-verify-mobile').addEventListener('click', function () {
+                const mobile = document.getElementById('mobile-number').value.trim();
+                const mobileErr = document.getElementById('mobile-error');
+
+                if (!/^\d{10}$/.test(mobile)) {
+                    mobileErr.style.display = 'block';
+                    return;
+                }
+                mobileErr.style.display = 'none';
+
+                const btn = this;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...';
+
+                fetch('{{ route("nhpr.register.mobile.verify") }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                    body: JSON.stringify({ mobile: mobile })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-shield-check"></i> Verify Mobile';
+
+                    if (data.success && data.verified) {
+                        // Demographic match passed
+                        markMobileVerified(mobile);
+                        showToast('Mobile number verified via demographic check!');
+                    } else if (data.success && !data.verified) {
+                        // OTP fallback triggered
+                        isFallbackMobileOtpSent = true;
+                        document.getElementById('mobile-otp-row').style.display = 'block';
+                        document.getElementById('mobile-number').disabled = true;
+                        btn.disabled = true;
+                        btn.style.opacity = '0.5';
+                        showToast(data.message, 'warning');
+                    } else {
+                        showToast(data.message || 'Mobile verification failed.', 'error');
+                    }
+                })
+                .catch(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-shield-check"></i> Verify Mobile';
+                    showToast('Mobile verification service error.', 'error');
+                });
+            });
+
+            document.getElementById('btn-verify-mobile-otp').addEventListener('click', function () {
+                const otp = document.getElementById('mobile-otp').value.trim();
+                const otpErr = document.getElementById('mobile-otp-error');
+                const mobile = document.getElementById('mobile-number').value.trim();
+
+                if (!/^\d{6}$/.test(otp)) {
+                    otpErr.style.display = 'block';
+                    return;
+                }
+                otpErr.style.display = 'none';
+
+                const btn = this;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting OTP...';
+
+                fetch('{{ route("nhpr.register.mobile.verify-otp") }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                    body: JSON.stringify({ otp: otp })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-key"></i> Submit OTP';
+
+                    if (data.success) {
+                        markMobileVerified(mobile);
+                        showToast('Mobile OTP verified successfully!');
+                    } else {
+                        showToast(data.message || 'Invalid OTP. Please try again.', 'error');
+                    }
+                })
+                .catch(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-key"></i> Submit OTP';
+                    showToast('OTP verification service error.', 'error');
+                });
+            });
 
             // ==========================================
             // STEP 1 ACTION: Aadhaar Link Redirect & Polling

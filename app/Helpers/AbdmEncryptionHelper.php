@@ -20,7 +20,7 @@ class AbdmEncryptionHelper
     /**
      * Cache key for storing the retrieved public certificate.
      */
-    public const CERTIFICATE_CACHE_KEY = 'abdm_public_cert';
+    public const CERTIFICATE_CACHE_KEY = 'abdm_public_key';
 
     /**
      * Fetch the ABDM Public Certificate, caching it for 24 hours.
@@ -64,17 +64,21 @@ class AbdmEncryptionHelper
                 ->get($endpoint);
 
             if ($response->successful()) {
-                $certContent = $response->body();
+                // The ABDM /auth/cert endpoint returns a PEM-formatted PUBLIC KEY block
+                // (-----BEGIN PUBLIC KEY-----) which openssl_pkey_get_public() accepts directly.
+                // Do NOT attempt to re-wrap it as a CERTIFICATE block.
+                $publicKeyPem = trim($response->body());
 
-                // Formulate PEM certificate format if not already present
-                if (! str_contains($certContent, '-----BEGIN CERTIFICATE-----')) {
-                    $certContent = "-----BEGIN CERTIFICATE-----\n".wordwrap(trim($certContent), 64, "\n", true)."\n-----END CERTIFICATE-----";
+                if (empty($publicKeyPem)) {
+                    throw new Exception('ABDM Encryption: cert endpoint returned an empty body.');
                 }
 
                 // Cache for 24 hours (86400 seconds)
-                Cache::put(self::CERTIFICATE_CACHE_KEY, $certContent, 86400);
+                Cache::put(self::CERTIFICATE_CACHE_KEY, $publicKeyPem, 86400);
 
-                return $certContent;
+                Log::info('ABDM Encryption: Public key fetched and cached successfully.');
+
+                return $publicKeyPem;
             }
 
             throw new Exception("ABDM Encryption cert fetch returned status {$response->status()}.");
