@@ -560,11 +560,22 @@ class NhprRegistrationController extends Controller
     public function getUsernameSuggestions(): JsonResponse
     {
         $realApiMode = session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false));
+        $demographics = session('hpr_reg_aadhaar_info', [
+            'name' => 'Dr Ramesh Kumar (Simulated)',
+            'gender' => 'M',
+            'yearOfBirth' => '1990',
+            'firstName' => 'Ramesh',
+            'lastName' => 'Kumar',
+            'stateCode' => '27',
+            'districtCode' => '472',
+            'profilePhoto' => '',
+        ]);
 
         if (! $realApiMode) {
             return response()->json([
                 'success' => true,
                 'suggestions' => ['doctor1990', 'dr.rahul', 'rahul123', 'rahul.k', 'rahulkumar'],
+                'demographics' => $demographics,
             ]);
         }
 
@@ -579,6 +590,7 @@ class NhprRegistrationController extends Controller
             return response()->json([
                 'success' => true,
                 'suggestions' => $suggestions,
+                'demographics' => $demographics,
             ]);
         } catch (Exception $e) {
             return response()->json([

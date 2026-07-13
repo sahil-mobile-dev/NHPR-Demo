@@ -1059,26 +1059,16 @@
                     <div class="step-connector"></div>
                     <div class="step" id="step-2-indicator">
                         <div class="step-circle">2</div>
-                        <div class="step-label">Contact Verify</div>
+                        <div class="step-label">HPR ID Creation</div>
                     </div>
                     <div class="step-connector"></div>
                     <div class="step" id="step-3-indicator">
                         <div class="step-circle">3</div>
-                        <div class="step-label">ID Creation</div>
+                        <div class="step-label">Professional Link</div>
                     </div>
                     <div class="step-connector"></div>
                     <div class="step" id="step-4-indicator">
                         <div class="step-circle">4</div>
-                        <div class="step-label">Professional Info</div>
-                    </div>
-                    <div class="step-connector"></div>
-                    <div class="step" id="step-5-indicator">
-                        <div class="step-circle">5</div>
-                        <div class="step-label">Facility Map</div>
-                    </div>
-                    <div class="step-connector"></div>
-                    <div class="step" id="step-6-indicator">
-                        <div class="step-circle">6</div>
                         <div class="step-label">Upload Docs</div>
                     </div>
                 </div>
@@ -1121,51 +1111,10 @@
                     </div>
                 </div>
 
-                <!-- STEP 2 PANEL: Contact verification demographic fallback OTP -->
+                <!-- STEP 2 PANEL: Username selection & HPR ID creation -->
                 <div class="form-panel" id="panel-2">
                     <div class="panel-header">
-                        <h2 class="panel-title"><i class="fa-solid fa-mobile-screen"></i> Step 2: Contact Mobile
-                            Verification</h2>
-                        <p class="panel-sub">Verify your mobile contact number to match with demographic registry
-                            parameters.</p>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header">
-                            <span class="card-title"><i class="fa-solid fa-address-book"></i> Demographic Match</span>
-                        </div>
-                        <div class="card-body">
-                            <div class="form-group" style="max-width: 450px;">
-                                <label for="mobile-input">Mobile Number <span class="req">*</span></label>
-                                <input type="text" id="mobile-input" class="form-control"
-                                    placeholder="10-digit Mobile Number" maxlength="10">
-                                <span class="form-hint">Should match Aadhaar linked mobile if possible.</span>
-                                <div class="form-error" id="mobile-error">Please enter a valid 10-digit mobile number.
-                                </div>
-                            </div>
-
-                            <!-- Mobile OTP verification (initially hidden) -->
-                            <div class="form-group" id="mobile-otp-group"
-                                style="max-width: 450px; display: none; margin-top: 24px;">
-                                <label for="mobile-otp-input">Enter Mobile OTP <span class="req">*</span></label>
-                                <input type="text" id="mobile-otp-input" class="form-control" placeholder="6-digit OTP"
-                                    maxlength="6">
-                                <div class="form-error" id="mobile-otp-error">Please enter the 6-digit verification OTP.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="btn-row">
-                        <button class="btn primary" id="btn-step2-action">Verify Mobile <i
-                                class="fa-solid fa-arrow-right"></i></button>
-                    </div>
-                </div>
-
-                <!-- STEP 3 PANEL: Username selection & HPR ID creation -->
-                <div class="form-panel" id="panel-3">
-                    <div class="panel-header">
-                        <h2 class="panel-title"><i class="fa-solid fa-user-plus"></i> Step 3: HPR Username & Credentials
+                        <h2 class="panel-title"><i class="fa-solid fa-user-plus"></i> Step 2: HPR Username & Credentials
                         </h2>
                         <p class="panel-sub">Select your desired healthcare professional alias username and set account
                             credentials.</p>
@@ -1278,13 +1227,11 @@
                     </div>
                 </div>
 
-                <!-- STEP 4 PANEL: Professional Academic Details -->
-                <div class="form-panel" id="panel-4">
+                <!-- STEP 3 PANEL: Professional Academic & Facility Association Details -->
+                <div class="form-panel" id="panel-3">
                     <div class="panel-header">
-                        <h2 class="panel-title"><i class="fa-solid fa-graduation-cap"></i> Step 4: Medical Council &
-                            Qualifications</h2>
-                        <p class="panel-sub">Submit registration license verification records and certificate
-                            attachments.</p>
+                        <h2 class="panel-title"><i class="fa-solid fa-graduation-cap"></i> Step 3: Professional Credentials & Facility Linkage</h2>
+                        <p class="panel-sub">Submit registration license credentials and map your associated healthcare facility.</p>
                     </div>
 
                     <div class="card">
@@ -1407,19 +1354,6 @@
                         </div>
                     </div>
 
-                    <div class="btn-row">
-                        <button class="btn primary" id="btn-step4-action">Continue to Facility Map <i
-                                class="fa-solid fa-arrow-right"></i></button>
-                    </div>
-                </div>
-
-                <!-- STEP 5 PANEL: Facility Search & Mappings -->
-                <div class="form-panel" id="panel-5">
-                    <div class="panel-header">
-                        <h2 class="panel-title"><i class="fa-solid fa-hospital"></i> Step 5: Facility Association</h2>
-                        <p class="panel-sub">Search and link the healthcare facility or hospital where you are currently
-                            associated.</p>
-                    </div>
 
                     <div class="card">
                         <div class="card-header">
@@ -1519,11 +1453,10 @@
                     </div>
                 </div>
 
-                <!-- STEP 6 PANEL: Document uploads checklist -->
-                <div class="form-panel" id="panel-6">
+                <!-- STEP 4 PANEL: Document uploads checklist -->
+                <div class="form-panel" id="panel-4">
                     <div class="panel-header">
-                        <h2 class="panel-title"><i class="fa-solid fa-cloud-arrow-up"></i> Step 6: Certificate Documents
-                            Upload</h2>
+                        <h2 class="panel-title"><i class="fa-solid fa-cloud-arrow-up"></i> Step 4: Certificate Documents Upload</h2>
                         <p class="panel-sub">Upload verified digital copies of required academic and identification
                             licenses.</p>
                     </div>
@@ -1546,8 +1479,8 @@
                     </div>
                 </div>
 
-                <!-- STEP 7 PANEL: Onboarding complete success dashboard -->
-                <div class="form-panel" id="panel-7">
+                <!-- STEP 5 PANEL: Onboarding complete success dashboard -->
+                <div class="form-panel" id="panel-5">
                     <div class="card">
                         <div class="card-body">
                             <div class="success-animation">
@@ -1638,9 +1571,7 @@
                 1: document.getElementById('step-1-indicator'),
                 2: document.getElementById('step-2-indicator'),
                 3: document.getElementById('step-3-indicator'),
-                4: document.getElementById('step-4-indicator'),
-                5: document.getElementById('step-5-indicator'),
-                6: document.getElementById('step-6-indicator')
+                4: document.getElementById('step-4-indicator')
             };
 
             // Panels
@@ -1649,9 +1580,7 @@
                 2: document.getElementById('panel-2'),
                 3: document.getElementById('panel-3'),
                 4: document.getElementById('panel-4'),
-                5: document.getElementById('panel-5'),
-                6: document.getElementById('panel-6'),
-                7: document.getElementById('panel-7')
+                5: document.getElementById('panel-5')
             };
 
             // Utility to show notification toast
@@ -1686,11 +1615,12 @@
             // Stepper Navigation controller
             function activateStep(stepNum) {
                 // Deactivate all
-                for (let i = 1; i <= 6; i++) {
-                    stepIndicators[i].classList.remove('active', 'done');
-                    panels[i].classList.remove('active');
+                for (let i = 1; i <= 4; i++) {
+                    if (stepIndicators[i]) stepIndicators[i].classList.remove('active', 'done');
                 }
-                if (panels[7]) panels[7].classList.remove('active');
+                for (let i = 1; i <= 5; i++) {
+                    if (panels[i]) panels[i].classList.remove('active');
+                }
 
                 // Activate current + mark previous as done
                 for (let i = 1; i < stepNum; i++) {
@@ -1887,10 +1817,7 @@
                                 `;
                             } else {
                                 showToast(data.message);
-                                if (data.mobile) {
-                                    document.getElementById('mobile-input').value = data.mobile;
-                                }
-                                activateStep(2);
+                                loadUsernameSuggestionsAndProceed();
                             }
                         }
                     })
@@ -1900,103 +1827,9 @@
                 }, 2000);
             }
 
-            // ==========================================
-            // STEP 2 ACTION: Mobile demographic / fallback OTP
-            // ==========================================
-            const btnStep2 = document.getElementById('btn-step2-action');
-            const mobileInput = document.getElementById('mobile-input');
-            const mobileOtpInput = document.getElementById('mobile-otp-input');
-            const mobileOtpGroup = document.getElementById('mobile-otp-group');
-
-            btnStep2.addEventListener('click', function () {
-                if (!isFallbackMobileOtpSent) {
-                    // Demographic verification or Trigger Mobile OTP Fallback
-                    const mobile = mobileInput.value.trim();
-                    if (mobile.length !== 10 || isNaN(mobile)) {
-                        document.getElementById('mobile-error').style.display = 'block';
-                        return;
-                    }
-                    document.getElementById('mobile-error').style.display = 'none';
-
-                    btnStep2.disabled = true;
-                    btnStep2.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking contact parameters...';
-
-                    fetch('{{ route("nhpr.register.mobile.verify") }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': csrfToken
-                        },
-                        body: JSON.stringify({ mobile: mobile })
-                    })
-                        .then(res => res.json())
-                        .then(data => {
-                            btnStep2.disabled = false;
-                            if (data.success) {
-                                if (data.verified) {
-                                    // Demographic Auth matches! Proceed directly to Step 3.
-                                    showToast(data.message);
-                                    loadUsernameSuggestionsAndProceed();
-                                } else {
-                                    // Fallback Mobile OTP triggered
-                                    isFallbackMobileOtpSent = true;
-                                    mobileOtpGroup.style.display = 'block';
-                                    mobileInput.disabled = true;
-                                    btnStep2.innerHTML = 'Verify Mobile OTP <i class="fa-solid fa-arrow-right"></i>';
-                                    showToast(data.message, 'warning');
-                                }
-                            } else {
-                                showToast(data.message, 'error');
-                            }
-                        })
-                        .catch(err => {
-                            btnStep2.disabled = false;
-                            btnStep2.innerHTML = 'Verify Mobile <i class="fa-solid fa-arrow-right"></i>';
-                            showToast('Mobile verification endpoint unreachable.', 'error');
-                        });
-
-                } else {
-                    // Verify fallback OTP
-                    const otp = mobileOtpInput.value.trim();
-                    if (otp.length !== 6 || isNaN(otp)) {
-                        document.getElementById('mobile-otp-error').style.display = 'block';
-                        return;
-                    }
-                    document.getElementById('mobile-otp-error').style.display = 'none';
-
-                    btnStep2.disabled = true;
-                    btnStep2.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...';
-
-                    fetch('{{ route("nhpr.register.mobile.verify-otp") }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': csrfToken
-                        },
-                        body: JSON.stringify({ otp: otp })
-                    })
-                        .then(res => res.json())
-                        .then(data => {
-                            btnStep2.disabled = false;
-                            if (data.success) {
-                                showToast(data.message);
-                                loadUsernameSuggestionsAndProceed();
-                            } else {
-                                showToast(data.message, 'error');
-                            }
-                        })
-                        .catch(err => {
-                            btnStep2.disabled = false;
-                            btnStep2.innerHTML = 'Verify Mobile OTP <i class="fa-solid fa-arrow-right"></i>';
-                            showToast('Verification failed.', 'error');
-                        });
-                }
-            });
-
-            // Trigger suggestions loading and transition to step 3
+            // Trigger suggestions loading and transition to Step 2 (ID Creation)
             function loadUsernameSuggestionsAndProceed() {
-                // Load demographic details summary in step 3
-                // Since demographic data is saved inside Session, we will pull suggested usernames
+                // Since demographic data is saved inside Session, we will pull suggested usernames and demographics
                 fetch('{{ route("nhpr.register.suggestions") }}', {
                     method: 'POST',
                     headers: {
@@ -2018,22 +1851,27 @@
                                 });
                                 container.appendChild(chip);
                             });
-                        }
-                    });
 
-                // Retrieve verified profile detail displays
-                // We make a request to check current session info
-                fetch('{{ route("nhpr.register.suggestions") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    }
-                })
-                    .then(() => {
-                        // Populate profile information displays statically since it's saved in session.
-                        // We'll proceed to Step 3 wizard panel
-                        activateStep(3);
+                            // Populate demographic card fields
+                            document.getElementById('profile-name').textContent = (data.demographics && data.demographics.name) ? data.demographics.name : '-';
+                            document.getElementById('profile-gender').textContent = (data.demographics && data.demographics.gender) ? data.demographics.gender : '-';
+                            document.getElementById('profile-yob').textContent = (data.demographics && data.demographics.yearOfBirth) ? data.demographics.yearOfBirth : '-';
+                            document.getElementById('profile-state').textContent = (data.demographics && data.demographics.stateCode) ? data.demographics.stateCode : '-';
+                            
+                            if (data.demographics && data.demographics.profilePhoto) {
+                                const photoContainer = document.getElementById('profile-photo-container');
+                                photoContainer.innerHTML = `<img src="data:image/jpeg;base64,${data.demographics.profilePhoto}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+                            }
+
+                            // Proceed to Step 2 (HPR ID Creation)
+                            activateStep(2);
+                        } else {
+                            showToast(data.message, 'error');
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error loading suggestions:', err);
+                        showToast('Failed to load profile suggestions.', 'error');
                     });
             }
 
@@ -2096,7 +1934,7 @@
                             } else {
                                 councilSelect.value = "41"; // Default to Medical Council
                             }
-                            activateStep(4);
+                            activateStep(3);
                         } else {
                             showToast(data.message, 'error');
                         }
@@ -2123,53 +1961,7 @@
                 }
             });
 
-            const btnStep4 = document.getElementById('btn-step4-action');
-            btnStep4.addEventListener('click', function () {
-                const councilId = document.getElementById('council-select').value;
-                const regNo = document.getElementById('registration-number').value.trim();
-                const regDate = document.getElementById('registration-date').value;
-                const regCert = document.getElementById('reg-cert-base64').value;
 
-                const degreeCode = document.getElementById('degree-select').value;
-                const degreeYear = document.getElementById('degree-year').value.trim();
-                const degreeUniv = document.getElementById('degree-university').value;
-                const degreeCert = document.getElementById('degree-cert-base64').value;
-
-                let valid = true;
-                if (!regNo) { document.getElementById('reg-no-error').style.display = 'block'; valid = false; }
-                else { document.getElementById('reg-no-error').style.display = 'none'; }
-
-                if (!regDate) { document.getElementById('reg-date-error').style.display = 'block'; valid = false; }
-                else { document.getElementById('reg-date-error').style.display = 'none'; }
-
-                if (!regCert) { document.getElementById('reg-cert-error').style.display = 'block'; valid = false; }
-                else { document.getElementById('reg-cert-error').style.display = 'none'; }
-
-                if (degreeYear.length !== 4 || isNaN(degreeYear)) { document.getElementById('degree-year-error').style.display = 'block'; valid = false; }
-                else { document.getElementById('degree-year-error').style.display = 'none'; }
-
-                if (!degreeCert) { document.getElementById('degree-cert-error').style.display = 'block'; valid = false; }
-                else { document.getElementById('degree-cert-error').style.display = 'none'; }
-
-                // Doctor renewable due date validation
-                const catVal = document.getElementById('hpr-category').value;
-                if (catVal == 1 && licenseStatusSelect.value === 'Renewable') {
-                    if (!renewableInput.value) {
-                        document.getElementById('renewable-due-date-error').style.display = 'block';
-                        valid = false;
-                    } else {
-                        document.getElementById('renewable-due-date-error').style.display = 'none';
-                    }
-                }
-
-                if (!valid) {
-                    showToast('Please complete all academic requirements and upload documents.', 'warning');
-                    return;
-                }
-
-                // We hold variables temporarily for submission in step 5
-                activateStep(5);
-            });
 
             // ==========================================
             // STEP 5 ACTION: Facility linkage search
@@ -2316,12 +2108,51 @@
             // Submit registration & transition to Step 6 (Document Fetch checklist)
             const btnStep5 = document.getElementById('btn-step5-action');
             btnStep5.addEventListener('click', function () {
+                const regNo = document.getElementById('registration-number').value.trim();
+                const regDate = document.getElementById('registration-date').value;
+                const regCert = document.getElementById('reg-cert-base64').value;
+
+                const degreeYear = document.getElementById('degree-year').value.trim();
+                const degreeCert = document.getElementById('degree-cert-base64').value;
+
+                let valid = true;
+                if (!regNo) { document.getElementById('reg-no-error').style.display = 'block'; valid = false; }
+                else { document.getElementById('reg-no-error').style.display = 'none'; }
+
+                if (!regDate) { document.getElementById('reg-date-error').style.display = 'block'; valid = false; }
+                else { document.getElementById('reg-date-error').style.display = 'none'; }
+
+                if (!regCert) { document.getElementById('reg-cert-error').style.display = 'block'; valid = false; }
+                else { document.getElementById('reg-cert-error').style.display = 'none'; }
+
+                if (degreeYear.length !== 4 || isNaN(degreeYear)) { document.getElementById('degree-year-error').style.display = 'block'; valid = false; }
+                else { document.getElementById('degree-year-error').style.display = 'none'; }
+
+                if (!degreeCert) { document.getElementById('degree-cert-error').style.display = 'block'; valid = false; }
+                else { document.getElementById('degree-cert-error').style.display = 'none'; }
+
+                // Doctor renewable due date validation
+                const catVal = document.getElementById('hpr-category').value;
+                if (catVal == 1 && licenseStatusSelect.value === 'Renewable') {
+                    if (!renewableInput.value) {
+                        document.getElementById('renewable-due-date-error').style.display = 'block';
+                        valid = false;
+                    } else {
+                        document.getElementById('renewable-due-date-error').style.display = 'none';
+                    }
+                }
+
                 const working = practisingSelect.value;
                 const status = workStatusSelect.value;
                 const facId = document.getElementById('selected-fac-id').value;
 
                 if (working == '1' && !facId) {
                     showToast('Please search and select/link a facility to proceed.', 'warning');
+                    valid = false;
+                }
+
+                if (!valid) {
+                    showToast('Please complete all academic and facility requirements.', 'warning');
                     return;
                 }
 
@@ -2441,7 +2272,7 @@
                                 handleFileAttachment(`file-dyn-${key}`, `base-dyn-${key}`, `card-dyn-${key}`, `name-dyn-${key}`);
                             });
 
-                            activateStep(6);
+                            activateStep(4);
                         } else {
                             showToast(data.message, 'error');
                         }
@@ -2506,7 +2337,7 @@
                             document.getElementById('success-hpr-number').textContent = data.result.hprIdNumber || 'Verified License';
                             document.getElementById('success-ref-id').textContent = activeTxnId || 'UIDAI-HANDSHAKE-DONE';
 
-                            activateStep(7); // Show success splash screen!
+                            activateStep(5); // Show success splash screen!
                         } else {
                             showToast(data.message, 'error');
                         }
