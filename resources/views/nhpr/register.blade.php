@@ -1083,44 +1083,41 @@
                     </div>
                 </div>
 
-                <!-- STEP 1 PANEL: Aadhaar input & Send OTP -->
+                <!-- STEP 1 PANEL: Aadhaar Link Authentication -->
                 <div class="form-panel active" id="panel-1">
                     <div class="panel-header">
                         <h2 class="panel-title"><i class="fa-solid fa-id-card"></i> Step 1: Aadhaar Authentication</h2>
-                        <p class="panel-sub">Enter your 12-digit Aadhaar number. A verification code will be sent to
-                            your linked mobile number.</p>
+                        <p class="panel-sub">Authenticate your identity securely using the official ABDM Aadhaar authentication gateway.</p>
                     </div>
 
                     <div class="card">
                         <div class="card-header">
-                            <span class="card-title"><i class="fa-solid fa-shield-halved"></i> UIDAI Gate
-                                Validation</span>
+                            <span class="card-title"><i class="fa-solid fa-shield-halved"></i> ABDM Gateway Redirect</span>
                         </div>
                         <div class="card-body">
-                            <div class="form-group" style="max-width: 450px;">
-                                <label for="aadhaar-input">Aadhaar Number <span class="req">*</span></label>
-                                <input type="text" id="aadhaar-input" class="form-control"
-                                    placeholder="12-digit Aadhaar Number" maxlength="12">
-                                <span class="form-hint">Must be 12 digits. Your identity will be verified securely via
-                                    RSA encryptions.</span>
-                                <div class="form-error" id="aadhaar-error">Please enter a valid 12-digit Aadhaar.</div>
+                            <div id="aadhaar-redirect-instructions">
+                                <p style="font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 16px;">
+                                    To verify your credentials, you will be redirected to the secure government authentication portal. Please make sure popups are allowed in your browser.
+                                </p>
+                                <div style="background: rgba(245, 124, 0, 0.1); border: 1px solid rgba(245, 124, 0, 0.3); border-radius: 8px; padding: 14px; margin-bottom: 24px; display: flex; gap: 12px; align-items: flex-start;">
+                                    <i class="fa-solid fa-circle-info" style="color: var(--warning-light); font-size: 16px; margin-top: 2px;"></i>
+                                    <div style="font-size: 12px; color: var(--warning-light); line-height: 1.5;">
+                                        <strong>Note:</strong> Once you complete verification on the redirected tab, this portal will automatically detect your authentication status and advance to the next step. Do not close this window.
+                                    </div>
+                                </div>
                             </div>
 
-                            <!-- OTP verification input (initially hidden) -->
-                            <div class="form-group" id="aadhaar-otp-group"
-                                style="max-width: 450px; display: none; margin-top: 24px;">
-                                <label for="aadhaar-otp-input">Verification OTP <span class="req">*</span></label>
-                                <input type="text" id="aadhaar-otp-input" class="form-control" placeholder="6-digit OTP"
-                                    maxlength="6">
-                                <div class="form-error" id="aadhaar-otp-error">Please enter the 6-digit verification
-                                    code.</div>
+                            <!-- Polling status container -->
+                            <div id="aadhaar-polling-indicator" style="display: none; text-align: center; padding: 24px 0;">
+                                <div style="margin-bottom: 16px;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 36px; color: var(--primary-light);"></i></div>
+                                <h4 style="font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 6px;">ABDM Authentication Pending</h4>
+                                <p style="font-size: 12px; color: var(--muted);">Please complete verification in the opened tab. Checking status...</p>
                             </div>
                         </div>
                     </div>
 
-                    <div class="btn-row">
-                        <button class="btn primary" id="btn-step1-action">Send Verification OTP <i
-                                class="fa-solid fa-arrow-right"></i></button>
+                    <div class="btn-row" id="btn-step1-row">
+                        <button class="btn primary" id="btn-step1-action">Launch ABDM Aadhaar Verification <i class="fa-solid fa-arrow-up-right-from-square"></i></button>
                     </div>
                 </div>
 
@@ -1260,6 +1257,7 @@
                                     <select id="hpr-category" class="form-control">
                                         <option value="1">Doctor</option>
                                         <option value="2">Nurse</option>
+                                        <option value="6">Pharmacist</option>
                                     </select>
                                 </div>
 
@@ -1297,12 +1295,13 @@
                         <div class="card-body">
                             <div class="grid-3">
                                 <div class="form-group">
-                                    <label for="council-select">Medical/Nursing Council <span
+                                    <label for="council-select">Medical/Nursing/Pharmacy Council <span
                                             class="req">*</span></label>
                                     <select id="council-select" class="form-control">
                                         <option value="41">Uttarakhand Medical Council</option>
                                         <option value="14">Uttarakhand Nurses and Midwives Council</option>
                                         <option value="7">Delhi Medical Council</option>
+                                        <option value="50">Uttarakhand Pharmacy Council</option>
                                     </select>
                                 </div>
 
@@ -1318,6 +1317,22 @@
                                     <label for="registration-date">Registration Date <span class="req">*</span></label>
                                     <input type="date" id="registration-date" class="form-control">
                                     <div class="form-error" id="reg-date-error">Registration date is required.</div>
+                                </div>
+                            </div>
+
+                            <div class="grid-2" id="doctor-license-validity-section" style="margin-top: 14px; display: none;">
+                                <div class="form-group">
+                                    <label for="license-status-select">License Validity Status <span class="req">*</span></label>
+                                    <select id="license-status-select" class="form-control">
+                                        <option value="Permanent">Permanent</option>
+                                        <option value="Renewable">Renewable</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group" id="renewable-due-date-group" style="display: none;">
+                                    <label for="renewable-due-date">Renewable Due Date <span class="req">*</span></label>
+                                    <input type="date" id="renewable-due-date" class="form-control">
+                                    <div class="form-error" id="renewable-due-date-error">Renewable due date is required.</div>
                                 </div>
                             </div>
 
@@ -1425,9 +1440,26 @@
                                     <label for="work-status-select">Employment Type Status <span
                                             class="req">*</span></label>
                                     <select id="work-status-select" class="form-control">
-                                        <option value="1">Government only</option>
                                         <option value="0">Private Sector</option>
+                                        <option value="1">Government only</option>
                                         <option value="2">Both Government & Private</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="grid-2" id="govt-work-details-section" style="margin-top: 14px; display: none;">
+                                <div class="form-group">
+                                    <label for="govt-type-select">Government Level <span class="req">*</span></label>
+                                    <select id="govt-type-select" class="form-control">
+                                        <option value="State">State Government</option>
+                                        <option value="Central">Central Government</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group" id="central-ministry-group" style="display: none;">
+                                    <label for="ministry-select">Associated Ministry <span class="req">*</span></label>
+                                    <select id="ministry-select" class="form-control">
+                                        <!-- Loaded dynamically via endpoint -->
                                     </select>
                                 </div>
                             </div>
@@ -1676,7 +1708,8 @@
                 { code: 4, name: 'Unani' },
                 { code: 5, name: 'Siddha' },
                 { code: 6, name: 'Homoeopathy' },
-                { code: 89, name: 'Sowa-Rigpa' }
+                { code: 89, name: 'Sowa-Rigpa' },
+                { code: 220, name: 'Yoga and Naturopathy' }
             ];
 
             const nurseSubcategories = [
@@ -1686,18 +1719,44 @@
                 { code: 10, name: 'Registered Lady Health Visitor (RLHV)' }
             ];
 
+            const pharmacistSubcategories = [
+                { code: 33, name: 'Pharmacist' }
+            ];
+
             const categorySelect = document.getElementById('hpr-category');
             const subcategorySelect = document.getElementById('hpr-subcategory');
 
             function loadSubcategories(catVal) {
                 subcategorySelect.innerHTML = '';
-                const list = catVal == 1 ? doctorSubcategories : nurseSubcategories;
+                let list = [];
+                if (catVal == 1) {
+                    list = doctorSubcategories;
+                } else if (catVal == 2) {
+                    list = nurseSubcategories;
+                } else if (catVal == 6) {
+                    list = pharmacistSubcategories;
+                }
                 list.forEach(item => {
                     const opt = document.createElement('option');
                     opt.value = item.code;
                     opt.textContent = item.name;
                     subcategorySelect.appendChild(opt);
                 });
+
+                // Toggle Doctor License Validity section display based on category
+                const licenseSection = document.getElementById('doctor-license-validity-section');
+                const councilSelect = document.getElementById('council-select');
+                if (catVal == 1) {
+                    licenseSection.style.display = 'grid';
+                    councilSelect.value = "41"; // Default to Medical Council
+                } else {
+                    licenseSection.style.display = 'none';
+                    if (catVal == 2) {
+                        councilSelect.value = "14"; // Default to Nursing Council
+                    } else if (catVal == 6) {
+                        councilSelect.value = "50"; // Default to Pharmacy Council
+                    }
+                }
             }
 
             categorySelect.addEventListener('change', function () {
@@ -1744,117 +1803,102 @@
             let verifiedAadhaarDemographics = {};
 
             // ==========================================
-            // STEP 1 ACTION: Aadhaar Send & Verify OTP
+            // STEP 1 ACTION: Aadhaar Link Redirect & Polling
             // ==========================================
             const btnStep1 = document.getElementById('btn-step1-action');
-            const aadhaarInput = document.getElementById('aadhaar-input');
-            const otpInput = document.getElementById('aadhaar-otp-input');
-            const otpGroup = document.getElementById('aadhaar-otp-group');
+            const instructionsDiv = document.getElementById('aadhaar-redirect-instructions');
+            const pollingDiv = document.getElementById('aadhaar-polling-indicator');
+            const btnStep1Row = document.getElementById('btn-step1-row');
+            let pollingInterval = null;
 
             btnStep1.addEventListener('click', function () {
-                if (!otpGroup.style.display || otpGroup.style.display === 'none') {
-                    // Send Aadhaar OTP Step
-                    const aadhaar = aadhaarInput.value.trim();
-                    if (aadhaar.length !== 12 || isNaN(aadhaar)) {
-                        document.getElementById('aadhaar-error').style.display = 'block';
-                        return;
+                btnStep1.disabled = true;
+                btnStep1.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating ABDM Link...';
+
+                fetch('{{ route("nhpr.register.aadhaar.generate-link") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
                     }
-                    document.getElementById('aadhaar-error').style.display = 'none';
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        activeTxnId = data.txnId;
 
-                    btnStep1.disabled = true;
-                    btnStep1.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Requesting OTP...';
+                        // Open gateway authentication link in popup/new tab
+                        window.open(data.url, '_blank');
 
-                    fetch('{{ route("nhpr.register.aadhaar.send-otp") }}', {
+                        // Show polling state
+                        instructionsDiv.style.display = 'none';
+                        pollingDiv.style.display = 'block';
+                        btnStep1Row.style.display = 'none';
+
+                        showToast('ABDM verification page launched in a new tab.');
+
+                        // Start polling auth status
+                        startPollingStatus();
+                    } else {
+                        btnStep1.disabled = false;
+                        btnStep1.innerHTML = 'Launch ABDM Aadhaar Verification <i class="fa-solid fa-arrow-up-right-from-square"></i>';
+                        showToast(data.message, 'error');
+                    }
+                })
+                .catch(err => {
+                    btnStep1.disabled = false;
+                    btnStep1.innerHTML = 'Launch ABDM Aadhaar Verification <i class="fa-solid fa-arrow-up-right-from-square"></i>';
+                    showToast('Failed to generate verification link. Try again.', 'error');
+                });
+            });
+
+            function startPollingStatus() {
+                if (pollingInterval) clearInterval(pollingInterval);
+
+                pollingInterval = setInterval(function () {
+                    fetch('{{ route("nhpr.register.aadhaar.check-status") }}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': csrfToken
-                        },
-                        body: JSON.stringify({ aadhaar: aadhaar })
+                        }
                     })
-                        .then(res => res.json())
-                        .then(data => {
-                            btnStep1.disabled = false;
-                            btnStep1.innerHTML = 'Verify OTP <i class="fa-solid fa-arrow-right"></i>';
-                            if (data.success) {
-                                activeTxnId = data.txnId;
-                                otpGroup.style.display = 'block';
-                                aadhaarInput.disabled = true;
-                                showToast(data.message);
-                            } else {
-                                btnStep1.innerHTML = 'Send Verification OTP <i class="fa-solid fa-arrow-right"></i>';
-                                showToast(data.message, 'error');
-                            }
-                        })
-                        .catch(err => {
-                            btnStep1.disabled = false;
-                            btnStep1.innerHTML = 'Send Verification OTP <i class="fa-solid fa-arrow-right"></i>';
-                            showToast('Connection timed out. Please try again.', 'error');
-                        });
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success && data.authenticated) {
+                            clearInterval(pollingInterval);
 
-                } else {
-                    // Verify Aadhaar OTP step
-                    const otp = otpInput.value.trim();
-                    if (otp.length !== 6 || isNaN(otp)) {
-                        document.getElementById('aadhaar-otp-error').style.display = 'block';
-                        return;
-                    }
-                    document.getElementById('aadhaar-otp-error').style.display = 'none';
-
-                    btnStep1.disabled = true;
-                    btnStep1.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Authenticating UIDAI...';
-
-                    fetch('{{ route("nhpr.register.aadhaar.verify-otp") }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': csrfToken
-                        },
-                        body: JSON.stringify({ otp: otp })
-                    })
-                        .then(res => res.json())
-                        .then(data => {
-                            btnStep1.disabled = false;
-                            btnStep1.innerHTML = 'Verify OTP <i class="fa-solid fa-arrow-right"></i>';
-
-                            if (data.success) {
-                                if (data.isExistingUser) {
-                                    // Stop flow, user already exists
-                                    showToast(data.message, 'warning');
-                                    panels[1].innerHTML = `
-                                <div class="card" style="border-color: var(--warning);">
-                                    <div class="card-body text-center" style="padding: 40px; text-align: center;">
-                                        <i class="fa-solid fa-circle-exclamation" style="font-size: 48px; color: var(--gold); margin-bottom: 16px;"></i>
-                                        <h3 style="margin-bottom: 8px;">Existing HPR Record Found</h3>
-                                        <p style="color: var(--muted); margin-bottom: 24px;">An active HPR profile is already associated with this Aadhaar number.</p>
-                                        
-                                        <div style="background: var(--surface2); padding: 16px; border-radius: 8px; max-width: 400px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; text-align: left;">
-                                            <div style="display: flex; justify-content: space-between;"><span style="color: var(--muted);">Full Name</span><span style="font-weight: 700;">${data.profile.name}</span></div>
-                                            <div style="display: flex; justify-content: space-between;"><span style="color: var(--muted);">HPR ID Number</span><span style="font-weight: 700; color: var(--primary-light);">${data.profile.hprIdNumber}</span></div>
-                                            <div style="display: flex; justify-content: space-between;"><span style="color: var(--muted);">Gender</span><span style="font-weight: 700;">${data.profile.gender}</span></div>
+                            if (data.isExistingUser) {
+                                showToast(data.message, 'warning');
+                                panels[1].innerHTML = `
+                                    <div class="card" style="border-color: var(--warning);">
+                                        <div class="card-body text-center" style="padding: 40px; text-align: center;">
+                                            <i class="fa-solid fa-circle-exclamation" style="font-size: 48px; color: var(--gold); margin-bottom: 16px;"></i>
+                                            <h3 style="margin-bottom: 8px;">Existing HPR Record Found</h3>
+                                            <p style="color: var(--muted); margin-bottom: 24px;">An active HPR profile is already associated with this Aadhaar number.</p>
+                                            
+                                            <div style="background: var(--surface2); padding: 16px; border-radius: 8px; max-width: 400px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; text-align: left;">
+                                                <div style="display: flex; justify-content: space-between;"><span style="color: var(--muted);">Full Name</span><span style="font-weight: 700;">${data.profile.name}</span></div>
+                                                <div style="display: flex; justify-content: space-between;"><span style="color: var(--muted);">HPR ID Number</span><span style="font-weight: 700; color: var(--primary-light);">${data.profile.hprIdNumber}</span></div>
+                                                <div style="display: flex; justify-content: space-between;"><span style="color: var(--muted);">Gender</span><span style="font-weight: 700;">${data.profile.gender}</span></div>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            `;
-                                } else {
-                                    showToast(data.message);
-                                    // Set mobile in next step from Aadhaar response if available
-                                    if (data.mobile) {
-                                        document.getElementById('mobile-input').value = data.mobile;
-                                    }
-                                    activateStep(2);
-                                }
+                                `;
                             } else {
-                                showToast(data.message, 'error');
+                                showToast(data.message);
+                                if (data.mobile) {
+                                    document.getElementById('mobile-input').value = data.mobile;
+                                }
+                                activateStep(2);
                             }
-                        })
-                        .catch(err => {
-                            btnStep1.disabled = false;
-                            btnStep1.innerHTML = 'Verify OTP <i class="fa-solid fa-arrow-right"></i>';
-                            showToast('Verification failed. Try again.', 'error');
-                        });
-                }
-            });
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error checking verification status:', err);
+                    });
+                }, 2000);
+            }
 
             // ==========================================
             // STEP 2 ACTION: Mobile demographic / fallback OTP
@@ -2063,10 +2107,22 @@
                         showToast('HPR Creation service error.', 'error');
                     });
             });
-
-            // ==========================================
+                           // ==========================================
             // STEP 4 ACTION: Academic submissions
             // ==========================================
+            const licenseStatusSelect = document.getElementById('license-status-select');
+            const renewableGroup = document.getElementById('renewable-due-date-group');
+            const renewableInput = document.getElementById('renewable-due-date');
+
+            licenseStatusSelect.addEventListener('change', function () {
+                if (this.value === 'Renewable') {
+                    renewableGroup.style.display = 'block';
+                } else {
+                    renewableGroup.style.display = 'none';
+                    renewableInput.value = '';
+                }
+            });
+
             const btnStep4 = document.getElementById('btn-step4-action');
             btnStep4.addEventListener('click', function () {
                 const councilId = document.getElementById('council-select').value;
@@ -2094,6 +2150,17 @@
 
                 if (!degreeCert) { document.getElementById('degree-cert-error').style.display = 'block'; valid = false; }
                 else { document.getElementById('degree-cert-error').style.display = 'none'; }
+
+                // Doctor renewable due date validation
+                const catVal = document.getElementById('hpr-category').value;
+                if (catVal == 1 && licenseStatusSelect.value === 'Renewable') {
+                    if (!renewableInput.value) {
+                        document.getElementById('renewable-due-date-error').style.display = 'block';
+                        valid = false;
+                    } else {
+                        document.getElementById('renewable-due-date-error').style.display = 'none';
+                    }
+                }
 
                 if (!valid) {
                     showToast('Please complete all academic requirements and upload documents.', 'warning');
@@ -2194,11 +2261,63 @@
                 }
             });
 
+            // Employment Type listeners (Central vs State)
+            const workStatusSelect = document.getElementById('work-status-select');
+            const govtSection = document.getElementById('govt-work-details-section');
+            const govtTypeSelect = document.getElementById('govt-type-select');
+            const ministryGroup = document.getElementById('central-ministry-group');
+
+            workStatusSelect.addEventListener('change', function () {
+                if (this.value === '1' || this.value === '2') {
+                    govtSection.style.display = 'grid';
+                    toggleMinistryGroup();
+                } else {
+                    govtSection.style.display = 'none';
+                    ministryGroup.style.display = 'none';
+                }
+            });
+
+            govtTypeSelect.addEventListener('change', toggleMinistryGroup);
+
+            function toggleMinistryGroup() {
+                if (govtTypeSelect.value === 'Central') {
+                    ministryGroup.style.display = 'block';
+                    fetchCentralMinistries();
+                } else {
+                    ministryGroup.style.display = 'none';
+                }
+            }
+
+            function fetchCentralMinistries() {
+                const select = document.getElementById('ministry-select');
+                if (select.children.length > 0) return; // already loaded
+
+                fetch('{{ route("nhpr.register.masters.ministries") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        select.innerHTML = '';
+                        data.ministries.forEach(min => {
+                            const opt = document.createElement('option');
+                            opt.value = min.name;
+                            opt.textContent = min.name;
+                            select.appendChild(opt);
+                        });
+                    }
+                });
+            }
+
             // Submit registration & transition to Step 6 (Document Fetch checklist)
             const btnStep5 = document.getElementById('btn-step5-action');
             btnStep5.addEventListener('click', function () {
                 const working = practisingSelect.value;
-                const status = document.getElementById('work-status-select').value;
+                const status = workStatusSelect.value;
                 const facId = document.getElementById('selected-fac-id').value;
 
                 if (working == '1' && !facId) {
@@ -2230,7 +2349,12 @@
                     facility_id: facId,
                     facility_name: document.getElementById('selected-fac-name').textContent,
                     facility_address: 'Dehradun',
-                    facility_pincode: '248001'
+                    facility_pincode: '248001',
+                    // Dynamic fields
+                    gov_type: (status === '1' || status === '2') ? govtTypeSelect.value : null,
+                    ministry: (status === '1' || status === '2' && govtTypeSelect.value === 'Central') ? document.getElementById('ministry-select').value : null,
+                    is_permanent: licenseStatusSelect.value,
+                    renewable_due_date: (licenseStatusSelect.value === 'Renewable') ? renewableInput.value : null
                 };
 
                 fetch('{{ route("nhpr.register.professional.submit") }}', {

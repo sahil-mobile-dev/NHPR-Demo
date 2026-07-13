@@ -199,8 +199,73 @@ class HfrFacilityService
             $message = $body['error']['message'] ?? $body['message'] ?? 'Professional registration failed.';
             throw new Exception("HPR Professional registration failed (HTTP {$statusCode}): {$message}");
         } catch (Exception $e) {
-            Log::error('HFR Facility Service Exception in registerProfessional: '.$e->getMessage());
+            Log::error('HfrFacilityService Exception in registerProfessional: '.$e->getMessage());
             throw $e;
         }
+    }
+
+    /**
+     * Get all Central government ministries list.
+     *
+     * @return array List of ministries.
+     */
+    public function getAllMinistries(): array
+    {
+        $token = $this->gatewayService->getValidToken();
+        if (empty($token)) {
+            Log::error('HFR Facility Service: Failed to fetch gateway token for ministries.');
+
+            return $this->getStaticMinistries();
+        }
+
+        $apiUrl = config('services.nhpr.api_url');
+        $xCmId = config('services.nhpr.x_cm_id');
+        $endpoint = rtrim($apiUrl, '/').'/v4/int/apis/v1/masters/getAllMinistry';
+
+        $requestId = (string) Str::uuid();
+        $timestamp = now()->toIso8601String();
+
+        $headers = [
+            'Authorization' => 'Bearer '.$token,
+            'REQUEST-ID' => $requestId,
+            'TIMESTAMP' => $timestamp,
+            'X-CM-ID' => $xCmId,
+            'Content-Type' => 'application/json',
+        ];
+
+        try {
+            $response = Http::when(! config('services.nhpr.verify_ssl'), fn ($q) => $q->withoutVerifying())
+                ->withHeaders($headers)
+                ->timeout(10)
+                ->get($endpoint);
+
+            if ($response->successful()) {
+                return $response->json() ?: $this->getStaticMinistries();
+            }
+
+            Log::warning('HFR Facility Service: live ministries endpoint failed, using static fallback.');
+
+            return $this->getStaticMinistries();
+        } catch (Exception $e) {
+            Log::error('HFR Facility Service Exception in getAllMinistries: '.$e->getMessage());
+
+            return $this->getStaticMinistries();
+        }
+    }
+
+    /**
+     * Static fallback list of central ministries.
+     */
+    protected function getStaticMinistries(): array
+    {
+        return [
+            ['code' => 'MOHFW', 'name' => 'Ministry of Health and Family Welfare'],
+            ['code' => 'MOR', 'name' => 'Ministry of Railways (MoR)'],
+            ['code' => 'MOD', 'name' => 'Ministry of Defence'],
+            ['code' => 'MHA', 'name' => 'Ministry of Home Affairs'],
+            ['code' => 'AYUSH', 'name' => 'Ministry of Ayush'],
+            ['code' => 'MHRD', 'name' => 'Ministry of Education'],
+            ['code' => 'OTH', 'name' => 'Other Central Ministry / Departments'],
+        ];
     }
 }

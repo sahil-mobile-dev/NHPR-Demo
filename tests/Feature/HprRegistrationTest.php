@@ -383,6 +383,7 @@ class HprRegistrationTest extends TestCase
             ],
             'hpr_reg_mobile' => '9876543210',
             'hpr_reg_category_code' => '1',
+            'hpr_reg_subcategory_code' => '1',
         ]);
 
         Http::fake([
@@ -417,6 +418,9 @@ class HprRegistrationTest extends TestCase
             'facility_name' => 'AIIMS Rishikesh',
             'facility_address' => 'Rishikesh',
             'facility_pincode' => '249201',
+            'gov_type' => 'Central',
+            'ministry' => 'Ministry of Health and Family Welfare',
+            'is_permanent' => 'Permanent',
         ]);
 
         $response->assertStatus(200)
@@ -427,6 +431,89 @@ class HprRegistrationTest extends TestCase
             ]);
 
         $this->assertEquals('71-3563-6824-2283', session('hpr_reg_hpr_id'));
+    }
+
+    /**
+     * Test generating Aadhaar authentication redirect link.
+     */
+    public function test_generate_aadhaar_link_success(): void
+    {
+        Http::fake([
+            'https://mock-api.abdm.gov.in/v4/int/aadhaar/generateLink' => Http::response([
+                'url' => 'https://mock-gateway.abdm.gov.in/auth/12345',
+                'txnId' => 'mock-link-txn-id',
+            ], 200),
+        ]);
+
+        $response = $this->postJson(route('nhpr.register.aadhaar.generate-link'));
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'url' => 'https://mock-gateway.abdm.gov.in/auth/12345',
+                'txnId' => 'mock-link-txn-id',
+            ]);
+
+        $this->assertEquals('mock-link-txn-id', session('hpr_reg_txn_id'));
+    }
+
+    /**
+     * Test checking Aadhaar authentication status when authenticated.
+     */
+    public function test_check_aadhaar_auth_status_authenticated(): void
+    {
+        session(['hpr_reg_txn_id' => 'mock-link-txn-id']);
+
+        Http::fake([
+            'https://mock-api.abdm.gov.in/v4/int/aadhaar/isAuthenticated' => Http::response('true', 200),
+            'https://mock-api.abdm.gov.in/v4/int/v2/registration/aadhaar/verifyOTP' => Http::response([
+                'name' => 'Dr Ramesh Kumar',
+                'gender' => 'M',
+                'dob' => '1990-05-15',
+                'firstName' => 'Ramesh',
+                'lastName' => 'Kumar',
+                'stateCode' => '27',
+                'districtCode' => '472',
+                'photo' => 'dummybase64photo',
+                'mobileNumber' => '9876543210',
+            ], 200),
+            'https://mock-api.abdm.gov.in/v4/int/v1/registration/aadhaar/checkHpIdAccountExist' => Http::response([
+                'new' => true,
+            ], 200),
+        ]);
+
+        $response = $this->postJson(route('nhpr.register.aadhaar.check-status'));
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'authenticated' => true,
+                'isExistingUser' => false,
+                'mobile' => '9876543210',
+            ]);
+
+        $this->assertEquals('Dr Ramesh Kumar', session('hpr_reg_aadhaar_info.name'));
+        $this->assertEquals('9876543210', session('hpr_reg_mobile'));
+    }
+
+    /**
+     * Test fetching central ministries master list.
+     */
+    public function test_get_ministries_success(): void
+    {
+        Http::fake([
+            'https://mock-api.abdm.gov.in/v4/int/apis/v1/masters/getAllMinistry' => Http::response([
+                ['code' => 'MOHFW', 'name' => 'Ministry of Health and Family Welfare'],
+            ], 200),
+        ]);
+
+        $response = $this->postJson(route('nhpr.register.masters.ministries'));
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+            ])
+            ->assertJsonStructure(['ministries']);
     }
 
     /**

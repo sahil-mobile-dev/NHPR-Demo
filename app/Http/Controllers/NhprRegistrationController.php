@@ -54,9 +54,38 @@ class NhprRegistrationController extends Controller
     /**
      * Render the main HPR Registration Stepper Wizard.
      */
-    public function showWizard(): View
+    public function showWizard(Request $request): mixed
     {
         $realApiMode = session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false));
+
+        if ($request->has('sim_auth_callback')) {
+            // Render a simple verification successful splash screen for the redirect tab
+            return response('
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>ABDM Authentication Success</title>
+                    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+                    <style>
+                        body { font-family: "Inter", sans-serif; background: #071221; color: #e8f0fe; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
+                        .card { background: #0a1628; border: 1px solid rgba(255,255,255,0.08); padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 400px; }
+                        h2 { color: #81c784; margin-top: 0; }
+                        p { color: #7b9bbf; font-size: 14px; line-height: 1.6; margin-bottom: 24px; }
+                        .btn { background: #1565c0; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; text-decoration: none; }
+                        .btn:hover { background: #1e88e5; }
+                    </style>
+                </head>
+                <body>
+                    <div class="card">
+                        <div style="font-size: 48px; margin-bottom: 16px;">✔️</div>
+                        <h2>Verification Successful</h2>
+                        <p>Your Aadhaar identity has been authenticated successfully. You can close this tab and return to the HPR registration wizard tab to continue.</p>
+                        <button onclick="window.close()" class="btn">Close Window</button>
+                    </div>
+                </body>
+                </html>
+            ');
+        }
 
         // Display config statuses
         $config = [
@@ -97,6 +126,182 @@ class NhprRegistrationController extends Controller
             'real_api_mode' => $mode,
             'message' => $mode ? 'ABDM Gateway integration activated.' : 'Offline simulated workflow activated.',
         ]);
+    }
+
+    /**
+     * Generate redirect link for Aadhaar authentication.
+     */
+    public function generateAadhaarLink(Request $request): JsonResponse
+    {
+        $realApiMode = session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false));
+
+        if (! $realApiMode) {
+            $txnId = 'simulated-aadhaar-txn-'.Str::random(10);
+            session([
+                'hpr_reg_txn_id' => $txnId,
+                'hpr_sim_auth_start' => now()->timestamp,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'txnId' => $txnId,
+                'url' => route('nhpr.register.wizard').'?sim_auth_callback=1&txnId='.$txnId,
+            ]);
+        }
+
+        try {
+            $result = $this->aadhaarService->generateLink();
+            session(['hpr_reg_txn_id' => $result['txnId']]);
+
+            return response()->json([
+                'success' => true,
+                'txnId' => $result['txnId'],
+                'url' => $result['url'],
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Check if the redirected Aadhaar authentication succeeded, and fetch user details.
+     */
+    public function checkAadhaarAuthStatus(Request $request): JsonResponse
+    {
+        $realApiMode = session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false));
+        $txnId = session('hpr_reg_txn_id');
+
+        if (empty($txnId)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Session expired or transaction ID not found.',
+            ], 400);
+        }
+
+        if (! $realApiMode) {
+            // Simulate a short delay (e.g. 2 seconds) before successful authentication
+            $startTime = session('hpr_sim_auth_start', 0);
+            if (now()->timestamp - $startTime < 2) {
+                return response()->json([
+                    'success' => true,
+                    'authenticated' => false,
+                ]);
+            }
+
+            $aadhaarInfo = [
+                'name' => 'Dr Ramesh Kumar (Simulated)',
+                'gender' => 'M',
+                'yearOfBirth' => '1990',
+                'firstName' => 'Ramesh',
+                'middleName' => '',
+                'lastName' => 'Kumar',
+                'stateCode' => '27',
+                'districtCode' => '472',
+                'profilePhoto' => '',
+            ];
+            session([
+                'hpr_reg_aadhaar_info' => $aadhaarInfo,
+                'hpr_reg_mobile' => '9876543210',
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'authenticated' => true,
+                'isExistingUser' => false,
+                'mobile' => '9876543210',
+                'message' => 'Simulated Aadhaar verified successfully!',
+            ]);
+        }
+
+        try {
+            $isAuthenticated = $this->aadhaarService->isAuthenticated($txnId);
+
+            if (! $isAuthenticated) {
+                return response()->json([
+                    'success' => true,
+                    'authenticated' => false,
+                ]);
+            }
+
+            // Authentication succeeded! Fetch details
+            $checkResult = $this->aadhaarService->fetchUserDetails($txnId);
+
+            // Check if HPR ID already exists
+            $hprExistResult = $this->hprService->checkHprIdExists($txnId);
+
+            if (isset($hprExistResult['new']) && $hprExistResult['new'] === false) {
+                // User already exists, abort registration flow
+                session()->forget(['hpr_reg_txn_id']);
+
+                return response()->json([
+                    'success' => true,
+                    'authenticated' => true,
+                    'isExistingUser' => true,
+                    'message' => 'HPR account already exists for this Aadhaar number.',
+                    'profile' => [
+                        'hprIdNumber' => $hprExistResult['hprIdNumber'] ?? null,
+                        'name' => $hprExistResult['name'] ?? 'Healthcare Professional',
+                        'gender' => $hprExistResult['gender'] ?? null,
+                        'yearOfBirth' => $hprExistResult['yearOfBirth'] ?? null,
+                        'address' => $hprExistResult['address'] ?? null,
+                        'profilePhoto' => $hprExistResult['profilePhoto'] ?? null,
+                    ],
+                ]);
+            }
+
+            // Save demographic data to session for final HPR creation
+            session([
+                'hpr_reg_aadhaar_info' => [
+                    'name' => $checkResult['name'] ?? null,
+                    'gender' => $checkResult['gender'] ?? null,
+                    'yearOfBirth' => substr($checkResult['dob'] ?? '1990', 0, 4),
+                    'firstName' => $checkResult['firstName'] ?? null,
+                    'middleName' => $checkResult['middleName'] ?? null,
+                    'lastName' => $checkResult['lastName'] ?? null,
+                    'stateCode' => $checkResult['stateCode'] ?? $hprExistResult['stateCode'] ?? null,
+                    'districtCode' => $checkResult['districtCode'] ?? $hprExistResult['districtCode'] ?? null,
+                    'profilePhoto' => $checkResult['photo'] ?? null,
+                ],
+                'hpr_reg_mobile' => $checkResult['mobileNumber'] ?? null,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'authenticated' => true,
+                'isExistingUser' => false,
+                'message' => 'Aadhaar verified successfully! Please verify your mobile number to continue.',
+                'mobile' => $checkResult['mobileNumber'] ?? null,
+            ]);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get list of ministries for Central Government.
+     */
+    public function getMinistries(): JsonResponse
+    {
+        try {
+            $ministries = $this->hfrService->getAllMinistries();
+
+            return response()->json([
+                'success' => true,
+                'ministries' => $ministries,
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
@@ -392,7 +597,7 @@ class NhprRegistrationController extends Controller
             'username' => 'required|alpha_dash|min:4',
             'password' => 'required|min:8',
             'email' => 'required|email',
-            'category' => 'required|in:1,2', // 1=Doctor, 2=Nurse
+            'category' => 'required|in:1,2,6', // 1=Doctor, 2=Nurse, 6=Pharmacist
             'subcategory' => 'required|integer',
         ]);
 
@@ -404,6 +609,7 @@ class NhprRegistrationController extends Controller
                 'hpr_reg_hpr_token' => 'simulated-jwt-token-'.Str::random(10),
                 'hpr_reg_hpr_id' => $username,
                 'hpr_reg_category_code' => $request->input('category'),
+                'hpr_reg_subcategory_code' => $request->input('subcategory'),
             ]);
 
             return response()->json([
@@ -453,6 +659,7 @@ class NhprRegistrationController extends Controller
                 'hpr_reg_hpr_token' => $result['hprToken'],
                 'hpr_reg_hpr_id' => $result['hprId'],
                 'hpr_reg_category_code' => $request->input('category'),
+                'hpr_reg_subcategory_code' => $request->input('subcategory'),
             ]);
 
             return response()->json([
@@ -559,6 +766,11 @@ class NhprRegistrationController extends Controller
             'facility_address' => 'required_if:currently_working,1|nullable|string',
             'facility_pincode' => 'required_if:currently_working,1|nullable|digits:6',
             'work_cert_base64' => 'nullable|string',
+            // New dynamic fields
+            'gov_type' => 'nullable|string|in:Central,State',
+            'ministry' => 'nullable|string',
+            'is_permanent' => 'nullable|string|in:Permanent,Renewable',
+            'renewable_due_date' => 'nullable|date_format:Y-m-d',
         ]);
 
         $realApiMode = session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false));
@@ -578,13 +790,90 @@ class NhprRegistrationController extends Controller
         $profile = session('hpr_reg_aadhaar_info');
         $mobile = session('hpr_reg_mobile');
         $category = session('hpr_reg_category_code');
+        $subCategory = session('hpr_reg_subcategory_code');
 
         if (empty($hprToken) || empty($profile)) {
             return response()->json(['success' => false, 'message' => 'Session expired. Please restart the wizard.'], 400);
         }
 
         try {
-            $professionalType = $category == 1 ? 'doctor' : 'nurse';
+            $professionalType = 'doctor';
+            if ($category == 2) {
+                $professionalType = 'nurse';
+            } elseif ($category == 6) {
+                $professionalType = 'pharmacist';
+            }
+
+            // Map subcategory code to register-professional categoryId (as per page 23 of PDF)
+            $regCategoryId = 1;
+            if ($category == 1) { // Doctor
+                $doctorMap = [
+                    1 => 1,   // Modern Medicine
+                    2 => 2,   // Dentist -> Dentistry
+                    6 => 3,   // Homoeopathy
+                    3 => 4,   // Ayurveda
+                    4 => 5,   // Unani
+                    5 => 6,   // Siddha
+                    89 => 7,  // Sowa-Rigpa
+                    220 => 14, // Yoga and Naturopathy
+                ];
+                $regCategoryId = $doctorMap[$subCategory] ?? 1;
+            } elseif ($category == 2) { // Nurse
+                $nurseMap = [
+                    7 => 8,  // RANM
+                    8 => 9,  // RN
+                    9 => 10, // RN & RM
+                    10 => 11, // RLHV
+                ];
+                $regCategoryId = $nurseMap[$subCategory] ?? 9;
+            } elseif ($category == 6) { // Pharmacist
+                $regCategoryId = 13; // Pharmacist
+            }
+
+            // Map personalInformation.category (C = Central Govt, S = State Govt, "" = Private) (as per page 31 of PDF)
+            $workStatus = (int) $request->input('work_status');
+            $govType = $request->input('gov_type');
+            $personalInfoCategory = '';
+            if ($workStatus == 1 || $workStatus == 2) {
+                $personalInfoCategory = ($govType === 'State') ? 'S' : 'C';
+            }
+
+            // Prepare registrationData array
+            $isPermanentOrRenewable = $request->input('is_permanent', 'Permanent');
+            $renewableDueDate = ($isPermanentOrRenewable === 'Renewable') ? $request->input('renewable_due_date') : null;
+
+            $regData = [
+                'registeredWithCouncil' => (int) $request->input('council_id'),
+                'registrationNumber' => $request->input('reg_no'),
+                'registrationDate' => $request->input('reg_date'),
+                'registrationCertificate' => [
+                    'fileType' => 'pdf',
+                    'data' => $request->input('reg_cert_base64'),
+                ],
+                'categoryId' => (int) $regCategoryId,
+                'qualifications' => [
+                    [
+                        'nameOfDegreeOrDiplomaObtained' => (int) $request->input('degree_code'),
+                        'country' => '356',
+                        'state' => $profile['stateCode'] ?: '29',
+                        'college' => (int) $request->input('degree_college'),
+                        'university' => (int) $request->input('degree_university'),
+                        'yearOfAwardingDegreeDiploma' => $request->input('degree_year'),
+                        'degreeCertificate' => [
+                            'fileType' => 'pdf',
+                            'data' => $request->input('degree_cert_base64'),
+                        ],
+                    ],
+                ],
+            ];
+
+            // If Doctor, permanent vs renewable fields are required (as per page 31 of PDF)
+            if ($professionalType === 'doctor') {
+                $regData['isPermanentOrRenewable'] = $isPermanentOrRenewable;
+                if ($isPermanentOrRenewable === 'Renewable') {
+                    $regData['renewableDueDate'] = $renewableDueDate;
+                }
+            }
 
             $payload = [
                 'hprToken' => $hprToken,
@@ -602,7 +891,7 @@ class NhprRegistrationController extends Controller
                         'gender' => $profile['gender'],
                         'dateOfBirth' => $request->input('dob'),
                         'languagesSpoken' => $request->input('languages'),
-                        'category' => 'C',
+                        'category' => $personalInfoCategory,
                     ],
                     'communicationAddress' => [
                         'isCommunicationAddressAsPerKYC' => 'false',
@@ -612,36 +901,13 @@ class NhprRegistrationController extends Controller
                     'registrationAcademic' => [
                         'category' => (int) $category,
                         'registrationData' => [
-                            [
-                                'registeredWithCouncil' => (int) $request->input('council_id'),
-                                'registrationNumber' => $request->input('reg_no'),
-                                'registrationDate' => $request->input('reg_date'),
-                                'registrationCertificate' => [
-                                    'fileType' => 'pdf',
-                                    'data' => $request->input('reg_cert_base64'),
-                                ],
-                                'isPermanentOrRenewable' => 'Permanent',
-                                'qualifications' => [
-                                    [
-                                        'nameOfDegreeOrDiplomaObtained' => (int) $request->input('degree_code'),
-                                        'country' => '356',
-                                        'state' => $profile['stateCode'] ?: '29',
-                                        'college' => (int) $request->input('degree_college'),
-                                        'university' => (int) $request->input('degree_university'),
-                                        'yearOfAwardingDegreeDiploma' => $request->input('degree_year'),
-                                        'degreeCertificate' => [
-                                            'fileType' => 'pdf',
-                                            'data' => $request->input('degree_cert_base64'),
-                                        ],
-                                    ],
-                                ],
-                            ],
+                            $regData,
                         ],
                     ],
                     'currentWorkDetails' => [
                         'currentlyWorking' => $request->input('currently_working'),
                         'purposeOfWork' => 'Practice',
-                        'chooseWorkStatus' => (int) $request->input('work_status'),
+                        'chooseWorkStatus' => $workStatus,
                         'certificateAttachment' => $request->input('work_cert_base64') ?: '',
                     ],
                 ],
@@ -649,7 +915,7 @@ class NhprRegistrationController extends Controller
 
             // Append facility link details if currently working
             if ($request->input('currently_working') == '1') {
-                $payload['practitioner']['currentWorkDetails']['facilityDeclarationData'] = [
+                $facilityData = [
                     'facilityId' => $request->input('facility_id'),
                     'facilityName' => $request->input('facility_name'),
                     'facilityAddress' => $request->input('facility_address'),
@@ -658,6 +924,15 @@ class NhprRegistrationController extends Controller
                     'district' => $profile['districtCode'] ?: '500',
                     'facilityType' => 'Hospital',
                 ];
+
+                // Append central ministry details if applicable (as per page 27 of PDF)
+                if (($workStatus == 1 || $workStatus == 2) && $govType === 'Central' && $request->filled('ministry')) {
+                    $facilityData['ministry'] = [
+                        'ministry' => $request->input('ministry'),
+                    ];
+                }
+
+                $payload['practitioner']['currentWorkDetails']['facilityDeclarationData'] = $facilityData;
             }
 
             $result = $this->hfrService->registerProfessional($payload);

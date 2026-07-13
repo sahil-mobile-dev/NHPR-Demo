@@ -19,6 +19,9 @@ Route::post('/nhpr/token/credentials/clear', [NhprController::class, 'clearCrede
 Route::prefix('nhpr/register')->name('nhpr.register.')->group(function () {
     Route::get('/', [NhprRegistrationController::class, 'showWizard'])->name('wizard');
     Route::post('/toggle-mode', [NhprRegistrationController::class, 'toggleMode'])->name('toggle-mode');
+    Route::post('/aadhaar/generate-link', [NhprRegistrationController::class, 'generateAadhaarLink'])->name('aadhaar.generate-link');
+    Route::post('/aadhaar/check-status', [NhprRegistrationController::class, 'checkAadhaarAuthStatus'])->name('aadhaar.check-status');
+    Route::post('/masters/ministries', [NhprRegistrationController::class, 'getMinistries'])->name('masters.ministries');
     Route::post('/aadhaar/send-otp', [NhprRegistrationController::class, 'sendAadhaarOtp'])->name('aadhaar.send-otp');
     Route::post('/aadhaar/verify-otp', [NhprRegistrationController::class, 'verifyAadhaarOtp'])->name('aadhaar.verify-otp');
     Route::post('/mobile/verify', [NhprRegistrationController::class, 'verifyMobile'])->name('mobile.verify');
