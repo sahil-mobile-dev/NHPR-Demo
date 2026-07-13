@@ -1512,7 +1512,7 @@
                                 <div style="margin-top: 24px; display: flex; gap: 14px;">
                                     <a href="#" class="btn primary"><i class="fa-solid fa-download"></i> Download
                                         License Card</a>
-                                    <a href="{{ route('nhpr.register.wizard') }}" class="btn"><i
+                                    <a href="{{ route('nhpr.register.wizard', ['fresh' => 1]) }}" class="btn"><i
                                             class="fa-solid fa-arrow-rotate-right"></i> Register New Provider</a>
                                 </div>
                             </div>

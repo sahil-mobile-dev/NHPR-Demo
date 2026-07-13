@@ -96,15 +96,18 @@ class NhprRegistrationController extends Controller
             'realApiMode' => $realApiMode,
         ];
 
-        // Clear wizard state when loading fresh view
-        session()->forget([
-            'hpr_reg_txn_id',
-            'hpr_reg_aadhaar_info',
-            'hpr_reg_mobile',
-            'hpr_reg_hpr_token',
-            'hpr_reg_hpr_id',
-            'hpr_reg_category_code',
-        ]);
+        // Clear wizard state when loading fresh view explicitly, or if there is no active session
+        if ($request->has('fresh') || ! session()->has('hpr_reg_txn_id')) {
+            session()->forget([
+                'hpr_reg_txn_id',
+                'hpr_reg_aadhaar_info',
+                'hpr_reg_mobile',
+                'hpr_reg_hpr_token',
+                'hpr_reg_hpr_id',
+                'hpr_reg_category_code',
+                'hpr_reg_subcategory_code',
+            ]);
+        }
 
         return view('nhpr.register', compact('config'));
     }
@@ -229,8 +232,11 @@ class NhprRegistrationController extends Controller
             // Authentication succeeded! Fetch details
             $checkResult = $this->aadhaarService->fetchUserDetails($txnId);
 
+            $currentTxnId = $checkResult['txnId'] ?? $txnId;
+            session(['hpr_reg_txn_id' => $currentTxnId]);
+
             // Check if HPR ID already exists
-            $hprExistResult = $this->hprService->checkHprIdExists($txnId);
+            $hprExistResult = $this->hprService->checkHprIdExists($currentTxnId);
 
             if (isset($hprExistResult['new']) && $hprExistResult['new'] === false) {
                 // User already exists, abort registration flow

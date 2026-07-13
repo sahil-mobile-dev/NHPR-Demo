@@ -2,10 +2,12 @@
 
 namespace App\Helpers;
 
+use App\Services\GatewayTokenService;
 use Exception;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 /**
  * Class AbdmEncryptionHelper
@@ -44,7 +46,19 @@ class AbdmEncryptionHelper
         try {
             Log::info('ABDM Encryption: Fetching public certificate from gateway', ['url' => $endpoint]);
 
+            $tokenService = app(GatewayTokenService::class);
+            $token = $tokenService->getValidToken();
+
+            $headers = [];
+            if ($token) {
+                $headers['Authorization'] = 'Bearer '.$token;
+            }
+            $headers['REQUEST-ID'] = (string) Str::uuid();
+            $headers['TIMESTAMP'] = now()->toIso8601String();
+            $headers['X-CM-ID'] = config('services.nhpr.x_cm_id', 'sbx');
+
             $response = Http::when(! config('services.nhpr.verify_ssl'), fn ($q) => $q->withoutVerifying())
+                ->withHeaders($headers)
                 ->timeout(10)
                 ->retry(3, 100)
                 ->get($endpoint);
