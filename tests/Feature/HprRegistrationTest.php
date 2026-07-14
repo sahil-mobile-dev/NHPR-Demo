@@ -759,4 +759,90 @@ class HprRegistrationTest extends TestCase
                 'real_api_mode' => true,
             ]);
     }
+
+    /**
+     * Test fetching HPR profile in simulated mode.
+     */
+    public function test_fetch_hpr_profile_simulated(): void
+    {
+        session(['nhpr_real_api_mode' => false]);
+
+        $response = $this->postJson(route('nhpr.register.fetch-hpr-profile'), [
+            'hpr_id' => 'doctor@hpr.abdm',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'profile' => [
+                    'hprId' => 'doctor@hpr.abdm',
+                    'name' => 'Dr. Rajesh Sharma (Simulated)',
+                ],
+            ]);
+    }
+
+    /**
+     * Test fetching HPR profile in real mode.
+     */
+    public function test_fetch_hpr_profile_real(): void
+    {
+        session(['nhpr_real_api_mode' => true]);
+
+        Http::fake([
+            'https://mock-api.abdm.gov.in/v4/int/apis/v1/doctors/fetch-professional-info' => Http::response([
+                'practitioners' => [
+                    [
+                        'name' => 'Dr. Ramesh Kumar',
+                        'healthProfessionalType' => 'doctor',
+                        'officialMobile' => '9876543210',
+                        'registrationAcademic' => [
+                            'registrationData' => [
+                                [
+                                    'registrationNumber' => 'MCI-12345',
+                                    'registeredWithCouncil' => 'Uttarakhand Medical Council',
+                                ]
+                            ]
+                        ]
+                    ],
+                ],
+            ], 200),
+        ]);
+
+        $response = $this->postJson(route('nhpr.register.fetch-hpr-profile'), [
+            'hpr_id' => 'doctor@hpr.abdm',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'profile' => [
+                    'hprId' => 'doctor@hpr.abdm',
+                    'name' => 'Dr. Ramesh Kumar',
+                ],
+            ]);
+    }
+
+    /**
+     * Test linking existing HPR ID in simulated mode.
+     */
+    public function test_link_existing_hpr_simulated(): void
+    {
+        session(['nhpr_real_api_mode' => false]);
+
+        $response = $this->postJson(route('nhpr.register.link-existing'), [
+            'hpr_id' => 'doctor@hpr.abdm',
+            'auth_method' => 'PASSWORD',
+            'password' => 'secret123',
+            'facility_id' => 'IN2710000059',
+            'facility_name' => 'Civil Hospital',
+            'facility_address' => 'Dehradun',
+            'facility_pincode' => '248001',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+            ])
+            ->assertJsonStructure(['referenceNumber']);
+    }
 }

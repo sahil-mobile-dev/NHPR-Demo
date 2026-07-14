@@ -943,6 +943,48 @@
         .switch-toggle input:checked+.slider::before {
             transform: translateX(20px);
         }
+
+        /* Tabs styling */
+        .tab-nav {
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--muted);
+            padding: 12px 20px;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .tab-btn.active {
+            color: var(--primary-light);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-panel {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
     </style>
 </head>
 
@@ -1052,6 +1094,19 @@
                                 class="fa-solid fa-gear"></i> Configure API Credentials</a>
                     </div>
                 </div>
+
+                <!-- Tabs Navigation -->
+                <div class="tab-nav">
+                    <button class="tab-btn active" data-tab="tab-wizard">
+                        <i class="fa-solid fa-user-plus"></i> Create New HPR ID
+                    </button>
+                    <button class="tab-btn" data-tab="tab-link-existing">
+                        <i class="fa-solid fa-link"></i> Link Existing HPR ID
+                    </button>
+                </div>
+
+                <!-- Tab 1: Create New HPR ID (Wizard) -->
+                <div class="tab-panel active" id="tab-wizard">
 
                 <!-- Wizard Indicator Stepper -->
                 <div class="stepper">
@@ -1490,7 +1545,13 @@
                                 search (HFR)</span>
                         </div>
                         <div class="card-body">
-                            <div class="grid-3">
+                            <div class="grid-4">
+                                <div class="form-group">
+                                    <label for="facility-search-id">Facility ID</label>
+                                    <input type="text" id="facility-search-id" class="form-control"
+                                        placeholder="e.g. IN2710000059">
+                                </div>
+
                                 <div class="form-group">
                                     <label for="facility-search-name">Hospital/Clinic Name</label>
                                     <input type="text" id="facility-search-name" class="form-control"
@@ -1604,6 +1665,182 @@
                     </div>
                 </div>
 
+                </div> <!-- End Tab 1: Create New HPR ID -->
+
+                <!-- Tab 2: Link Existing HPR ID -->
+                <div class="tab-panel" id="tab-link-existing">
+                    <div class="panel-header">
+                        <h2 class="panel-title"><i class="fa-solid fa-link"></i> Link Existing HPR ID</h2>
+                        <p class="panel-sub">Look up your existing HPR profile by HPR ID, select your healthcare facility, and authorize the linkage.</p>
+                    </div>
+
+                    <!-- HPR ID Lookup Card -->
+                    <div class="card" id="hpr-lookup-card">
+                        <div class="card-header">
+                            <span class="card-title"><i class="fa-solid fa-search"></i> HPR Profile Lookup</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="existing-hpr-id">Enter HPR ID / Username <span class="req">*</span></label>
+                                <div style="display: flex; gap: 12px; margin-top: 8px;">
+                                    <input type="text" id="existing-hpr-id" class="form-input" placeholder="e.g. doctor123@hpr.abdm" style="flex: 1; padding: 10px 14px; border: 1px solid var(--border2); border-radius: 8px; background: var(--surface2); color: #fff;">
+                                    <button class="btn primary" id="btn-fetch-hpr-profile" style="padding: 10px 20px;"><i class="fa-solid fa-magnifying-glass"></i> Fetch Profile</button>
+                                </div>
+                                <span style="font-size: 11px; color: var(--muted); margin-top: 6px; display: block;">For simulated mode, use any ID (e.g. `doctor@hpr.abdm`). To trigger a simulated fail, use `invalid` or `fail` in the HPR ID.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Profile Details View Card (Initially Hidden) -->
+                    <div class="card" id="existing-profile-details-card" style="display: none;">
+                        <div class="card-header" style="background: rgba(21, 101, 192, 0.05);">
+                            <span class="card-title" style="color: var(--primary-light);"><i class="fa-solid fa-address-card"></i> Healthcare Professional Profile Found</span>
+                        </div>
+                        <div class="card-body">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                                <div class="detail-row" style="border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+                                    <span class="detail-label" style="font-size: 11px; color: var(--muted); display: block;">Full Name</span>
+                                    <span class="detail-val" id="ext-prof-name" style="font-weight: 700; color: #fff; font-size: 14px;">-</span>
+                                </div>
+                                <div class="detail-row" style="border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+                                    <span class="detail-label" style="font-size: 11px; color: var(--muted); display: block;">Practitioner Category</span>
+                                    <span class="detail-val" id="ext-prof-category" style="font-weight: 600; color: #fff; font-size: 13.5px;">-</span>
+                                </div>
+                                <div class="detail-row" style="border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+                                    <span class="detail-label" style="font-size: 11px; color: var(--muted); display: block;">Registration Number</span>
+                                    <span class="detail-val" id="ext-prof-reg-no" style="font-weight: 600; color: #fff; font-size: 13.5px;">-</span>
+                                </div>
+                                <div class="detail-row" style="border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+                                    <span class="detail-label" style="font-size: 11px; color: var(--muted); display: block;">State Medical Council</span>
+                                    <span class="detail-val" id="ext-prof-council" style="font-weight: 600; color: #fff; font-size: 13.5px;">-</span>
+                                </div>
+                                <div class="detail-row" style="padding-bottom: 8px;">
+                                    <span class="detail-label" style="font-size: 11px; color: var(--muted); display: block;">Registered Mobile Number</span>
+                                    <span class="detail-val" id="ext-prof-mobile" style="font-weight: 600; color: #fff; font-size: 13.5px;">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Facility Search and Mapping Section (Initially Hidden) -->
+                    <div class="card" id="existing-facility-mapping-card" style="display: none;">
+                        <div class="card-header">
+                            <span class="card-title"><i class="fa-solid fa-hospital-user"></i> Associate Healthcare Facility (HFR)</span>
+                        </div>
+                        <div class="card-body">
+                            <p style="font-size: 12.5px; color: var(--muted); margin-bottom: 16px;">Search the National Health Facility Registry (HFR) database and select the facility where you practice.</p>
+                            
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px;">
+                                <div class="form-group">
+                                    <label for="ext-facility-search-id">Facility ID</label>
+                                    <input type="text" id="ext-facility-search-id" class="form-input" placeholder="e.g. IN2710000059" style="width: 100%; padding: 10px; border: 1px solid var(--border2); border-radius: 8px; background: var(--surface2); color: #fff; margin-top: 6px;">
+                                </div>
+                                <div class="form-group">
+                                    <label for="ext-facility-search-name">Facility Name</label>
+                                    <input type="text" id="ext-facility-search-name" class="form-input" placeholder="e.g. AIIMS Dehradun" style="width: 100%; padding: 10px; border: 1px solid var(--border2); border-radius: 8px; background: var(--surface2); color: #fff; margin-top: 6px;">
+                                </div>
+                                <div class="form-group">
+                                    <label for="ext-facility-search-pincode">Pincode (6 digits)</label>
+                                    <input type="text" id="ext-facility-search-pincode" class="form-input" placeholder="e.g. 248001" style="width: 100%; padding: 10px; border: 1px solid var(--border2); border-radius: 8px; background: var(--surface2); color: #fff; margin-top: 6px;">
+                                </div>
+                            </div>
+
+                            <button class="btn" id="btn-ext-search-facility" style="padding: 10px 20px; background: var(--surface2); border: 1px solid var(--border2); color: #fff; cursor: pointer; border-radius: 8px; font-weight: 600;"><i class="fa-solid fa-magnifying-glass"></i> Search Facilities</button>
+
+                            <!-- Facility search results -->
+                            <div id="ext-facility-results-container" style="display: none; margin-top: 16px; max-height: 250px; overflow-y: auto; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+                                <!-- Dynamically populated facility items -->
+                            </div>
+
+                            <!-- Selected facility info box -->
+                            <div class="selected-facility-box" id="ext-selected-facility-box" style="display: none; background: rgba(46, 125, 50, 0.1); border: 1px solid rgba(46, 125, 50, 0.3); border-radius: 8px; padding: 14px; margin-top: 16px; position: relative;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <i class="fa-solid fa-circle-check" style="color: var(--success-light); font-size: 18px;"></i>
+                                    <div>
+                                        <div style="font-size: 13.5px; font-weight: 700; color: #fff;" id="ext-selected-fac-name">Apollo Hospital</div>
+                                        <div style="font-size: 11.5px; color: var(--muted); margin-top: 2px;" id="ext-selected-fac-details">ID: IN2710000059 | Rishikesh, Uttarakhand</div>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="ext-selected-fac-id">
+                                <input type="hidden" id="ext-selected-fac-address">
+                                <input type="hidden" id="ext-selected-fac-pincode">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Authenticate & Link Card (Initially Hidden) -->
+                    <div class="card" id="existing-auth-link-card" style="display: none;">
+                        <div class="card-header">
+                            <span class="card-title"><i class="fa-solid fa-shield-halved"></i> Practitioner Authorization & Linkage</span>
+                        </div>
+                        <div class="card-body">
+                            <p style="font-size: 12.5px; color: var(--muted); margin-bottom: 16px;">Verify your credentials to complete the facility association on HPR.</p>
+                            
+                            <div class="form-group" style="margin-bottom: 16px;">
+                                <label>Select Authentication Method</label>
+                                <div style="display: flex; gap: 24px; margin-top: 8px;">
+                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px;">
+                                        <input type="radio" name="ext-auth-method" value="PASSWORD" checked style="accent-color: var(--primary);"> HPR Account Password
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px;">
+                                        <input type="radio" name="ext-auth-method" value="OTP" style="accent-color: var(--primary);"> Registered Mobile OTP
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Password Fields -->
+                            <div id="ext-auth-password-group" class="form-group" style="margin-bottom: 24px;">
+                                <label for="ext-hpr-password">Enter HPR Password <span class="req">*</span></label>
+                                <input type="password" id="ext-hpr-password" class="form-input" placeholder="Enter HPR account password" style="width: 100%; padding: 10px; border: 1px solid var(--border2); border-radius: 8px; background: var(--surface2); color: #fff; margin-top: 8px; display: block;">
+                                <span style="font-size: 11px; color: var(--muted); margin-top: 6px; display: block;">For simulated mode, use any password (or enter `wrong` to simulate a credentials error).</span>
+                            </div>
+
+                            <!-- OTP Fields -->
+                            <div id="ext-auth-otp-group" class="form-group" style="display: none; margin-bottom: 24px;">
+                                <label for="ext-hpr-otp">Enter 6-Digit Mobile OTP <span class="req">*</span></label>
+                                <div style="display: flex; gap: 12px; margin-top: 8px;">
+                                    <input type="text" id="ext-hpr-otp" class="form-input" placeholder="e.g. 123456" style="flex: 1; padding: 10px 14px; border: 1px solid var(--border2); border-radius: 8px; background: var(--surface2); color: #fff;">
+                                    <button class="btn" id="btn-ext-send-otp" style="padding: 10px 20px; background: var(--surface2); border: 1px solid var(--border2); color: #fff; cursor: pointer; border-radius: 8px; font-weight: 600;"><i class="fa-solid fa-paper-plane"></i> Send OTP</button>
+                                </div>
+                                <span style="font-size: 11px; color: var(--muted); margin-top: 6px; display: block;">For simulated mode, click 'Send OTP' and then enter `123456`.</span>
+                            </div>
+
+                            <button class="btn primary" id="btn-ext-submit-linkage" style="width: 100%; padding: 12px 20px; font-size: 14px;"><i class="fa-solid fa-link"></i> Authenticate & Link Facility</button>
+                        </div>
+                    </div>
+
+                    <!-- Linkage Success Card (Initially Hidden) -->
+                    <div class="card" id="ext-linkage-success-card" style="display: none;">
+                        <div class="card-body">
+                            <div class="success-animation">
+                                <div class="tick-circle" style="background: var(--success);"><i class="fa-solid fa-check"></i></div>
+                                <h2 class="success-title">Facility Association Successful</h2>
+                                <p class="success-text" id="ext-success-msg">Congratulations! The facility has been linked to your HPR profile successfully.</p>
+
+                                <div class="result-box" style="background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin: 20px 0; width: 100%; max-width: 450px; text-align: left; margin-left: auto; margin-right: auto;">
+                                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 6px;">
+                                        <span style="font-size: 11.5px; color: var(--muted);">HPR ID Username</span>
+                                        <span style="font-weight: 700; color: #fff;" id="ext-success-hpr-id">-</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 6px; margin-top: 6px;">
+                                        <span style="font-size: 11.5px; color: var(--muted);">Linked Health Facility</span>
+                                        <span style="font-weight: 700; color: var(--primary-light);" id="ext-success-fac-name">-</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; margin-top: 6px;">
+                                        <span style="font-size: 11.5px; color: var(--muted);">Verification Reference ID</span>
+                                        <span style="font-weight: 600; color: var(--gold);" id="ext-success-ref-id">-</span>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top: 24px; display: flex; gap: 14px; justify-content: center;">
+                                    <a href="{{ route('nhpr.register.wizard', ['fresh' => 1]) }}" class="btn primary"><i class="fa-solid fa-arrow-rotate-right"></i> Link Another Facility</a>
+                                    <a href="{{ route('nhpr.hfr.index') }}" class="btn"><i class="fa-solid fa-building-circle-check"></i> HFR Dashboard</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -1613,6 +1850,285 @@
 
             // CSRF Token setup
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            // ==========================================
+            // TABS SWITCHING LOGIC
+            // ==========================================
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabPanels = document.querySelectorAll('.tab-panel');
+
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const targetTabId = this.getAttribute('data-tab');
+                    
+                    tabBtns.forEach(b => b.classList.remove('active'));
+                    tabPanels.forEach(p => p.classList.remove('active'));
+
+                    this.classList.add('active');
+                    document.getElementById(targetTabId).classList.add('active');
+                });
+            });
+
+            // ==========================================
+            // LINK EXISTING HPR ID WORKFLOW
+            // ==========================================
+            const btnFetchProfile = document.getElementById('btn-fetch-hpr-profile');
+            const existingHprIdInput = document.getElementById('existing-hpr-id');
+            const extProfileCard = document.getElementById('existing-profile-details-card');
+            const extFacilityCard = document.getElementById('existing-facility-mapping-card');
+            const extAuthLinkCard = document.getElementById('existing-auth-link-card');
+            const extSuccessCard = document.getElementById('ext-linkage-success-card');
+
+            // Form inputs
+            const extHprPassword = document.getElementById('ext-hpr-password');
+            const extHprOtp = document.getElementById('ext-hpr-otp');
+            const btnExtSendOtp = document.getElementById('btn-ext-send-otp');
+            const btnExtSubmitLinkage = document.getElementById('btn-ext-submit-linkage');
+
+            // Selected facility state
+            let selectedExtFacility = null;
+
+            // Step 1: Fetch Profile details
+            btnFetchProfile.addEventListener('click', function () {
+                const hprId = existingHprIdInput.value.trim();
+                if (!hprId) {
+                    showToast('Please enter an HPR ID.', 'warning');
+                    return;
+                }
+
+                btnFetchProfile.disabled = true;
+                btnFetchProfile.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Fetching...';
+
+                fetch('{{ route("nhpr.register.fetch-hpr-profile") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({ hpr_id: hprId })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    btnFetchProfile.disabled = false;
+                    btnFetchProfile.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Fetch Profile';
+
+                    if (data.success) {
+                        showToast('HPR Profile retrieved successfully!');
+                        
+                        // Populate details
+                        document.getElementById('ext-prof-name').textContent = data.profile.name;
+                        document.getElementById('ext-prof-category').textContent = data.profile.category + (data.profile.subCategory ? ' (' + data.profile.subCategory + ')' : '');
+                        document.getElementById('ext-prof-reg-no').textContent = data.profile.registrationNumber;
+                        document.getElementById('ext-prof-council').textContent = data.profile.council;
+                        document.getElementById('ext-prof-mobile').textContent = data.profile.maskedMobile;
+
+                        // Slide open other cards
+                        extProfileCard.style.display = 'block';
+                        extFacilityCard.style.display = 'block';
+                        extAuthLinkCard.style.display = 'block';
+                        
+                        // Scroll to profile card
+                        extProfileCard.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                        showToast(data.message, 'error');
+                        extProfileCard.style.display = 'none';
+                        extFacilityCard.style.display = 'none';
+                        extAuthLinkCard.style.display = 'none';
+                    }
+                })
+                .catch(err => {
+                    btnFetchProfile.disabled = false;
+                    btnFetchProfile.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Fetch Profile';
+                    showToast('Failed to retrieve HPR details.', 'error');
+                });
+            });
+
+            // Step 2: HFR Facility Search (Link tab)
+            const btnExtSearchFac = document.getElementById('btn-ext-search-facility');
+            const extFacResultsContainer = document.getElementById('ext-facility-results-container');
+            const extSelectedFacilityBox = document.getElementById('ext-selected-facility-box');
+
+            btnExtSearchFac.addEventListener('click', function () {
+                const name = document.getElementById('ext-facility-search-name').value.trim();
+                const pincode = document.getElementById('ext-facility-search-pincode').value.trim();
+                const facilityId = document.getElementById('ext-facility-search-id').value.trim();
+
+                if (!name && !pincode && !facilityId) {
+                    showToast('Please enter facility ID, name or pincode to search.', 'warning');
+                    return;
+                }
+
+                btnExtSearchFac.disabled = true;
+                btnExtSearchFac.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Searching...';
+                extFacResultsContainer.style.display = 'none';
+                extSelectedFacilityBox.style.display = 'none';
+
+                fetch('{{ route("nhpr.register.facility.search") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({ facilityName: name, pincode: pincode, facilityId: facilityId })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    btnExtSearchFac.disabled = false;
+                    btnExtSearchFac.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Search Facilities';
+
+                    if (data.success) {
+                        extFacResultsContainer.innerHTML = '';
+
+                        if (data.facilities.length === 0) {
+                            extFacResultsContainer.innerHTML = '<div style="padding: 12px; color: var(--muted); font-size: 13px; text-align: center;">No facilities found matching details.</div>';
+                            extFacResultsContainer.style.display = 'block';
+                            return;
+                        }
+
+                        data.facilities.forEach(fac => {
+                            const item = document.createElement('div');
+                            item.className = 'facility-item';
+                            item.innerHTML = `
+                                <div class="facility-info">
+                                    <span class="fac-name">${fac.facilityName}</span>
+                                    <span class="fac-id">ID: ${fac.facilityId}</span>
+                                    <span class="fac-address">${fac.address || ''}, ${fac.stateName || ''}</span>
+                                </div>
+                                <span class="btn-link">Link Facility <i class="fa-solid fa-link"></i></span>
+                            `;
+
+                            item.addEventListener('click', function () {
+                                document.getElementById('ext-selected-fac-name').textContent = fac.facilityName;
+                                document.getElementById('ext-selected-fac-details').textContent = `ID: ${fac.facilityId} | Address: ${fac.address || ''} | Pincode: ${fac.pincode || ''}`;
+                                document.getElementById('ext-selected-fac-id').value = fac.facilityId;
+                                document.getElementById('ext-selected-fac-address').value = fac.address || '';
+                                document.getElementById('ext-selected-fac-pincode').value = fac.pincode || '';
+                                
+                                selectedExtFacility = fac;
+
+                                extSelectedFacilityBox.style.display = 'block';
+                                extFacResultsContainer.style.display = 'none';
+                            });
+
+                            extFacResultsContainer.appendChild(item);
+                        });
+
+                        extFacResultsContainer.style.display = 'block';
+                    } else {
+                        showToast(data.message, 'error');
+                    }
+                })
+                .catch(err => {
+                    btnExtSearchFac.disabled = false;
+                    btnExtSearchFac.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Search Facilities';
+                    showToast('Facility search failed.', 'error');
+                });
+            });
+
+            // Step 3: Auth Method Toggles
+            const extAuthRadioButtons = document.querySelectorAll('input[name="ext-auth-method"]');
+            const extAuthPasswordGroup = document.getElementById('ext-auth-password-group');
+            const extAuthOtpGroup = document.getElementById('ext-auth-otp-group');
+
+            extAuthRadioButtons.forEach(radio => {
+                radio.addEventListener('change', function () {
+                    if (this.value === 'PASSWORD') {
+                        extAuthPasswordGroup.style.display = 'block';
+                        extAuthOtpGroup.style.display = 'none';
+                    } else {
+                        extAuthPasswordGroup.style.display = 'none';
+                        extAuthOtpGroup.style.display = 'block';
+                    }
+                });
+            });
+
+            // Send simulated OTP
+            btnExtSendOtp.addEventListener('click', function () {
+                btnExtSendOtp.disabled = true;
+                btnExtSendOtp.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
+                
+                setTimeout(() => {
+                    btnExtSendOtp.disabled = false;
+                    btnExtSendOtp.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Resend OTP';
+                    showToast('Simulated OTP sent to your registered mobile number! Enter 123456.');
+                }, 1000);
+            });
+
+            // Step 4: Submit Linkage
+            btnExtSubmitLinkage.addEventListener('click', function () {
+                const hprId = existingHprIdInput.value.trim();
+                const authMethod = document.querySelector('input[name="ext-auth-method"]:checked').value;
+                const password = extHprPassword.value;
+                const otp = extHprOtp.value.trim();
+                const facilityId = document.getElementById('ext-selected-fac-id').value;
+
+                if (!facilityId) {
+                    showToast('Please search and select a facility first.', 'warning');
+                    return;
+                }
+
+                if (authMethod === 'PASSWORD' && !password) {
+                    showToast('Please enter your HPR password.', 'warning');
+                    return;
+                }
+
+                if (authMethod === 'OTP' && !otp) {
+                    showToast('Please enter the OTP.', 'warning');
+                    return;
+                }
+
+                btnExtSubmitLinkage.disabled = true;
+                btnExtSubmitLinkage.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing linkage...';
+
+                const payload = {
+                    hpr_id: hprId,
+                    auth_method: authMethod,
+                    password: password,
+                    otp: otp,
+                    facility_id: facilityId,
+                    facility_name: selectedExtFacility.facilityName,
+                    facility_address: selectedExtFacility.address || 'Address info',
+                    facility_pincode: selectedExtFacility.pincode || '248001'
+                };
+
+                fetch('{{ route("nhpr.register.link-existing") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    btnExtSubmitLinkage.disabled = false;
+                    btnExtSubmitLinkage.innerHTML = '<i class="fa-solid fa-link"></i> Authenticate & Link Facility';
+
+                    if (data.success) {
+                        showToast('Facility linked successfully!');
+                        
+                        // Hide input cards and show success screen
+                        document.getElementById('hpr-lookup-card').style.display = 'none';
+                        extProfileCard.style.display = 'none';
+                        extFacilityCard.style.display = 'none';
+                        extAuthLinkCard.style.display = 'none';
+
+                        document.getElementById('ext-success-hpr-id').textContent = hprId;
+                        document.getElementById('ext-success-fac-name').textContent = selectedExtFacility.facilityName;
+                        document.getElementById('ext-success-ref-id').textContent = data.referenceNumber;
+
+                        extSuccessCard.style.display = 'block';
+                        extSuccessCard.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                        showToast(data.message, 'error');
+                    }
+                })
+                .catch(err => {
+                    btnExtSubmitLinkage.disabled = false;
+                    btnExtSubmitLinkage.innerHTML = '<i class="fa-solid fa-link"></i> Authenticate & Link Facility';
+                    showToast('Linkage request failed.', 'error');
+                });
+            });
 
             // Switch listener to toggle API mode
             const liveModeSwitch = document.getElementById('live-mode-switch');
@@ -2169,9 +2685,10 @@
             btnSearchFac.addEventListener('click', function () {
                 const name = document.getElementById('facility-search-name').value.trim();
                 const pincode = document.getElementById('facility-search-pincode').value.trim();
+                const facilityId = document.getElementById('facility-search-id').value.trim();
 
-                if (!name && !pincode) {
-                    showToast('Please enter facility name or pincode to search.', 'warning');
+                if (!name && !pincode && !facilityId) {
+                    showToast('Please enter facility ID, name or pincode to search.', 'warning');
                     return;
                 }
 
@@ -2185,7 +2702,7 @@
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': csrfToken
                     },
-                    body: JSON.stringify({ facilityName: name, pincode: pincode })
+                    body: JSON.stringify({ facilityName: name, pincode: pincode, facilityId: facilityId })
                 })
                     .then(res => res.json())
                     .then(data => {
