@@ -638,7 +638,7 @@
                         <i class="fa-solid fa-circle-plus"></i> Register Facility
                     </button>
                     <button class="tab-btn" data-tab="tab-link">
-                        <i class="fa-solid fa-link"></i> Link Bridge Software
+                        <i class="fa-solid fa-link"></i> Link HPR/Facility Manager
                     </button>
                 </div>
 
@@ -786,32 +786,90 @@
                     </div>
                 </div>
 
-                <!-- TAB 3: Link Bridge Software -->
+                <!-- TAB 3: Link HPR/Facility Manager -->
+                <!-- TAB 3: Link HPR/Facility Manager -->
                 <div class="tab-panel" id="tab-link">
                     <div class="card">
                         <div class="card-header">
-                            <span class="card-title"><i class="fa-solid fa-circle-nodes"></i> Software Bridge Facility Linkage</span>
+                            <span class="card-title"><i class="fa-solid fa-user-tie"></i> HFR to HPR / Facility Manager Linkage</span>
                         </div>
                         <div class="card-body">
-                            <form id="link-form">
-                                <div class="form-group">
-                                    <label for="link-facility-id">Health Facility ID (HFR ID) <span class="req">*</span></label>
-                                    <input type="text" id="link-facility-id" class="form-control" placeholder="e.g. IN2710000059" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="link-facility-name">Facility Name <span class="req">*</span></label>
-                                    <input type="text" id="link-facility-name" class="form-control" placeholder="e.g. Dehradun Civil Hospital" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="link-bridge-id">Bridge Client ID (HRP Software Client) <span class="req">*</span></label>
-                                    <input type="text" id="link-bridge-id" class="form-control" value="{{ $defaultBridgeId }}" placeholder="Your Software Bridge Client ID" required>
-                                    <span style="font-size: 11px; color: var(--muted);">Defaults to active gateway client ID.</span>
+                            <form id="link-form" onsubmit="submitLinkageForm(event)">
+                                <!-- Hidden Fields to hold details for link-existing API -->
+                                <input type="hidden" id="link-facility-address" value="Dehradun">
+                                <input type="hidden" id="link-facility-pincode" value="248001">
+
+                                <!-- Step 1: Base Details -->
+                                <div id="link-step-1">
+                                    <div class="form-group" style="margin-bottom: 14px;">
+                                        <label for="link-facility-id">Health Facility ID (HFR ID) <span class="req">*</span></label>
+                                        <input type="text" id="link-facility-id" class="form-control" placeholder="e.g. IN2710000059" required>
+                                    </div>
+                                    <div class="form-group" style="margin-bottom: 14px;">
+                                        <label for="link-facility-name">Facility Name <span class="req">*</span></label>
+                                        <input type="text" id="link-facility-name" class="form-control" placeholder="e.g. Dehradun Civil Hospital" required>
+                                    </div>
+                                    <div class="form-group" style="margin-bottom: 14px;">
+                                        <label for="link-hpr-id">HPR ID / Facility Manager ID <span class="req">*</span></label>
+                                        <input type="text" id="link-hpr-id" class="form-control" value="{{ $loggedInHprId }}" placeholder="e.g. doctor@hpr.abdm" required>
+                                        <span style="font-size: 11px; color: var(--muted);">Pre-populated with active logged-in HPR session identifier.</span>
+                                    </div>
+
+                                    <div style="margin-top: 20px; text-align: right;">
+                                        <button type="button" class="btn" id="btn-verify-hpr" onclick="verifyHprId()" style="background: var(--primary); color: #fff;">
+                                            <i class="fa-solid fa-user-shield"></i> Verify HPR Profile
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <div style="margin-top: 20px; text-align: right;">
-                                    <button type="submit" class="btn" id="btn-link-fac">
-                                        <i class="fa-solid fa-link"></i> Link Bridge Software
-                                    </button>
+                                <!-- Step 2: HPR Verification (Hidden by default) -->
+                                <div id="link-step-2" style="display: none; margin-top: 14px;">
+                                    <!-- Fetched Profile Card -->
+                                    <div class="hpr-profile-card" style="padding: 16px; background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px; margin-bottom: 20px;">
+                                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                                            <div style="font-size: 24px; color: var(--primary-light);"><i class="fa-solid fa-user-doctor"></i></div>
+                                            <div>
+                                                <div style="font-weight: 700; font-size: 15px;" id="hpr-profile-name">Loading...</div>
+                                                <div style="font-size: 11px; color: var(--muted);" id="hpr-profile-id">ID: </div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-2" style="font-size: 12px; gap: 8px; color: var(--muted2); margin-top: 12px;">
+                                            <div><strong>Medical Council:</strong> <span id="hpr-profile-council">—</span></div>
+                                            <div><strong>Reg No:</strong> <span id="hpr-profile-regno">—</span></div>
+                                            <div><strong>Mobile:</strong> <span id="hpr-profile-mobile">—</span></div>
+                                            <div><strong>DOB:</strong> <span id="hpr-profile-dob">—</span></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Auth Type Selection -->
+                                    <div class="form-group" style="margin-bottom: 14px;">
+                                        <label for="link-auth-method">Select Authentication Method <span class="req">*</span></label>
+                                        <select id="link-auth-method" class="form-control" onchange="toggleAuthFields()">
+                                            <option value="OTP">OTP Verification (via Registered Mobile)</option>
+                                            <option value="PASSWORD">Password Authentication</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Verification Fields -->
+                                    <div class="form-group id-auth-field" id="auth-otp-group" style="margin-bottom: 14px;">
+                                        <label for="link-otp">Enter 6-Digit OTP <span class="req">*</span></label>
+                                        <input type="text" id="link-otp" class="form-control font-mono" maxlength="6" placeholder="Enter OTP (e.g. 123456)">
+                                        <span style="font-size: 11px; color: var(--muted);">OTP has been sent to registered mobile number.</span>
+                                    </div>
+
+                                    <div class="form-group id-auth-field" id="auth-password-group" style="margin-bottom: 14px; display: none;">
+                                        <label for="link-password">HPR Password <span class="req">*</span></label>
+                                        <input type="password" id="link-password" class="form-control" placeholder="Enter HPR Registry Password">
+                                    </div>
+
+                                    <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+                                        <button type="button" class="btn" id="btn-back-step1" onclick="goBackToStep1()" style="background: rgba(255,255,255,0.05); color: #fff;">
+                                            <i class="fa-solid fa-arrow-left"></i> Back
+                                        </button>
+                                        <button type="submit" class="btn" id="btn-link-fac" style="background: var(--success); color: #fff;">
+                                            <i class="fa-solid fa-link"></i> Link HPR/Facility Manager
+                                        </button>
+                                    </div>
                                 </div>
                             </form>
                         </div>
@@ -909,7 +967,9 @@
                                     <button class="btn secondary select-fac-btn" 
                                         style="padding: 4px 8px; font-size: 11px;"
                                         data-id="${fac.facilityId}"
-                                        data-name="${fac.facilityName}">
+                                        data-name="${fac.facilityName}"
+                                        data-address="${fac.address || 'Dehradun'}"
+                                        data-pincode="${fac.pincode || '248001'}">
                                         Select for Linkage
                                     </button>
                                 </td>
@@ -922,8 +982,12 @@
                             selBtn.addEventListener('click', function() {
                                 const id = this.getAttribute('data-id');
                                 const name = this.getAttribute('data-name');
+                                const address = this.getAttribute('data-address');
+                                const pincode = this.getAttribute('data-pincode');
                                 document.getElementById('link-facility-id').value = id;
                                 document.getElementById('link-facility-name').value = name;
+                                document.getElementById('link-facility-address').value = address;
+                                document.getElementById('link-facility-pincode').value = pincode;
                                 showToast(`Selected facility: ${name}`);
                                 
                                 // Auto switch to linkage tab
@@ -985,6 +1049,8 @@
                     // Set up link form with new details automatically
                     document.getElementById('link-facility-id').value = data.facilityId;
                     document.getElementById('link-facility-name').value = data.facilityName;
+                    document.getElementById('link-facility-address').value = payload.facilityAddress || 'Dehradun';
+                    document.getElementById('link-facility-pincode').value = payload.pincode || '248001';
                     
                     // Auto switch to linkage tab
                     const tabLinkBtn = document.querySelector('.tab-btn[data-tab="tab-link"]');
@@ -1000,20 +1066,102 @@
             });
         });
 
-        // Link Action
-        document.getElementById('link-form').addEventListener('submit', function (e) {
-            e.preventDefault();
+        // Toggle Authentication fields based on selection (OTP vs PASSWORD)
+        function toggleAuthFields() {
+            const method = document.getElementById('link-auth-method').value;
+            if (method === 'OTP') {
+                document.getElementById('auth-otp-group').style.display = 'block';
+                document.getElementById('auth-password-group').style.display = 'none';
+            } else {
+                document.getElementById('auth-otp-group').style.display = 'none';
+                document.getElementById('auth-password-group').style.display = 'block';
+            }
+        }
+
+        // Verify HPR ID Registry Details (Step 1 -> Step 2)
+        function verifyHprId() {
+            const hprId = document.getElementById('link-hpr-id').value.trim();
+            if (!hprId) {
+                showToast('Please enter an HPR ID.', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('btn-verify-hpr');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...';
+
+            fetch('{{ route("nhpr.register.fetch-hpr-profile") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({ hpr_id: hprId })
+            })
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error('Verification failed.');
+                }
+                return res.json();
+            })
+            .then(data => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-user-shield"></i> Verify HPR Profile';
+
+                if (data.success && data.profile) {
+                    const prof = data.profile;
+                    document.getElementById('hpr-profile-name').innerText = prof.name || 'Healthcare Professional';
+                    document.getElementById('hpr-profile-id').innerText = 'ID: ' + (prof.hprId || hprId);
+                    document.getElementById('hpr-profile-council').innerText = prof.council || '—';
+                    document.getElementById('hpr-profile-regno').innerText = prof.registrationNumber || '—';
+                    document.getElementById('hpr-profile-mobile').innerText = prof.maskedMobile || '—';
+                    document.getElementById('hpr-profile-dob').innerText = prof.dob || '—';
+
+                    // Slide to Step 2
+                    document.getElementById('link-step-1').style.display = 'none';
+                    document.getElementById('link-step-2').style.display = 'block';
+                    showToast('Practitioner profile retrieved successfully!');
+                } else {
+                    showToast(data.message || 'HPR ID not found.', 'error');
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-user-shield"></i> Verify HPR Profile';
+                showToast('HPR verification service offline.', 'error');
+            });
+        }
+
+        // Back action (Step 2 -> Step 1)
+        function goBackToStep1() {
+            document.getElementById('link-step-2').style.display = 'none';
+            document.getElementById('link-step-1').style.display = 'block';
+        }
+
+        // Final submit linkage form (reusing link-existing API)
+        function submitLinkageForm(event) {
+            event.preventDefault();
             const btn = document.getElementById('btn-link-fac');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Linking...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Authenticating & Linking...';
 
+            const authMethod = document.getElementById('link-auth-method').value;
             const payload = {
-                facilityId: document.getElementById('link-facility-id').value,
-                facilityName: document.getElementById('link-facility-name').value,
-                bridgeId: document.getElementById('link-bridge-id').value,
+                hpr_id: document.getElementById('link-hpr-id').value.trim(),
+                auth_method: authMethod,
+                facility_id: document.getElementById('link-facility-id').value,
+                facility_name: document.getElementById('link-facility-name').value,
+                facility_address: document.getElementById('link-facility-address').value || 'Dehradun',
+                facility_pincode: document.getElementById('link-facility-pincode').value || '248001',
             };
 
-            fetch('{{ route("nhpr.hfr.link") }}', {
+            if (authMethod === 'OTP') {
+                payload.otp = document.getElementById('link-otp').value.trim();
+            } else {
+                payload.password = document.getElementById('link-password').value;
+            }
+
+            fetch('{{ route("nhpr.register.link-existing") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1024,21 +1172,28 @@
             .then(res => res.json())
             .then(data => {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-link"></i> Link Bridge Software';
+                btn.innerHTML = '<i class="fa-solid fa-link"></i> Link HPR/Facility Manager';
 
                 if (data.success) {
-                    showToast(data.message || 'Bridge linked successfully!');
-                    document.getElementById('link-form').reset();
+                    showToast(data.message || 'Successfully linked HFR with HPR/Facility Manager!');
+                    
+                    // Clear inputs and reset views back to Step 1
+                    document.getElementById('link-facility-id').value = '';
+                    document.getElementById('link-facility-name').value = '';
+                    document.getElementById('link-otp').value = '';
+                    document.getElementById('link-password').value = '';
+                    
+                    goBackToStep1();
                 } else {
-                    showToast(data.message || 'Linkage failed.', 'error');
+                    showToast(data.message || 'Authentication & linkage failed.', 'error');
                 }
             })
             .catch(() => {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-link"></i> Link Bridge Software';
-                showToast('HFR linkage service error.', 'error');
+                btn.innerHTML = '<i class="fa-solid fa-link"></i> Link HPR/Facility Manager';
+                showToast('HFR linkage request failed.', 'error');
             });
-        });
+        }
     </script>
 </body>
 

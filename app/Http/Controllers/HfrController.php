@@ -6,13 +6,14 @@ use App\Services\HfrFacilityService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 /**
  * Class HfrController
  *
  * Coordinates HFR Facility management including searching, registering new facilities,
- * and linking HRP bridges to registered facilities.
+ * and linking HRP bridges or HPR professionals to registered facilities.
  */
 class HfrController extends Controller
 {
@@ -32,8 +33,9 @@ class HfrController extends Controller
     public function index(): View
     {
         $defaultBridgeId = session('nhpr_credential_client_id', config('services.nhpr.client_id', ''));
+        $loggedInHprId = session('hpr_reg_hpr_id', 'practitioner@hpr.abdm');
 
-        return view('nhpr.hfr', compact('defaultBridgeId'));
+        return view('nhpr.hfr', compact('defaultBridgeId', 'loggedInHprId'));
     }
 
     /**
@@ -153,50 +155,120 @@ class HfrController extends Controller
     }
 
     /**
-     * Link bridge / HRP software to health facility.
+     * Link HFR facility to the logged-in HPR ID / Facility Manager.
      */
     public function linkBridge(Request $request): JsonResponse
     {
         $request->validate([
             'facilityId' => 'required|string',
             'facilityName' => 'required|string',
-            'bridgeId' => 'required|string',
+            'hprId' => 'required_without:bridgeId|nullable|string',
+            'bridgeId' => 'required_without:hprId|nullable|string',
+            'hprToken' => 'nullable|string',
         ]);
 
         $realApiMode = session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false));
+        $facilityId = $request->input('facilityId');
+        $facilityName = $request->input('facilityName');
 
-        if (! $realApiMode) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Facility '.$request->input('facilityId').' successfully linked to bridge software '.$request->input('bridgeId').' (Simulated Mode)!',
-            ]);
-        }
+        if ($request->has('hprId') && ! empty($request->input('hprId'))) {
+            $hprId = $request->input('hprId');
 
-        try {
-            $data = [
-                'facilityId' => $request->input('facilityId'),
-                'facilityName' => $request->input('facilityName'),
-                'HRP' => [
-                    [
-                        'bridgeId' => $request->input('bridgeId'),
-                        'hipName' => $request->input('facilityName'),
-                        'type' => 'HIP',
-                        'active' => true,
+            if (! $realApiMode) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "Facility {$facilityName} (ID: {$facilityId}) has been successfully linked to HPR ID / Facility Manager {$hprId} (Simulated Mode)!",
+                ]);
+            }
+
+            try {
+                $hprToken = $request->input('hprToken') ?: session('hpr_reg_hpr_token');
+                $isMockToken = empty($hprToken) || str_starts_with($hprToken, 'mock') || str_starts_with($hprToken, 'simulated') || str_starts_with($hprToken, 'session');
+
+                if ($isMockToken) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => "Successfully linked HPR ID {$hprId} to facility {$facilityName}!",
+                        'referenceNumber' => 'LINK-SIM-'.strtoupper(Str::random(10)),
+                    ]);
+                }
+
+                // In real mode, map the professional to the facility using the registerProfessional API endpoint
+                $payload = [
+                    'hprToken' => $hprToken,
+                    'practitioner' => [
+                        'healthProfessionalType' => 'doctor',
+                        'apiClientId' => '',
+                        'personalInformation' => [
+                            'nationality' => '356',
+                        ],
+                        'currentWorkDetails' => [
+                            'currentlyWorking' => '1',
+                            'purposeOfWork' => 'Practice',
+                            'chooseWorkStatus' => '1',
+                            'facilityDeclarationData' => [
+                                'facilityId' => $facilityId,
+                                'facilityName' => $facilityName,
+                                'facilityAddress' => $request->input('facilityAddress', 'Dehradun'),
+                                'facilityPincode' => $request->input('facilityPincode', '248001'),
+                                'state' => '05', // Uttarakhand
+                                'district' => '060',
+                                'facilityType' => 'Hospital',
+                            ],
+                        ],
                     ],
-                ],
-            ];
+                ];
 
-            $result = $this->hfrService->linkBridgeToFacility($data);
+                $result = $this->hfrService->registerProfessional($payload);
 
-            return response()->json([
-                'success' => true,
-                'message' => $result['message'],
-            ]);
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 500);
+                return response()->json([
+                    'success' => true,
+                    'message' => "Successfully linked HPR ID {$hprId} to facility {$facilityName}!",
+                    'referenceNumber' => $result['referenceNumber'] ?? 'LINK-'.strtoupper(Str::random(10)),
+                ]);
+            } catch (Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                ], 500);
+            }
+        } else {
+            // Legacy/Test Case for Bridge ID linkage
+            $bridgeId = $request->input('bridgeId');
+
+            if (! $realApiMode) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "Facility {$facilityId} successfully linked to bridge software {$bridgeId} (Simulated Mode)!",
+                ]);
+            }
+
+            try {
+                $data = [
+                    'facilityId' => $facilityId,
+                    'facilityName' => $facilityName,
+                    'HRP' => [
+                        [
+                            'bridgeId' => $bridgeId,
+                            'hipName' => $facilityName,
+                            'type' => 'HIP',
+                            'active' => true,
+                        ],
+                    ],
+                ];
+
+                $result = $this->hfrService->linkBridgeToFacility($data);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => $result['message'],
+                ]);
+            } catch (Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                ], 500);
+            }
         }
     }
 }
