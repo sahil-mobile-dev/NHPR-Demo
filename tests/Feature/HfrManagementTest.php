@@ -63,7 +63,7 @@ class HfrManagementTest extends TestCase
         $response->assertStatus(200);
         $response->assertJsonPath('success', true);
         $response->assertJsonCount(2, 'facilities');
-        $response->assertJsonPath('facilities.0.facilityId', 'IN2710000059');
+        $response->assertJsonPath('facilities.0.facilityId', 'IN3310001245');
     }
 
     /**

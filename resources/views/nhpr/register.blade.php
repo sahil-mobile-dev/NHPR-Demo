@@ -1996,14 +1996,22 @@
                                             <h3 style="margin-bottom: 8px;">Existing HPR Record Found</h3>
                                             <p style="color: var(--muted); margin-bottom: 24px;">An active HPR profile is already associated with this Aadhaar number.</p>
                                             
-                                            <div style="background: var(--surface2); padding: 16px; border-radius: 8px; max-width: 400px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; text-align: left;">
+                                            <div style="background: var(--surface2); padding: 16px; border-radius: 8px; max-width: 400px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; text-align: left; margin-bottom: 24px;">
                                                 <div style="display: flex; justify-content: space-between;"><span style="color: var(--muted);">Full Name</span><span style="font-weight: 700;">${data.profile.name}</span></div>
                                                 <div style="display: flex; justify-content: space-between;"><span style="color: var(--muted);">HPR ID Number</span><span style="font-weight: 700; color: var(--primary-light);">${data.profile.hprIdNumber}</span></div>
                                                 <div style="display: flex; justify-content: space-between;"><span style="color: var(--muted);">Gender</span><span style="font-weight: 700;">${data.profile.gender}</span></div>
                                             </div>
+
+                                            <button class="btn primary" id="btn-proceed-existing" style="width: 100%; max-width: 400px;">
+                                                Proceed to Link Facility <i class="fa-solid fa-arrow-right"></i>
+                                            </button>
                                         </div>
                                     </div>
                                 `;
+                                    // Add event listener to transition to Step 3
+                                    document.getElementById('btn-proceed-existing').addEventListener('click', function () {
+                                        activateStep(3);
+                                    });
                                 } else {
                                     showToast(data.message);
                                     loadUsernameSuggestionsAndProceed();

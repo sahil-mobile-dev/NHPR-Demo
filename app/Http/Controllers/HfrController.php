@@ -52,17 +52,17 @@ class HfrController extends Controller
         if (! $realApiMode) {
             $facilities = [
                 [
+                    'facilityId' => 'IN3310001245',
+                    'facilityName' => 'ABC Hospital (Simulated)',
+                    'address' => 'No 510 south street koyambedu',
+                    'pincode' => '600107',
+                    'stateName' => 'Tamil Nadu',
+                ],
+                [
                     'facilityId' => 'IN2710000059',
                     'facilityName' => 'Dehradun Civil Hospital (Simulated)',
                     'address' => 'EC Road, Dehradun',
                     'pincode' => $request->input('pincode') ?: '248001',
-                    'stateName' => 'Uttarakhand',
-                ],
-                [
-                    'facilityId' => 'IN2710000060',
-                    'facilityName' => 'AIIMS Rishikesh OPD (Simulated)',
-                    'address' => 'Virbhadra Road, Rishikesh',
-                    'pincode' => '249201',
                     'stateName' => 'Uttarakhand',
                 ],
             ];

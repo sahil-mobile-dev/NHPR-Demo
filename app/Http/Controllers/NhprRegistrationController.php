@@ -239,8 +239,24 @@ class NhprRegistrationController extends Controller
             $hprExistResult = $this->hprService->checkHprIdExists($currentTxnId);
 
             if (isset($hprExistResult['new']) && $hprExistResult['new'] === false) {
-                // User already exists, abort registration flow
-                session()->forget(['hpr_reg_txn_id']);
+                $hprId = $hprExistResult['hprId'] ?? $hprExistResult['hprIdNumber'] ?? null;
+
+                // Store existing details in session to support direct Step 3 linkage
+                session([
+                    'hpr_reg_hpr_id' => $hprId,
+                    'hpr_reg_hpr_token' => 'simulated-jwt-token-'.Str::random(10),
+                    'hpr_reg_aadhaar_info' => [
+                        'name' => $hprExistResult['name'] ?? 'Healthcare Professional',
+                        'gender' => $hprExistResult['gender'] ?? null,
+                        'yearOfBirth' => $hprExistResult['yearOfBirth'] ?? null,
+                        'firstName' => $hprExistResult['firstName'] ?? null,
+                        'middleName' => $hprExistResult['middleName'] ?? null,
+                        'lastName' => $hprExistResult['lastName'] ?? null,
+                        'stateCode' => $hprExistResult['stateCode'] ?? null,
+                        'districtCode' => $hprExistResult['districtCode'] ?? null,
+                        'profilePhoto' => $hprExistResult['profilePhoto'] ?? null,
+                    ],
+                ]);
 
                 return response()->json([
                     'success' => true,
@@ -249,6 +265,7 @@ class NhprRegistrationController extends Controller
                     'message' => 'HPR account already exists for this Aadhaar number.',
                     'profile' => [
                         'hprIdNumber' => $hprExistResult['hprIdNumber'] ?? null,
+                        'hprId' => $hprId,
                         'name' => $hprExistResult['name'] ?? 'Healthcare Professional',
                         'gender' => $hprExistResult['gender'] ?? null,
                         'yearOfBirth' => $hprExistResult['yearOfBirth'] ?? null,
@@ -711,6 +728,13 @@ class NhprRegistrationController extends Controller
         if (! $realApiMode) {
             $facilities = [
                 [
+                    'facilityId' => 'IN3310001245',
+                    'facilityName' => 'ABC Hospital (Simulated)',
+                    'address' => 'No 510 south street koyambedu',
+                    'pincode' => '600107',
+                    'stateName' => 'Tamil Nadu',
+                ],
+                [
                     'facilityId' => 'IN2710000059',
                     'facilityName' => 'Dehradun Civil Hospital (Simulated)',
                     'address' => 'EC Road, Dehradun',
@@ -722,13 +746,6 @@ class NhprRegistrationController extends Controller
                     'facilityName' => 'AIIMS Rishikesh OPD (Simulated)',
                     'address' => 'Virbhadra Road, Rishikesh',
                     'pincode' => '249201',
-                    'stateName' => 'Uttarakhand',
-                ],
-                [
-                    'facilityId' => 'IN2710000061',
-                    'facilityName' => 'Haldwani Base Hospital (Simulated)',
-                    'address' => 'Haldwani, Nainital',
-                    'pincode' => '263139',
                     'stateName' => 'Uttarakhand',
                 ],
             ];
