@@ -800,9 +800,9 @@ class HprRegistrationTest extends TestCase
                                 [
                                     'registrationNumber' => 'MCI-12345',
                                     'registeredWithCouncil' => 'Uttarakhand Medical Council',
-                                ]
-                            ]
-                        ]
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ], 200),
@@ -823,9 +823,9 @@ class HprRegistrationTest extends TestCase
     }
 
     /**
-     * Test linking existing HPR ID in simulated mode.
+     * Test linking existing HPR ID in simulated mode using Password.
      */
-    public function test_link_existing_hpr_simulated(): void
+    public function test_link_existing_hpr_simulated_password_success(): void
     {
         session(['nhpr_real_api_mode' => false]);
 
@@ -844,5 +844,186 @@ class HprRegistrationTest extends TestCase
                 'success' => true,
             ])
             ->assertJsonStructure(['referenceNumber']);
+    }
+
+    /**
+     * Test linking existing HPR ID in simulated mode using wrong Password.
+     */
+    public function test_link_existing_hpr_simulated_password_failure(): void
+    {
+        session(['nhpr_real_api_mode' => false]);
+
+        $response = $this->postJson(route('nhpr.register.link-existing'), [
+            'hpr_id' => 'doctor@hpr.abdm',
+            'auth_method' => 'PASSWORD',
+            'password' => 'wrong',
+            'facility_id' => 'IN2710000059',
+            'facility_name' => 'Civil Hospital',
+            'facility_address' => 'Dehradun',
+            'facility_pincode' => '248001',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJson([
+                'success' => false,
+                'message' => 'Invalid HPR credentials / password. Please try again.',
+            ]);
+    }
+
+    /**
+     * Test linking existing HPR ID in simulated mode using OTP.
+     */
+    public function test_link_existing_hpr_simulated_otp_success(): void
+    {
+        session(['nhpr_real_api_mode' => false]);
+
+        $response = $this->postJson(route('nhpr.register.link-existing'), [
+            'hpr_id' => 'doctor@hpr.abdm',
+            'auth_method' => 'OTP',
+            'otp' => '123456',
+            'txn_id' => 'mock-txn-12345',
+            'facility_id' => 'IN2710000059',
+            'facility_name' => 'Civil Hospital',
+            'facility_address' => 'Dehradun',
+            'facility_pincode' => '248001',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+            ])
+            ->assertJsonStructure(['referenceNumber']);
+    }
+
+    /**
+     * Test linking existing HPR ID in simulated mode using invalid OTP.
+     */
+    public function test_link_existing_hpr_simulated_otp_failure(): void
+    {
+        session(['nhpr_real_api_mode' => false]);
+
+        $response = $this->postJson(route('nhpr.register.link-existing'), [
+            'hpr_id' => 'doctor@hpr.abdm',
+            'auth_method' => 'OTP',
+            'otp' => '111111',
+            'txn_id' => 'mock-txn-12345',
+            'facility_id' => 'IN2710000059',
+            'facility_name' => 'Civil Hospital',
+            'facility_address' => 'Dehradun',
+            'facility_pincode' => '248001',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJson([
+                'success' => false,
+                'message' => 'Invalid OTP. Please enter 123456 for simulated verification.',
+            ]);
+    }
+
+    /**
+     * Test sending linkage OTP in simulated mode.
+     */
+    public function test_send_linkage_otp_simulated(): void
+    {
+        session(['nhpr_real_api_mode' => false]);
+
+        $response = $this->postJson(route('nhpr.register.link-existing.send-otp'), [
+            'hpr_id' => 'doctor@hpr.abdm',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+            ])
+            ->assertJsonStructure(['txnId', 'message']);
+    }
+
+    /**
+     * Test sending linkage OTP in real mode.
+     */
+    public function test_send_linkage_otp_real_success(): void
+    {
+        session(['nhpr_real_api_mode' => true]);
+
+        Http::fake([
+            'https://mock-api.abdm.gov.in/v4/int/api/v1/auth/init' => Http::response([
+                'txnId' => 'real-txn-uuid-77777',
+            ], 200),
+        ]);
+
+        $response = $this->postJson(route('nhpr.register.link-existing.send-otp'), [
+            'hpr_id' => 'doctor@hpr.abdm',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'txnId' => 'real-txn-uuid-77777',
+            ]);
+    }
+
+    /**
+     * Test linking existing HPR ID in real mode using Password.
+     */
+    public function test_link_existing_hpr_real_password_success(): void
+    {
+        session(['nhpr_real_api_mode' => true]);
+
+        Http::fake([
+            'https://mock-api.abdm.gov.in/v4/int/api/v1/auth/authPassword' => Http::response([
+                'token' => 'real-mocked-jwt-token-hpr',
+            ], 200),
+        ]);
+
+        $response = $this->postJson(route('nhpr.register.link-existing'), [
+            'hpr_id' => 'doctor@hpr.abdm',
+            'auth_method' => 'PASSWORD',
+            'password' => 'secret123',
+            'facility_id' => 'IN2710000059',
+            'facility_name' => 'Civil Hospital',
+            'facility_address' => 'Dehradun',
+            'facility_pincode' => '248001',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+            ])
+            ->assertJsonStructure(['referenceNumber']);
+
+        $this->assertEquals('real-mocked-jwt-token-hpr', session('hpr_reg_hpr_token'));
+    }
+
+    /**
+     * Test linking existing HPR ID in real mode using OTP.
+     */
+    public function test_link_existing_hpr_real_otp_success(): void
+    {
+        session(['nhpr_real_api_mode' => true]);
+
+        Http::fake([
+            'https://mock-api.abdm.gov.in/v4/int/api/v1/auth/confirmWithMobileOTP' => Http::response([
+                'token' => 'real-mocked-jwt-token-hpr-otp',
+            ], 200),
+        ]);
+
+        $response = $this->postJson(route('nhpr.register.link-existing'), [
+            'hpr_id' => 'doctor@hpr.abdm',
+            'auth_method' => 'OTP',
+            'otp' => '123456',
+            'txn_id' => 'real-txn-uuid-77777',
+            'facility_id' => 'IN2710000059',
+            'facility_name' => 'Civil Hospital',
+            'facility_address' => 'Dehradun',
+            'facility_pincode' => '248001',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+            ])
+            ->assertJsonStructure(['referenceNumber']);
+
+        $this->assertEquals('real-mocked-jwt-token-hpr-otp', session('hpr_reg_hpr_token'));
     }
 }

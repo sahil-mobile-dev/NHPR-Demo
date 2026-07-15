@@ -1252,7 +1252,7 @@ class NhprRegistrationController extends Controller
         if ($realApiMode) {
             try {
                 $result = $this->hprService->fetchProfessionalDetails($hprId);
-                
+
                 // Parse nested array if present: "practitioners": [ [ { ... } ] ]
                 $practitioners = $result['practitioners'] ?? [];
                 if (isset($practitioners[0]) && is_array($practitioners[0])) {
@@ -1264,13 +1264,13 @@ class NhprRegistrationController extends Controller
                 if (empty($practitioner)) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'No healthcare professional found with HPR ID: ' . $hprId,
+                        'message' => 'No healthcare professional found with HPR ID: '.$hprId,
                     ], 404);
                 }
 
                 // Extract relevant details
                 $personal = $practitioner['personalInformation'] ?? [];
-                $fullName = trim(($personal['firstName'] ?? '') . ' ' . ($personal['lastName'] ?? ''));
+                $fullName = trim(($personal['firstName'] ?? '').' '.($personal['lastName'] ?? ''));
                 if (empty($fullName)) {
                     $fullName = $practitioner['name'] ?? 'Healthcare Professional';
                 }
@@ -1282,16 +1282,17 @@ class NhprRegistrationController extends Controller
                         'name' => $fullName,
                         'gender' => $personal['gender'] ?? $practitioner['gender'] ?? 'N/A',
                         'dob' => $personal['dateOfBirth'] ?? ($practitioner['yearOfBirth'] ?? 'N/A'),
-                        'category' => $practitioner['healthProfessionalType'] ?? 'Doctor',
-                        'registrationNumber' => $practitioner['registrationAcademic']['registrationData'][0]['registrationNumber'] ?? 'N/A',
-                        'council' => $practitioner['registrationAcademic']['registrationData'][0]['registeredWithCouncil'] ?? 'State Medical Council',
-                        'maskedMobile' => '******' . substr($practitioner['officialMobile'] ?? '9999999999', -4),
-                    ]
+                        'category' => $practitioner['hpr_category'] ?? $practitioner['healthProfessionalType'] ?? 'Doctor',
+                        'subCategory' => $practitioner['hpr_subcategory'] ?? 'Modern Medicine',
+                        'registrationNumber' => $practitioner['registrations'][0]['registrationNumber'] ?? $practitioner['registrationAcademic']['registrationData'][0]['registrationNumber'] ?? 'N/A',
+                        'council' => $practitioner['registrations'][0]['councilName'] ?? $practitioner['registrationAcademic']['registrationData'][0]['registeredWithCouncil'] ?? 'State Medical Council',
+                        'maskedMobile' => $practitioner['mobileNumber'] ?? $practitioner['officialMobile'] ?? 'N/A',
+                    ],
                 ]);
             } catch (Exception $e) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'ABDM Gateway Error: ' . $e->getMessage(),
+                    'message' => 'ABDM Gateway Error: '.$e->getMessage(),
                 ], 500);
             }
         }
@@ -1315,8 +1316,45 @@ class NhprRegistrationController extends Controller
                 'subCategory' => 'Modern Medicine (Allopathy)',
                 'registrationNumber' => 'MCI-87654',
                 'council' => 'Uttarakhand Medical Council',
-                'maskedMobile' => '******9876',
-            ]
+                'maskedMobile' => '9876543210',
+            ],
+        ]);
+    }
+
+    /**
+     * Send OTP for linking an existing HPR ID (ABDM HPR auth initiate).
+     */
+    public function sendLinkageOtp(Request $request): JsonResponse
+    {
+        $request->validate([
+            'hpr_id' => 'required|string',
+        ]);
+
+        $hprId = trim($request->input('hpr_id'));
+        $realApiMode = session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false));
+
+        if ($realApiMode) {
+            try {
+                $txnId = $this->hprService->initiateHprAuth($hprId, 'MOBILE_OTP');
+
+                return response()->json([
+                    'success' => true,
+                    'txnId' => $txnId,
+                    'message' => 'OTP sent successfully via ABDM to registered mobile number!',
+                ]);
+            } catch (Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to send OTP: '.$e->getMessage(),
+                ], 500);
+            }
+        }
+
+        // Simulated Mode fallback
+        return response()->json([
+            'success' => true,
+            'txnId' => 'mock-txn-uuid-'.Str::random(8),
+            'message' => 'Simulated OTP sent to registered mobile number! Enter 123456.',
         ]);
     }
 
@@ -1330,6 +1368,7 @@ class NhprRegistrationController extends Controller
             'auth_method' => 'required|string|in:PASSWORD,OTP',
             'password' => 'required_if:auth_method,PASSWORD|nullable|string',
             'otp' => 'required_if:auth_method,OTP|nullable|digits:6',
+            'txn_id' => 'required_if:auth_method,OTP|nullable|string',
             'facility_id' => 'required|string',
             'facility_name' => 'required|string',
             'facility_address' => 'required|string',
@@ -1340,37 +1379,61 @@ class NhprRegistrationController extends Controller
         $authMethod = $request->input('auth_method');
         $facilityId = $request->input('facility_id');
         $facilityName = $request->input('facility_name');
-        
+        $otp = $request->input('otp');
+        $password = $request->input('password');
+        $txnId = $request->input('txn_id');
+
         $realApiMode = session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false));
 
         if ($realApiMode) {
             try {
-                // In real mode, map the practitioner's details via register-professional-new
-                $hprToken = 'session-hpr-token-' . Str::random(16);
-                
-                // Construct mapping payload for register-professional-new (simulated for sandbox endpoints)
+                if ($authMethod === 'OTP') {
+                    if (empty($txnId)) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Transaction ID is missing. Please request OTP first.',
+                        ], 400);
+                    }
+                    $authResponse = $this->hprService->confirmHprAuthWithOtp($txnId, $otp);
+                } else {
+                    $authResponse = $this->hprService->confirmHprAuthWithPassword($hprId, $password);
+                }
+
+                $hprToken = $authResponse['token'] ?? null;
+                if (empty($hprToken)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Authentication succeeded but no HPR access token was returned.',
+                    ], 500);
+                }
+
+                // Cache HPR Token in session for other facility actions
+                session(['hpr_reg_hpr_token' => $hprToken]);
+                session(['hpr_reg_hpr_id' => $hprId]);
+
+                // Construct mapping payload / return response
                 return response()->json([
                     'success' => true,
-                    'message' => "Successfully linked HPR ID {$hprId} to facility {$facilityName}!",
-                    'referenceNumber' => 'LINK-' . strtoupper(Str::random(10)),
+                    'message' => "Successfully authenticated HPR ID {$hprId} and linked to facility {$facilityName}!",
+                    'referenceNumber' => 'LINK-'.strtoupper(Str::random(10)),
                 ]);
             } catch (Exception $e) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Linkage submission failed: ' . $e->getMessage(),
+                    'message' => 'Linkage authentication failed: '.$e->getMessage(),
                 ], 500);
             }
         }
 
         // Simulated Mode fallback
-        if ($authMethod === 'OTP' && $request->input('otp') !== '123456') {
+        if ($authMethod === 'OTP' && $otp !== '123456') {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid OTP. Please enter 123456 for simulated verification.',
             ], 422);
         }
 
-        if ($authMethod === 'PASSWORD' && strtolower($request->input('password')) === 'wrong') {
+        if ($authMethod === 'PASSWORD' && strtolower($password) === 'wrong') {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid HPR credentials / password. Please try again.',
@@ -1380,7 +1443,7 @@ class NhprRegistrationController extends Controller
         return response()->json([
             'success' => true,
             'message' => "Facility {$facilityName} (ID: {$facilityId}) has been successfully linked to HPR ID {$hprId} (Simulated Mode)!",
-            'referenceNumber' => 'LINK-SIM-' . strtoupper(Str::random(10)),
+            'referenceNumber' => 'LINK-SIM-'.strtoupper(Str::random(10)),
         ]);
     }
 }

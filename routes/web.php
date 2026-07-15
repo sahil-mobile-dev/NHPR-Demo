@@ -35,6 +35,7 @@ Route::prefix('nhpr/register')->name('nhpr.register.')->group(function () {
     Route::post('/documents/upload', [NhprRegistrationController::class, 'uploadDocuments'])->name('documents.upload');
     Route::post('/fetch-hpr-profile', [NhprRegistrationController::class, 'fetchHprProfile'])->name('fetch-hpr-profile');
     Route::post('/link-existing-hpr', [NhprRegistrationController::class, 'linkExistingHpr'])->name('link-existing');
+    Route::post('/link-existing-hpr/send-otp', [NhprRegistrationController::class, 'sendLinkageOtp'])->name('link-existing.send-otp');
 });
 
 Route::get('/nhpr/track', [NhprRegistrationController::class, 'showTracker'])->name('nhpr.track.show');

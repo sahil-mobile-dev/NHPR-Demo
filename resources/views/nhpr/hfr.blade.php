@@ -224,8 +224,34 @@
             width: 8px;
             height: 8px;
             border-radius: 50%;
+            background: var(--warning);
+            box-shadow: 0 0 8px var(--warning-light);
+        }
+        
+        .status-dot.active {
             background: var(--success);
             box-shadow: 0 0 8px var(--success-light);
+        }
+
+        /* Dynamic Switch toggle */
+        .switch-toggle input:checked+.slider {
+            background-color: var(--primary);
+        }
+
+        .switch-toggle .slider::before {
+            content: "";
+            position: absolute;
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: #fff;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        .switch-toggle input:checked+.slider::before {
+            transform: translateX(20px);
         }
 
         /* Content Body */
@@ -653,8 +679,8 @@
                 </div>
 
                 <div class="gateway-status">
-                    <span class="status-dot"></span>
-                    <span>ABDM Sandbox Mode</span>
+                    <span class="status-dot {{ session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false)) ? 'active' : '' }}" id="gateway-status-dot"></span>
+                    <span id="gateway-status-text">{{ session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false)) ? 'Live API Connected' : 'Simulated Sandbox Mode' }}</span>
                 </div>
             </div>
 
@@ -663,6 +689,20 @@
                 <div class="page-header">
                     <h1 class="page-title">Health Facility Registry (HFR) Portal</h1>
                     <p class="page-subtitle">Search registered health facilities, register new health installations, or link bridge software credentials.</p>
+                </div>
+
+                <!-- API Mode Control Toolbar -->
+                <div style="background: var(--surface); border: 1px solid var(--border); padding: 12px 20px; border-radius: 12px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 12.5px; font-weight: 700; color: #fff;">ABDM Gateway Live Mode</span>
+                        <label class="switch-toggle" style="position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer;">
+                            <input type="checkbox" id="live-mode-switch" style="opacity: 0; width: 0; height: 0;" {{ session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false)) ? 'checked' : '' }}>
+                            <span class="slider" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: #1a2847; border: 1px solid var(--border2); transition: .3s; border-radius: 24px;"></span>
+                        </label>
+                    </div>
+                    <div id="credentials-config-btn-wrap" style="display: {{ session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false)) ? 'block' : 'none' }};">
+                        <a href="{{ route('nhpr.token.show') }}" class="btn" style="padding: 6px 12px; font-size: 11px; background: rgba(249, 168, 37, 0.1); border-color: rgba(249, 168, 37, 0.4); color: var(--gold);"><i class="fa-solid fa-gear"></i> Configure API Credentials</a>
+                    </div>
                 </div>
 
                 <!-- Tabs Navigation -->
@@ -956,9 +996,25 @@
 
                                     <!-- Verification Fields -->
                                     <div class="form-group id-auth-field" id="auth-otp-group" style="margin-bottom: 14px;">
-                                        <label for="link-otp">Enter 6-Digit OTP <span class="req">*</span></label>
-                                        <input type="text" id="link-otp" class="form-control font-mono" maxlength="6" placeholder="Enter OTP (e.g. 123456)">
-                                        <span style="font-size: 11px; color: var(--muted);">OTP has been sent to registered mobile number.</span>
+                                        <!-- Step A: Send OTP Button (Shown initially when OTP mode is selected) -->
+                                        <div id="hfr-otp-request-container" style="text-align: center; margin-bottom: 10px;">
+                                            <p style="font-size: 12.5px; color: var(--muted); margin-bottom: 10px;">OTP will be sent to the mobile number registered with your HPR ID.</p>
+                                            <button type="button" class="btn" id="btn-hfr-send-otp" style="background: var(--primary); color: #fff; width: 100%; padding: 10px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                                                <i class="fa-solid fa-paper-plane"></i> Send OTP to Mobile
+                                            </button>
+                                        </div>
+
+                                        <!-- Step B: OTP Input Fields (Hidden until OTP is successfully sent) -->
+                                        <div id="hfr-otp-input-container" style="display: none;">
+                                            <label for="link-otp">Enter 6-Digit OTP <span class="req">*</span></label>
+                                            <div style="display: flex; gap: 10px; margin-top: 6px; margin-bottom: 6px;">
+                                                <input type="text" id="link-otp" class="form-control font-mono" maxlength="6" placeholder="Enter OTP (e.g. 123456)" style="flex: 1;">
+                                                <button type="button" class="btn" id="btn-hfr-resend-otp" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border2); padding: 8px 16px; border-radius: 6px; font-size: 13px;">
+                                                    <i class="fa-solid fa-rotate-right"></i> Resend OTP
+                                                </button>
+                                            </div>
+                                            <span style="font-size: 11px; color: var(--muted); display: block; margin-top: 4px;">For simulated mode, enter `123456`.</span>
+                                        </div>
                                     </div>
 
                                     <div class="form-group id-auth-field" id="auth-password-group" style="margin-bottom: 14px; display: none;">
@@ -970,7 +1026,7 @@
                                         <button type="button" class="btn" id="btn-back-step1" onclick="goBackToStep1()" style="background: rgba(255,255,255,0.05); color: #fff;">
                                             <i class="fa-solid fa-arrow-left"></i> Back
                                         </button>
-                                        <button type="submit" class="btn" id="btn-link-fac" style="background: var(--success); color: #fff;">
+                                        <button type="submit" class="btn" id="btn-link-fac" style="background: var(--success); color: #fff; display: none;">
                                             <i class="fa-solid fa-link"></i> Link HPR/Facility Manager
                                         </button>
                                     </div>
@@ -987,6 +1043,8 @@
     <script>
         // CSRF details
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        let hfrOtpSent = false;
+        let hfrOtpTxnId = null;
 
         // Toast Notification System
         function showToast(message, type = 'success') {
@@ -1183,12 +1241,30 @@
         // Toggle Authentication fields based on selection (OTP vs PASSWORD)
         function toggleAuthFields() {
             const method = document.getElementById('link-auth-method').value;
+            const authOtpGroup = document.getElementById('auth-otp-group');
+            const authPasswordGroup = document.getElementById('auth-password-group');
+            const hfrOtpRequestContainer = document.getElementById('hfr-otp-request-container');
+            const hfrOtpInputContainer = document.getElementById('hfr-otp-input-container');
+            const btnLinkFac = document.getElementById('btn-link-fac');
+
             if (method === 'OTP') {
-                document.getElementById('auth-otp-group').style.display = 'block';
-                document.getElementById('auth-password-group').style.display = 'none';
+                authOtpGroup.style.display = 'block';
+                authPasswordGroup.style.display = 'none';
+                if (hfrOtpSent) {
+                    hfrOtpRequestContainer.style.display = 'none';
+                    hfrOtpInputContainer.style.display = 'block';
+                    btnLinkFac.style.display = 'block';
+                    btnLinkFac.innerHTML = '<i class="fa-solid fa-link"></i> Verify OTP & Link HPR';
+                } else {
+                    hfrOtpRequestContainer.style.display = 'block';
+                    hfrOtpInputContainer.style.display = 'none';
+                    btnLinkFac.style.display = 'none';
+                }
             } else {
-                document.getElementById('auth-otp-group').style.display = 'none';
-                document.getElementById('auth-password-group').style.display = 'block';
+                authOtpGroup.style.display = 'none';
+                authPasswordGroup.style.display = 'block';
+                btnLinkFac.style.display = 'block';
+                btnLinkFac.innerHTML = '<i class="fa-solid fa-link"></i> Link HPR/Facility Manager';
             }
         }
 
@@ -1231,6 +1307,11 @@
                     document.getElementById('hpr-profile-mobile').innerText = prof.maskedMobile || '—';
                     document.getElementById('hpr-profile-dob').innerText = prof.dob || '—';
 
+                    // Reset OTP state and set auth selection back to default OTP
+                    hfrOtpSent = false;
+                    document.getElementById('link-auth-method').value = 'OTP';
+                    toggleAuthFields();
+
                     // Slide to Step 2
                     document.getElementById('link-step-1').style.display = 'none';
                     document.getElementById('link-step-2').style.display = 'block';
@@ -1252,6 +1333,100 @@
             document.getElementById('link-step-1').style.display = 'block';
         }
 
+        // Bind Send OTP and Resend OTP buttons after DOM loads
+        document.addEventListener('DOMContentLoaded', function() {
+            const btnHfrSendOtp = document.getElementById('btn-hfr-send-otp');
+            const btnHfrResendOtp = document.getElementById('btn-hfr-resend-otp');
+            const hfrOtpRequestContainer = document.getElementById('hfr-otp-request-container');
+            const hfrOtpInputContainer = document.getElementById('hfr-otp-input-container');
+            const btnLinkFac = document.getElementById('btn-link-fac');
+
+            if (btnHfrSendOtp) {
+                btnHfrSendOtp.addEventListener('click', function() {
+                    const hprId = document.getElementById('link-hpr-id').value.trim();
+                    if (!hprId) {
+                        showToast('Please enter HPR ID.', 'warning');
+                        return;
+                    }
+
+                    btnHfrSendOtp.disabled = true;
+                    btnHfrSendOtp.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending OTP...';
+
+                    fetch('{{ route("nhpr.register.link-existing.send-otp") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify({ hpr_id: hprId })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        btnHfrSendOtp.disabled = false;
+                        btnHfrSendOtp.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Send OTP to Mobile';
+
+                        if (data.success) {
+                            hfrOtpSent = true;
+                            hfrOtpTxnId = data.txnId;
+
+                            hfrOtpRequestContainer.style.display = 'none';
+                            hfrOtpInputContainer.style.display = 'block';
+                            btnLinkFac.style.display = 'block';
+                            btnLinkFac.innerHTML = '<i class="fa-solid fa-link"></i> Verify OTP & Link HPR';
+
+                            showToast(data.message || 'OTP sent successfully!');
+                        } else {
+                            showToast(data.message || 'Failed to send OTP.', 'error');
+                        }
+                    })
+                    .catch(() => {
+                        btnHfrSendOtp.disabled = false;
+                        btnHfrSendOtp.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Send OTP to Mobile';
+                        showToast('Failed to send OTP.', 'error');
+                    });
+                });
+            }
+
+            if (btnHfrResendOtp) {
+                btnHfrResendOtp.addEventListener('click', function() {
+                    const hprId = document.getElementById('link-hpr-id').value.trim();
+                    if (!hprId) {
+                        showToast('Please enter HPR ID.', 'warning');
+                        return;
+                    }
+
+                    btnHfrResendOtp.disabled = true;
+                    btnHfrResendOtp.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Resending...';
+
+                    fetch('{{ route("nhpr.register.link-existing.send-otp") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify({ hpr_id: hprId })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        btnHfrResendOtp.disabled = false;
+                        btnHfrResendOtp.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Resend OTP';
+
+                        if (data.success) {
+                            hfrOtpTxnId = data.txnId;
+                            showToast(data.message || 'OTP resent successfully!');
+                        } else {
+                            showToast(data.message || 'Failed to resend OTP.', 'error');
+                        }
+                    })
+                    .catch(() => {
+                        btnHfrResendOtp.disabled = false;
+                        btnHfrResendOtp.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Resend OTP';
+                        showToast('Failed to resend OTP.', 'error');
+                    });
+                });
+            }
+        });
+
         // Final submit linkage form (reusing link-existing API)
         function submitLinkageForm(event) {
             event.preventDefault();
@@ -1263,6 +1438,7 @@
             const payload = {
                 hpr_id: document.getElementById('link-hpr-id').value.trim(),
                 auth_method: authMethod,
+                txn_id: hfrOtpTxnId,
                 facility_id: document.getElementById('link-facility-id').value,
                 facility_name: document.getElementById('link-facility-name').value,
                 facility_address: document.getElementById('link-facility-address').value || 'Dehradun',
@@ -1270,9 +1446,29 @@
             };
 
             if (authMethod === 'OTP') {
-                payload.otp = document.getElementById('link-otp').value.trim();
+                if (!hfrOtpSent) {
+                    showToast('Please send OTP first.', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-link"></i> Verify OTP & Link HPR';
+                    return;
+                }
+                const otpVal = document.getElementById('link-otp').value.trim();
+                if (!otpVal) {
+                    showToast('Please enter the OTP.', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-link"></i> Verify OTP & Link HPR';
+                    return;
+                }
+                payload.otp = otpVal;
             } else {
-                payload.password = document.getElementById('link-password').value;
+                const passVal = document.getElementById('link-password').value;
+                if (!passVal) {
+                    showToast('Please enter HPR password.', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-link"></i> Link HPR/Facility Manager';
+                    return;
+                }
+                payload.password = passVal;
             }
 
             fetch('{{ route("nhpr.register.link-existing") }}', {
@@ -1286,7 +1482,9 @@
             .then(res => res.json())
             .then(data => {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-link"></i> Link HPR/Facility Manager';
+                btn.innerHTML = authMethod === 'OTP' 
+                    ? '<i class="fa-solid fa-link"></i> Verify OTP & Link HPR' 
+                    : '<i class="fa-solid fa-link"></i> Link HPR/Facility Manager';
 
                 if (data.success) {
                     showToast(data.message || 'Successfully linked HFR with HPR/Facility Manager!');
@@ -1296,6 +1494,8 @@
                     document.getElementById('link-facility-name').value = '';
                     document.getElementById('link-otp').value = '';
                     document.getElementById('link-password').value = '';
+                    hfrOtpSent = false;
+                    hfrOtpTxnId = null;
                     
                     goBackToStep1();
                 } else {
@@ -1304,8 +1504,61 @@
             })
             .catch(() => {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-link"></i> Link HPR/Facility Manager';
+                btn.innerHTML = authMethod === 'OTP' 
+                    ? '<i class="fa-solid fa-link"></i> Verify OTP & Link HPR' 
+                    : '<i class="fa-solid fa-link"></i> Link HPR/Facility Manager';
                 showToast('HFR linkage request failed.', 'error');
+            });
+        }
+
+        // Switch listener to toggle API mode
+        const liveModeSwitch = document.getElementById('live-mode-switch');
+        const configBtnWrap = document.getElementById('credentials-config-btn-wrap');
+        const statusDot = document.getElementById('gateway-status-dot');
+        const statusText = document.getElementById('gateway-status-text');
+
+        if (liveModeSwitch) {
+            liveModeSwitch.addEventListener('change', function () {
+                const isLive = this.checked;
+
+                fetch('{{ route("nhpr.register.toggle-mode") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({ real_api_mode: isLive ? 1 : 0 })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast(isLive ? 'Live API Mode activated.' : 'Simulated Mode activated.', 'info');
+                        if (isLive) {
+                            configBtnWrap.style.display = 'block';
+                            if (statusDot) {
+                                statusDot.classList.add('active');
+                            }
+                            if (statusText) {
+                                statusText.innerText = 'Live API Connected';
+                            }
+                        } else {
+                            configBtnWrap.style.display = 'none';
+                            if (statusDot) {
+                                statusDot.classList.remove('active');
+                            }
+                            if (statusText) {
+                                statusText.innerText = 'Simulated Sandbox Mode';
+                            }
+                        }
+                    } else {
+                        showToast('Failed to toggle API mode.', 'error');
+                        liveModeSwitch.checked = !isLive;
+                    }
+                })
+                .catch(() => {
+                    showToast('Communication error with portal server.', 'error');
+                    liveModeSwitch.checked = !isLive;
+                });
             });
         }
     </script>

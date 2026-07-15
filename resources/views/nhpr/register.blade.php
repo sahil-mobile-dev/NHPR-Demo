@@ -1797,12 +1797,21 @@
 
                             <!-- OTP Fields -->
                             <div id="ext-auth-otp-group" class="form-group" style="display: none; margin-bottom: 24px;">
-                                <label for="ext-hpr-otp">Enter 6-Digit Mobile OTP <span class="req">*</span></label>
-                                <div style="display: flex; gap: 12px; margin-top: 8px;">
-                                    <input type="text" id="ext-hpr-otp" class="form-input" placeholder="e.g. 123456" style="flex: 1; padding: 10px 14px; border: 1px solid var(--border2); border-radius: 8px; background: var(--surface2); color: #fff;">
-                                    <button class="btn" id="btn-ext-send-otp" style="padding: 10px 20px; background: var(--surface2); border: 1px solid var(--border2); color: #fff; cursor: pointer; border-radius: 8px; font-weight: 600;"><i class="fa-solid fa-paper-plane"></i> Send OTP</button>
+                                <!-- Step A: Send OTP Button (Shown initially when OTP mode is selected) -->
+                                <div id="ext-otp-request-container" style="text-align: center; margin-bottom: 16px;">
+                                    <p style="font-size: 13px; color: var(--muted); margin-bottom: 12px;">OTP will be sent to the mobile number registered with your HPR ID.</p>
+                                    <button class="btn primary" id="btn-ext-send-otp" style="width: 100%; padding: 12px 20px; font-size: 14px;"><i class="fa-solid fa-paper-plane"></i> Send OTP to Mobile</button>
                                 </div>
-                                <span style="font-size: 11px; color: var(--muted); margin-top: 6px; display: block;">For simulated mode, click 'Send OTP' and then enter `123456`.</span>
+
+                                <!-- Step B: OTP Input Fields (Hidden until OTP is successfully sent) -->
+                                <div id="ext-otp-input-container" style="display: none;">
+                                    <label for="ext-hpr-otp">Enter 6-Digit Mobile OTP <span class="req">*</span></label>
+                                    <div style="display: flex; gap: 12px; margin-top: 8px; margin-bottom: 8px;">
+                                        <input type="text" id="ext-hpr-otp" class="form-input" placeholder="e.g. 123456" style="flex: 1; padding: 10px 14px; border: 1px solid var(--border2); border-radius: 8px; background: var(--surface2); color: #fff;">
+                                        <button class="btn" id="btn-ext-resend-otp" style="padding: 10px 20px; background: var(--surface2); border: 1px solid var(--border2); color: #fff; cursor: pointer; border-radius: 8px; font-weight: 600;"><i class="fa-solid fa-rotate-right"></i> Resend OTP</button>
+                                    </div>
+                                    <span style="font-size: 11px; color: var(--muted); margin-top: 6px; display: block;">For simulated mode, enter `123456`.</span>
+                                </div>
                             </div>
 
                             <button class="btn primary" id="btn-ext-submit-linkage" style="width: 100%; padding: 12px 20px; font-size: 14px;"><i class="fa-solid fa-link"></i> Authenticate & Link Facility</button>
@@ -1884,9 +1893,16 @@
             const extHprOtp = document.getElementById('ext-hpr-otp');
             const btnExtSendOtp = document.getElementById('btn-ext-send-otp');
             const btnExtSubmitLinkage = document.getElementById('btn-ext-submit-linkage');
+            const extAuthPasswordGroup = document.getElementById('ext-auth-password-group');
+            const extAuthOtpGroup = document.getElementById('ext-auth-otp-group');
+            const extOtpRequestContainer = document.getElementById('ext-otp-request-container');
+            const extOtpInputContainer = document.getElementById('ext-otp-input-container');
+            const btnExtResendOtp = document.getElementById('btn-ext-resend-otp');
 
-            // Selected facility state
+            // Selected facility and authentication state
             let selectedExtFacility = null;
+            let extOtpSent = false;
+            let extOtpTxnId = null;
 
             // Step 1: Fetch Profile details
             btnFetchProfile.addEventListener('click', function () {
@@ -1926,6 +1942,18 @@
                         extProfileCard.style.display = 'block';
                         extFacilityCard.style.display = 'block';
                         extAuthLinkCard.style.display = 'block';
+                        
+                        // Reset OTP state and set authentication method to Password by default on profile load
+                        extOtpSent = false;
+                        extOtpTxnId = null;
+                        const defaultRadio = document.querySelector('input[name="ext-auth-method"][value="PASSWORD"]');
+                        if (defaultRadio) defaultRadio.checked = true;
+                        if (extAuthPasswordGroup) extAuthPasswordGroup.style.display = 'block';
+                        if (extAuthOtpGroup) extAuthOtpGroup.style.display = 'none';
+                        if (btnExtSubmitLinkage) {
+                            btnExtSubmitLinkage.style.display = 'block';
+                            btnExtSubmitLinkage.innerHTML = '<i class="fa-solid fa-link"></i> Authenticate & Link Facility';
+                        }
                         
                         // Scroll to profile card
                         extProfileCard.scrollIntoView({ behavior: 'smooth' });
@@ -2026,33 +2054,117 @@
             });
 
             // Step 3: Auth Method Toggles
-            const extAuthRadioButtons = document.querySelectorAll('input[name="ext-auth-method"]');
-            const extAuthPasswordGroup = document.getElementById('ext-auth-password-group');
-            const extAuthOtpGroup = document.getElementById('ext-auth-otp-group');
-
             extAuthRadioButtons.forEach(radio => {
                 radio.addEventListener('change', function () {
                     if (this.value === 'PASSWORD') {
                         extAuthPasswordGroup.style.display = 'block';
                         extAuthOtpGroup.style.display = 'none';
+                        btnExtSubmitLinkage.style.display = 'block';
+                        btnExtSubmitLinkage.innerHTML = '<i class="fa-solid fa-link"></i> Authenticate & Link Facility';
                     } else {
                         extAuthPasswordGroup.style.display = 'none';
                         extAuthOtpGroup.style.display = 'block';
+                        if (extOtpSent) {
+                            extOtpRequestContainer.style.display = 'none';
+                            extOtpInputContainer.style.display = 'block';
+                            btnExtSubmitLinkage.style.display = 'block';
+                            btnExtSubmitLinkage.innerHTML = '<i class="fa-solid fa-link"></i> Verify OTP & Link Facility';
+                        } else {
+                            extOtpRequestContainer.style.display = 'block';
+                            extOtpInputContainer.style.display = 'none';
+                            btnExtSubmitLinkage.style.display = 'none';
+                        }
                     }
                 });
             });
 
-            // Send simulated OTP
+            // Send simulated / real OTP
             btnExtSendOtp.addEventListener('click', function () {
+                const hprId = existingHprIdInput.value.trim();
+                if (!hprId) {
+                    showToast('HPR ID is missing.', 'warning');
+                    return;
+                }
+
                 btnExtSendOtp.disabled = true;
-                btnExtSendOtp.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
+                btnExtSendOtp.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending OTP...';
                 
-                setTimeout(() => {
+                fetch('{{ route("nhpr.register.link-existing.send-otp") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({ hpr_id: hprId })
+                })
+                .then(res => res.json())
+                .then(data => {
                     btnExtSendOtp.disabled = false;
-                    btnExtSendOtp.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Resend OTP';
-                    showToast('Simulated OTP sent to your registered mobile number! Enter 123456.');
-                }, 1000);
+                    btnExtSendOtp.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Send OTP to Mobile';
+
+                    if (data.success) {
+                        extOtpSent = true;
+                        extOtpTxnId = data.txnId;
+                        
+                        // Transition to OTP Input view
+                        extOtpRequestContainer.style.display = 'none';
+                        extOtpInputContainer.style.display = 'block';
+                        
+                        // Show submit button with OTP label
+                        btnExtSubmitLinkage.style.display = 'block';
+                        btnExtSubmitLinkage.innerHTML = '<i class="fa-solid fa-link"></i> Verify OTP & Link Facility';
+                        
+                        showToast(data.message || 'OTP sent successfully!');
+                    } else {
+                        showToast(data.message || 'Failed to send OTP.', 'error');
+                    }
+                })
+                .catch(() => {
+                    btnExtSendOtp.disabled = false;
+                    btnExtSendOtp.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Send OTP to Mobile';
+                    showToast('Failed to send OTP. Please check your network connection.', 'error');
+                });
             });
+
+            // Resend OTP
+            if (btnExtResendOtp) {
+                btnExtResendOtp.addEventListener('click', function () {
+                    const hprId = existingHprIdInput.value.trim();
+                    if (!hprId) {
+                        showToast('HPR ID is missing.', 'warning');
+                        return;
+                    }
+
+                    btnExtResendOtp.disabled = true;
+                    btnExtResendOtp.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Resending...';
+                    
+                    fetch('{{ route("nhpr.register.link-existing.send-otp") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify({ hpr_id: hprId })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        btnExtResendOtp.disabled = false;
+                        btnExtResendOtp.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Resend OTP';
+
+                        if (data.success) {
+                            extOtpTxnId = data.txnId;
+                            showToast(data.message || 'OTP resent successfully!');
+                        } else {
+                            showToast(data.message || 'Failed to resend OTP.', 'error');
+                        }
+                    })
+                    .catch(() => {
+                        btnExtResendOtp.disabled = false;
+                        btnExtResendOtp.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Resend OTP';
+                        showToast('Failed to resend OTP.', 'error');
+                    });
+                });
+            }
 
             // Step 4: Submit Linkage
             btnExtSubmitLinkage.addEventListener('click', function () {
@@ -2072,9 +2184,15 @@
                     return;
                 }
 
-                if (authMethod === 'OTP' && !otp) {
-                    showToast('Please enter the OTP.', 'warning');
-                    return;
+                if (authMethod === 'OTP') {
+                    if (!extOtpSent) {
+                        showToast('Please request and send OTP first.', 'warning');
+                        return;
+                    }
+                    if (!otp) {
+                        showToast('Please enter the OTP.', 'warning');
+                        return;
+                    }
                 }
 
                 btnExtSubmitLinkage.disabled = true;
@@ -2085,6 +2203,7 @@
                     auth_method: authMethod,
                     password: password,
                     otp: otp,
+                    txn_id: extOtpTxnId,
                     facility_id: facilityId,
                     facility_name: selectedExtFacility.facilityName,
                     facility_address: selectedExtFacility.address || 'Address info',
@@ -2102,7 +2221,9 @@
                 .then(res => res.json())
                 .then(data => {
                     btnExtSubmitLinkage.disabled = false;
-                    btnExtSubmitLinkage.innerHTML = '<i class="fa-solid fa-link"></i> Authenticate & Link Facility';
+                    btnExtSubmitLinkage.innerHTML = authMethod === 'OTP' 
+                        ? '<i class="fa-solid fa-link"></i> Verify OTP & Link Facility' 
+                        : '<i class="fa-solid fa-link"></i> Authenticate & Link Facility';
 
                     if (data.success) {
                         showToast('Facility linked successfully!');
@@ -2125,7 +2246,9 @@
                 })
                 .catch(err => {
                     btnExtSubmitLinkage.disabled = false;
-                    btnExtSubmitLinkage.innerHTML = '<i class="fa-solid fa-link"></i> Authenticate & Link Facility';
+                    btnExtSubmitLinkage.innerHTML = authMethod === 'OTP' 
+                        ? '<i class="fa-solid fa-link"></i> Verify OTP & Link Facility' 
+                        : '<i class="fa-solid fa-link"></i> Authenticate & Link Facility';
                     showToast('Linkage request failed.', 'error');
                 });
             });
