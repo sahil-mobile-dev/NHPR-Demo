@@ -430,7 +430,6 @@ class HprAccountService
         $payload = [
             'otp' => $encryptedOtp,
             'transactionId' => $txnId,
-            'txnId' => $txnId,
         ];
 
         Log::info('HPR Auth Request: Confirm Mobile OTP', [
@@ -438,7 +437,7 @@ class HprAccountService
             'request_id' => $requestId,
             'body' => [
                 'otp' => '[ENCRYPTED_MASKED]',
-                'txnId' => $txnId,
+                'transactionId' => $txnId,
             ],
         ]);
 
