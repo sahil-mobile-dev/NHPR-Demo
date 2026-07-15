@@ -25,6 +25,7 @@ class HfrManagementTest extends TestCase
         config([
             'services.nhpr.base_url' => 'https://mock.abdm.gov.in',
             'services.nhpr.api_url' => 'https://mock-api.abdm.gov.in',
+            'services.nhpr.hfr_api_url' => 'https://mock-hfr.abdm.gov.in',
             'services.nhpr.client_id' => 'mock-client-id',
             'services.nhpr.client_secret' => 'mock-client-secret',
             'services.nhpr.x_cm_id' => 'sbx',
@@ -99,24 +100,21 @@ class HfrManagementTest extends TestCase
         $response->assertJsonPath('facilities.0.facilityId', 'IN2710001111');
     }
 
-    /**
-     * Test registering new facility in simulated mode.
-     */
     public function test_create_facility_simulated(): void
     {
         session(['nhpr_real_api_mode' => false]);
 
         $payload = [
             'facilityName' => 'New Uttarakhand Clinic',
-            'ownershipCode' => 'Private',
-            'systemOfMedicineCode' => 'Allopathy',
-            'facilityTypeCode' => 'Clinic',
+            'ownershipCode' => 'P',
+            'systemOfMedicineCode' => 'M',
+            'facilityTypeCode' => 'CLINIC',
             'pincode' => '248001',
             'stateLGDCode' => '05',
             'districtLGDCode' => '060',
-            'facilityAddress' => 'Rajpur Road, Dehradun',
-            'contactNumber' => '9876543210',
-            'email' => 'contact@utclinic.org',
+            'address' => 'Rajpur Road, Dehradun',
+            'facilityContactNumber' => '9876543210',
+            'facilityEmailId' => 'contact@utclinic.org',
         ];
 
         $response = $this->postJson(route('nhpr.hfr.create'), $payload);
@@ -148,15 +146,15 @@ class HfrManagementTest extends TestCase
 
         $payload = [
             'facilityName' => 'Live Created Clinic',
-            'ownershipCode' => 'Private',
-            'systemOfMedicineCode' => 'Allopathy',
-            'facilityTypeCode' => 'Clinic',
+            'ownershipCode' => 'P',
+            'systemOfMedicineCode' => 'M',
+            'facilityTypeCode' => 'CLINIC',
             'pincode' => '248001',
             'stateLGDCode' => '05',
             'districtLGDCode' => '060',
-            'facilityAddress' => 'Rajpur Road, Dehradun',
-            'contactNumber' => '9876543210',
-            'email' => 'contact@utclinic.org',
+            'address' => 'Rajpur Road, Dehradun',
+            'facilityContactNumber' => '9876543210',
+            'facilityEmailId' => 'contact@utclinic.org',
         ];
 
         $response = $this->postJson(route('nhpr.hfr.create'), $payload);

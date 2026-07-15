@@ -536,6 +536,42 @@
             margin-bottom: 12px;
             display: block;
         }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 992px) {
+            .grid-4 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 576px) {
+            .grid-4 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-section-header {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--primary-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 28px 0 16px 0;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-section-header:first-of-type {
+            margin-top: 10px;
+        }
     </style>
 </head>
 
@@ -700,7 +736,6 @@
                     </div>
                 </div>
 
-                <!-- TAB 2: Register New Facility -->
                 <div class="tab-panel" id="tab-create">
                     <div class="card">
                         <div class="card-header">
@@ -708,75 +743,144 @@
                         </div>
                         <div class="card-body">
                             <form id="create-form">
+                                <!-- Section 1: Basic Facility Information -->
+                                <div class="form-section-header">
+                                    <i class="fa-solid fa-circle-info"></i> Basic Facility Details
+                                </div>
                                 <div class="grid-2">
                                     <div class="form-group">
                                         <label for="fac-name">Facility Name <span class="req">*</span></label>
-                                        <input type="text" id="fac-name" class="form-control" placeholder="Official Facility Name" required>
+                                        <input type="text" id="fac-name" class="form-control" placeholder="e.g. Sunrise Multispeciality Hospital" required>
                                     </div>
                                     <div class="form-group">
                                         <label for="fac-ownership">Ownership Type <span class="req">*</span></label>
                                         <select id="fac-ownership" class="form-control" required>
-                                            <option value="Private">Private</option>
-                                            <option value="Government">Government / Public</option>
+                                            <option value="P">Private (P)</option>
+                                            <option value="G">Government / Public (G)</option>
                                             <option value="NGO">Non-Governmental Organization (NGO)</option>
-                                            <option value="Trust">Charitable Trust</option>
+                                            <option value="T">Charitable Trust (T)</option>
                                         </select>
                                     </div>
                                 </div>
 
                                 <div class="grid-2" style="margin-top: 14px;">
                                     <div class="form-group">
-                                        <label for="fac-medicine">System of Medicine <span class="req">*</span></label>
-                                        <select id="fac-medicine" class="form-control" required>
-                                            <option value="Allopathy">Allopathy (Modern Medicine)</option>
-                                            <option value="Ayurveda">Ayurveda</option>
-                                            <option value="Homeopathy">Homeopathy</option>
-                                            <option value="Unani">Unani</option>
+                                        <label for="fac-medicine">System of Medicine</label>
+                                        <select id="fac-medicine" class="form-control">
+                                            <option value="M">Modern Medicine / Allopathy (M)</option>
+                                            <option value="A">Ayurveda (A)</option>
+                                            <option value="H">Homeopathy (H)</option>
+                                            <option value="U">Unani (U)</option>
+                                            <option value="S">Siddha (S)</option>
+                                            <option value="Y">Yoga & Naturopathy (Y)</option>
                                         </select>
                                     </div>
                                     <div class="form-group">
-                                        <label for="fac-type">Facility Category/Type <span class="req">*</span></label>
-                                        <select id="fac-type" class="form-control" required>
-                                            <option value="Hospital">Hospital</option>
-                                            <option value="Clinic">Clinic / O.P.D.</option>
-                                            <option value="Diagnostic Centre">Diagnostic Lab</option>
-                                            <option value="Pharmacy">Pharmacy</option>
+                                        <label for="fac-type">Facility Category/Type</label>
+                                        <select id="fac-type" class="form-control">
+                                            <option value="HOSPITAL">Hospital</option>
+                                            <option value="CLINIC">Clinic / O.P.D.</option>
+                                            <option value="DIAGNOSTIC_CENTRE">Diagnostic Lab</option>
+                                            <option value="PHARMACY">Pharmacy</option>
+                                            <option value="NURSING_HOME">Nursing Home</option>
+                                            <option value="DISPENSARY">Dispensary</option>
                                         </select>
+                                    </div>
+                                </div>
+
+                                <!-- Section 2: Address & Location Details -->
+                                <div class="form-section-header">
+                                    <i class="fa-solid fa-map-location-dot"></i> Address & Location Details
+                                </div>
+                                <div class="form-group">
+                                    <label for="fac-address">Complete Address <span class="req">*</span></label>
+                                    <textarea id="fac-address" class="form-control" style="resize: vertical; min-height: 80px;" placeholder="e.g. SG Highway, Ahmedabad" required></textarea>
+                                </div>
+
+                                <div class="grid-3" style="margin-top: 14px;">
+                                    <div class="form-group">
+                                        <label for="fac-state">State LGD Code <span class="req">*</span></label>
+                                        <input type="text" id="fac-state" class="form-control" placeholder="e.g. 24" value="24" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="fac-district">District LGD Code</label>
+                                        <input type="text" id="fac-district" class="form-control" placeholder="e.g. 474" value="474">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="fac-subdistrict">Sub-District LGD Code</label>
+                                        <input type="text" id="fac-subdistrict" class="form-control" placeholder="e.g. 3924" value="3924">
                                     </div>
                                 </div>
 
                                 <div class="grid-3" style="margin-top: 14px;">
                                     <div class="form-group">
-                                        <label for="fac-pincode">Pincode <span class="req">*</span></label>
-                                        <input type="text" id="fac-pincode" class="form-control" maxlength="6" placeholder="6-digit Pincode" required>
+                                        <label for="fac-pincode">Pincode</label>
+                                        <input type="text" id="fac-pincode" class="form-control" maxlength="6" placeholder="e.g. 380051">
                                     </div>
                                     <div class="form-group">
-                                        <label for="fac-state">State LGD Code <span class="req">*</span></label>
-                                        <input type="text" id="fac-state" class="form-control" placeholder="e.g. 05" value="05" required>
+                                        <label for="fac-latitude">Latitude</label>
+                                        <input type="text" id="fac-latitude" class="form-control" placeholder="e.g. 23.0395">
                                     </div>
                                     <div class="form-group">
-                                        <label for="fac-district">District LGD Code <span class="req">*</span></label>
-                                        <input type="text" id="fac-district" class="form-control" placeholder="e.g. 060" value="060" required>
+                                        <label for="fac-longitude">Longitude</label>
+                                        <input type="text" id="fac-longitude" class="form-control" placeholder="e.g. 72.5660">
                                     </div>
                                 </div>
 
-                                <div class="form-group" style="margin-top: 14px;">
-                                    <label for="fac-address">Complete Address <span class="req">*</span></label>
-                                    <textarea id="fac-address" class="form-control" style="resize: vertical; min-height: 80px;" placeholder="Street address details" required></textarea>
+                                <!-- Section 3: Contact Details -->
+                                <div class="form-section-header">
+                                    <i class="fa-solid fa-address-book"></i> Contact Details
+                                </div>
+                                <div class="grid-4">
+                                    <div class="form-group">
+                                        <label for="fac-email">Facility Email ID</label>
+                                        <input type="email" id="fac-email" class="form-control" placeholder="e.g. info@sunrisehospital.com">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="fac-contact">Facility Mobile Number</label>
+                                        <input type="tel" id="fac-contact" class="form-control" maxlength="10" placeholder="e.g. 9876543210">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="fac-std">STD Code</label>
+                                        <input type="text" id="fac-std" class="form-control" placeholder="e.g. 079">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="fac-landline">Landline Number</label>
+                                        <input type="text" id="fac-landline" class="form-control" placeholder="e.g. 40000000">
+                                    </div>
+                                </div>
+
+                                <!-- Section 4: Identifiers & Registrations -->
+                                <div class="form-section-header">
+                                    <i class="fa-solid fa-id-card"></i> Identifiers & Registrations (Optional)
+                                </div>
+                                <div class="grid-3">
+                                    <div class="form-group">
+                                        <label for="fac-abpmjay">AB-PMJAY ID</label>
+                                        <input type="text" id="fac-abpmjay" class="form-control" placeholder="AB-PMJAY ID">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="fac-nin">National Identification Number (NIN ID)</label>
+                                        <input type="text" id="fac-nin" class="form-control" placeholder="NIN ID">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="fac-cea">CEA ID (Clinical Establishment Act)</label>
+                                        <input type="text" id="fac-cea" class="form-control" placeholder="CEA ID">
+                                    </div>
                                 </div>
 
                                 <div class="grid-2" style="margin-top: 14px;">
                                     <div class="form-group">
-                                        <label for="fac-contact">Nodal Contact Number <span class="req">*</span></label>
-                                        <input type="tel" id="fac-contact" class="form-control" maxlength="10" placeholder="10-digit mobile number" required>
+                                        <label for="fac-hrpsource">HRP Source</label>
+                                        <input type="text" id="fac-hrpsource" class="form-control" placeholder="e.g. NIC-HIMS">
                                     </div>
                                     <div class="form-group">
-                                        <label for="fac-email">Nodal Email Address <span class="req">*</span></label>
-                                        <input type="email" id="fac-email" class="form-control" placeholder="admin@facility.org" required>
+                                        <label for="fac-hrp-facid">HRP Source Facility ID</label>
+                                        <input type="text" id="fac-hrp-facid" class="form-control" placeholder="External Facility ID">
                                     </div>
                                 </div>
 
-                                <div style="margin-top: 20px; text-align: right;">
+                                <div style="margin-top: 24px; text-align: right;">
                                     <button type="submit" class="btn" id="btn-create-fac">
                                         <i class="fa-solid fa-circle-check"></i> Register Facility
                                     </button>
@@ -1024,9 +1128,19 @@
                 pincode: document.getElementById('fac-pincode').value,
                 stateLGDCode: document.getElementById('fac-state').value,
                 districtLGDCode: document.getElementById('fac-district').value,
-                facilityAddress: document.getElementById('fac-address').value,
-                contactNumber: document.getElementById('fac-contact').value,
-                email: document.getElementById('fac-email').value,
+                subDistrictLGDCode: document.getElementById('fac-subdistrict').value,
+                address: document.getElementById('fac-address').value,
+                facilityContactNumber: document.getElementById('fac-contact').value,
+                facilityEmailId: document.getElementById('fac-email').value,
+                facilityLandlineNumber: document.getElementById('fac-landline').value,
+                facilityStdCode: document.getElementById('fac-std').value,
+                latitude: document.getElementById('fac-latitude').value,
+                longitude: document.getElementById('fac-longitude').value,
+                abpmjayId: document.getElementById('fac-abpmjay').value,
+                ninID: document.getElementById('fac-nin').value,
+                ceaId: document.getElementById('fac-cea').value,
+                hrpSource: document.getElementById('fac-hrpsource').value,
+                hrpSourceFacilityId: document.getElementById('fac-hrp-facid').value,
             };
 
             fetch('{{ route("nhpr.hfr.create") }}', {
@@ -1049,7 +1163,7 @@
                     // Set up link form with new details automatically
                     document.getElementById('link-facility-id').value = data.facilityId;
                     document.getElementById('link-facility-name').value = data.facilityName;
-                    document.getElementById('link-facility-address').value = payload.facilityAddress || 'Dehradun';
+                    document.getElementById('link-facility-address').value = payload.address || 'Dehradun';
                     document.getElementById('link-facility-pincode').value = payload.pincode || '248001';
                     
                     // Auto switch to linkage tab

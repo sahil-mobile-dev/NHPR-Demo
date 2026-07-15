@@ -34,6 +34,10 @@ class HfrFacilityService
      */
     public function searchFacility(array $searchParams): array
     {
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(60);
+        }
+
         $token = $this->gatewayService->getValidToken();
         if (empty($token)) {
             throw new Exception('HFR Facility Service: Failed to fetch gateway authorization token.');
@@ -76,8 +80,9 @@ class HfrFacilityService
         try {
             $response = Http::when(! config('services.nhpr.verify_ssl'), fn ($q) => $q->withoutVerifying())
                 ->withHeaders($headers)
-                ->timeout(10)
-                ->retry(3, 100, throw: false)
+                ->connectTimeout(30)
+                ->timeout(30)
+                ->retry(1, 100, throw: false)
                 ->post($endpoint, $payload);
 
             $statusCode = $response->status();
@@ -122,6 +127,10 @@ class HfrFacilityService
      */
     public function registerProfessional(array $data): array
     {
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(60);
+        }
+
         $token = $this->gatewayService->getValidToken();
         if (empty($token)) {
             throw new Exception('HFR Facility Service: Failed to fetch gateway authorization token.');
@@ -177,8 +186,9 @@ class HfrFacilityService
         try {
             $response = Http::when(! config('services.nhpr.verify_ssl'), fn ($q) => $q->withoutVerifying())
                 ->withHeaders($headers)
-                ->timeout(10)
-                ->retry(3, 100, throw: false)
+                ->connectTimeout(30)
+                ->timeout(30)
+                ->retry(1, 100, throw: false)
                 ->post($endpoint, $data);
 
             $statusCode = $response->status();
@@ -267,6 +277,10 @@ class HfrFacilityService
      */
     public function createFacility(array $data): array
     {
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(120);
+        }
+
         $token = $this->gatewayService->getValidToken();
         if (empty($token)) {
             throw new Exception('HFR Facility Service: Failed to fetch gateway authorization token.');
@@ -274,9 +288,7 @@ class HfrFacilityService
 
         $hprToken = session('hpr_reg_hpr_token', 'mock-hpr-token-jwt-111');
 
-        $apiUrl = config('services.nhpr.api_url');
-        $xCmId = config('services.nhpr.x_cm_id');
-
+        $apiUrl = config('services.nhpr.api_url', 'https://apihspsbx.abdm.gov.in');
         $basicInfoEndpoint = rtrim($apiUrl, '/').'/v4/int/v1.5/facility/basic-information';
         $submitEndpoint = rtrim($apiUrl, '/').'/v4/int/v1.5/facility/submit-facility';
 
@@ -285,37 +297,37 @@ class HfrFacilityService
 
         $headers = [
             'Authorization' => 'Bearer '.$token,
-            'x-hprid-auth' => $hprToken,
+            'x-hprid-auth' => str_starts_with($hprToken, 'Bearer ') ? substr($hprToken, 7) : $hprToken,
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
             'REQUEST-ID' => $requestId,
             'TIMESTAMP' => $timestamp,
-            'X-CM-ID' => $xCmId,
-            'Content-Type' => 'application/json',
         ];
 
-        // Format basic information payload matching HFR PDF page 9 Sample 1
+        // Format basic information payload matching HFR PDF specifications
         $basicPayload = [
             'trackingId' => '',
             'facilityInformation' => [
-                'facilityName' => $data['facilityName'],
+                'facilityName' => $data['facilityName'] ?? '',
                 'facilityAddressDetails' => [
                     'country' => 'India',
-                    'stateLGDCode' => $data['stateLGDCode'] ?? '05',
-                    'districtLGDCode' => $data['districtLGDCode'] ?? '060',
-                    'subDistrictLGDCode' => $data['districtLGDCode'] ?? '060',
+                    'stateLGDCode' => $data['stateLGDCode'] ?? '',
+                    'districtLGDCode' => $data['districtLGDCode'] ?? '',
+                    'subDistrictLGDCode' => $data['subDistrictLGDCode'] ?? '',
                     'facilityRegion' => 'U',
                     'villageCityTownLGDCode' => '',
-                    'addressLine1' => $data['facilityAddress'],
+                    'addressLine1' => $data['address'] ?? '',
                     'addressLine2' => '',
-                    'pincode' => $data['pincode'],
-                    'latitude' => '24.068570',
-                    'longitude' => '24.068570',
+                    'pincode' => $data['pincode'] ?? '',
+                    'latitude' => $data['latitude'] ?? '24.068570',
+                    'longitude' => $data['longitude'] ?? '24.068570',
                 ],
                 'facilityContactInformation' => [
-                    'facilityEmailId' => $data['email'],
-                    'facilityContactNumber' => $data['contactNumber'],
+                    'facilityEmailId' => $data['facilityEmailId'] ?? '',
+                    'facilityContactNumber' => $data['facilityContactNumber'] ?? '',
                     'websiteLink' => 'http://example.org',
-                    'facilityLandlineNumber' => '',
-                    'facilityStdCode' => '',
+                    'facilityLandlineNumber' => $data['facilityLandlineNumber'] ?? '',
+                    'facilityStdCode' => $data['facilityStdCode'] ?? '',
                 ],
                 'ownershipCode' => $data['ownershipCode'] ?? 'P',
                 'ownershipSubTypeCode' => 'S',
@@ -323,7 +335,7 @@ class HfrFacilityService
                 'typeOfServiceCode' => 'IPD',
                 'specialityTypeCode' => 'SINGLE',
                 'systemOfMedicineCode' => $data['systemOfMedicineCode'] ?? 'M',
-                'facilityTypeCode' => $data['facilityTypeCode'] ?? '5',
+                'facilityTypeCode' => $data['facilityTypeCode'] ?? 'HOSPITAL',
                 'facilityUploads' => [
                     'facilityBuildingPhoto' => [
                         'name' => '',
@@ -335,6 +347,11 @@ class HfrFacilityService
                 'facilityOperationalStatus' => 'NF', // NF = Non-Functional (allows direct submission)
                 'timingsOfFacility' => [],
                 'abdmCompliantSoftware' => [],
+                'abpmjayId' => $data['abpmjayId'] ?? '',
+                'ninID' => $data['ninID'] ?? '',
+                'ceaId' => $data['ceaId'] ?? '',
+                'hrpSource' => $data['hrpSource'] ?? '',
+                'hrpSourceFacilityId' => $data['hrpSourceFacilityId'] ?? '',
             ],
         ];
 
@@ -345,11 +362,12 @@ class HfrFacilityService
         ]);
 
         try {
-            // Call Basic Info
+            // Step 1: Submit Basic Information
             $response = Http::when(! config('services.nhpr.verify_ssl'), fn ($q) => $q->withoutVerifying())
                 ->withHeaders($headers)
-                ->timeout(10)
-                ->retry(3, 100, throw: false)
+                ->connectTimeout(30)
+                ->timeout(30)
+                ->retry(1, 100, throw: false)
                 ->post($basicInfoEndpoint, $basicPayload);
 
             $statusCode = $response->status();
@@ -361,7 +379,7 @@ class HfrFacilityService
             ]);
 
             if (! $response->successful()) {
-                $message = $body['error']['message'] ?? $body['message'] ?? 'Basic information creation failed.';
+                $message = $body['message'] ?? $body['error']['message'] ?? 'Basic information creation failed.';
                 throw new Exception("HFR Basic Information failed (HTTP {$statusCode}): {$message}");
             }
 
@@ -370,7 +388,7 @@ class HfrFacilityService
                 throw new Exception('HFR Basic Information did not return a valid trackingId.');
             }
 
-            // Call Submit Facility
+            // Step 2: Submit Facility
             $submitPayload = [
                 'trackingId' => $trackingId,
                 'sourceOfInformation' => 'HIMS',
@@ -385,8 +403,9 @@ class HfrFacilityService
 
             $submitResponse = Http::when(! config('services.nhpr.verify_ssl'), fn ($q) => $q->withoutVerifying())
                 ->withHeaders($headers)
-                ->timeout(10)
-                ->retry(3, 100, throw: false)
+                ->connectTimeout(30)
+                ->timeout(30)
+                ->retry(1, 100, throw: false)
                 ->post($submitEndpoint, $submitPayload);
 
             $submitStatusCode = $submitResponse->status();
@@ -398,15 +417,16 @@ class HfrFacilityService
             ]);
 
             if ($submitResponse->successful()) {
+                $responseBody = $submitBody['data'] ?? $submitBody;
                 return [
-                    'facilityId' => $submitBody['facilityId'] ?? 'IN'.rand(1000000000, 9999999999),
-                    'facilityName' => $data['facilityName'],
+                    'facilityId' => $responseBody['hfrId'] ?? $responseBody['facilityId'] ?? 'IN'.rand(1000000000, 9999999999),
+                    'facilityName' => $responseBody['facilityName'] ?? ($data['facilityName'] ?? ''),
+                    'status' => $responseBody['status'] ?? 'PENDING_APPROVAL',
                     'message' => $submitBody['message'] ?? 'Facility registered and submitted successfully.',
-                    'status' => 'success',
                 ];
             }
 
-            $message = $submitBody['error']['message'] ?? $submitBody['message'] ?? 'Facility submit failed.';
+            $message = $submitBody['message'] ?? $submitBody['error']['message'] ?? 'Facility submit failed.';
             throw new Exception("HFR Submit Facility failed (HTTP {$submitStatusCode}): {$message}");
         } catch (Exception $e) {
             Log::error('HfrFacilityService Exception in createFacility: '.$e->getMessage());
@@ -424,6 +444,10 @@ class HfrFacilityService
      */
     public function linkBridgeToFacility(array $data): array
     {
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(60);
+        }
+
         $token = $this->gatewayService->getValidToken();
         if (empty($token)) {
             throw new Exception('HFR Facility Service: Failed to fetch gateway authorization token.');
@@ -453,8 +477,9 @@ class HfrFacilityService
         try {
             $response = Http::when(! config('services.nhpr.verify_ssl'), fn ($q) => $q->withoutVerifying())
                 ->withHeaders($headers)
-                ->timeout(10)
-                ->retry(3, 100, throw: false)
+                ->connectTimeout(30)
+                ->timeout(30)
+                ->retry(1, 100, throw: false)
                 ->post($endpoint, $data);
 
             $statusCode = $response->status();

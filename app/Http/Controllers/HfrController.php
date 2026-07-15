@@ -108,14 +108,24 @@ class HfrController extends Controller
         $request->validate([
             'facilityName' => 'required|string|min:3',
             'ownershipCode' => 'required|string',
-            'systemOfMedicineCode' => 'required|string',
-            'facilityTypeCode' => 'required|string',
-            'pincode' => 'required|digits:6',
             'stateLGDCode' => 'required|string',
-            'districtLGDCode' => 'required|string',
-            'facilityAddress' => 'required|string',
-            'contactNumber' => 'required|digits:10',
-            'email' => 'required|email',
+            'districtLGDCode' => 'nullable|string',
+            'subDistrictLGDCode' => 'nullable|string',
+            'address' => 'required|string',
+            'pincode' => 'nullable|string',
+            'facilityEmailId' => 'nullable|email',
+            'facilityContactNumber' => 'nullable|string',
+            'facilityLandlineNumber' => 'nullable|string',
+            'facilityStdCode' => 'nullable|string',
+            'latitude' => 'nullable|string',
+            'longitude' => 'nullable|string',
+            'systemOfMedicineCode' => 'nullable|string',
+            'facilityTypeCode' => 'nullable|string',
+            'abpmjayId' => 'nullable|string',
+            'ninID' => 'nullable|string',
+            'ceaId' => 'nullable|string',
+            'hrpSource' => 'nullable|string',
+            'hrpSourceFacilityId' => 'nullable|string',
         ]);
 
         $realApiMode = session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false));
@@ -127,15 +137,18 @@ class HfrController extends Controller
                 'success' => true,
                 'facilityId' => $simulatedId,
                 'facilityName' => $request->input('facilityName'),
+                'status' => 'PENDING_APPROVAL',
                 'message' => 'Facility registered successfully (Simulated Mode)!',
             ]);
         }
 
         try {
             $data = $request->only([
-                'facilityName', 'ownershipCode', 'systemOfMedicineCode',
-                'facilityTypeCode', 'pincode', 'stateLGDCode', 'districtLGDCode',
-                'facilityAddress', 'contactNumber', 'email',
+                'facilityName', 'ownershipCode', 'stateLGDCode', 'districtLGDCode',
+                'subDistrictLGDCode', 'address', 'pincode', 'facilityEmailId',
+                'facilityContactNumber', 'facilityLandlineNumber', 'facilityStdCode',
+                'latitude', 'longitude', 'systemOfMedicineCode', 'facilityTypeCode',
+                'abpmjayId', 'ninID', 'ceaId', 'hrpSource', 'hrpSourceFacilityId',
             ]);
 
             $result = $this->hfrService->createFacility($data);
@@ -144,6 +157,7 @@ class HfrController extends Controller
                 'success' => true,
                 'facilityId' => $result['facilityId'],
                 'facilityName' => $result['facilityName'],
+                'status' => $result['status'] ?? 'PENDING_APPROVAL',
                 'message' => $result['message'],
             ]);
         } catch (Exception $e) {

@@ -38,6 +38,7 @@ return [
     'nhpr' => [
         'base_url' => env('NHPR_BASE_URL', 'https://dev.abdm.gov.in'),
         'api_url' => env('NHPR_API_URL', 'https://apihspsbx.abdm.gov.in'),
+        'hfr_api_url' => env('NHPR_HFR_API_URL', 'https://facilitysbx.abdm.gov.in'),
         'client_id' => env('NHPR_CLIENT_ID'),
         'client_secret' => env('NHPR_CLIENT_SECRET'),
         'x_cm_id' => env('NHPR_X_CM_ID', 'sbx'),
