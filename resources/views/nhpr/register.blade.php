@@ -2054,6 +2054,7 @@
             });
 
             // Step 3: Auth Method Toggles
+            const extAuthRadioButtons = document.querySelectorAll('input[name="ext-auth-method"]');
             extAuthRadioButtons.forEach(radio => {
                 radio.addEventListener('change', function () {
                     if (this.value === 'PASSWORD') {
