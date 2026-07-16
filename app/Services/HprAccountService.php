@@ -355,7 +355,7 @@ class HprAccountService
         $payload = [
             'idType' => 'hpr_id',
             'domainName' => '@hpr.abdm',
-            'authMethod' => $authMethod,
+            'authMethod' => 'AADHAAR_OTP',
             'hprId' => $hprId,
         ];
 
@@ -627,7 +627,7 @@ class HprAccountService
             throw $e;
         }
     }
-
+    
     /**
      * Verify mobile OTP to retrieve HPR Profiles linked to that mobile.
      *
@@ -670,7 +670,7 @@ class HprAccountService
             'body' => [
                 'mobile' => $mobile,
                 'txnId' => $txnId,
-                'otp' => '[ENCRYPTED_MASKED]',
+                'otp' => $encryptedOtp,
             ],
         ]);
 
@@ -800,16 +800,17 @@ class HprAccountService
         ];
 
         $payload = [
-            'otp' => $encryptedOtp,
-            'transactionId' => $txnId,
+            'otp' => $otp,
+            'txnId' => $txnId,
         ];
 
         Log::info('HPR Auth Request: Confirm Aadhaar OTP', [
             'url' => $endpoint,
             'request_id' => $requestId,
             'body' => [
-                'otp' => '[ENCRYPTED_MASKED]',
-                'transactionId' => $txnId,
+                'otp' => $otp,
+                'EncryptedOtp' => $encryptedOtp,
+                'txnId' => $txnId,
             ],
         ]);
 
