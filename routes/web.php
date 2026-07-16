@@ -47,6 +47,8 @@ Route::prefix('nhpr/hfr')->name('nhpr.hfr.')->group(function () {
     Route::post('/search', [HfrController::class, 'search'])->name('search');
     Route::post('/create', [HfrController::class, 'store'])->name('create');
     Route::post('/link', [HfrController::class, 'linkBridge'])->name('link');
+    Route::post('/hpr-login', [HfrController::class, 'hprLogin'])->name('hpr-login');
+    Route::post('/hpr-logout', [HfrController::class, 'hprLogout'])->name('hpr-logout');
 });
 
 Route::prefix('abha')->name('abha.')->group(function () {

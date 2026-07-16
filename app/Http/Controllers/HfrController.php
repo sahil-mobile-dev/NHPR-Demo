@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\HfrFacilityService;
+use App\Services\HprAccountService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -33,9 +34,10 @@ class HfrController extends Controller
     public function index(): View
     {
         $defaultBridgeId = session('nhpr_credential_client_id', config('services.nhpr.client_id', ''));
-        $loggedInHprId = session('hpr_reg_hpr_id', 'practitioner@hpr.abdm');
+        $hprAuthenticated = session()->has('hpr_reg_hpr_token');
+        $loggedInHprId = session('hpr_reg_hpr_id');
 
-        return view('nhpr.hfr', compact('defaultBridgeId', 'loggedInHprId'));
+        return view('nhpr.hfr', compact('defaultBridgeId', 'loggedInHprId', 'hprAuthenticated'));
     }
 
     /**
@@ -105,6 +107,13 @@ class HfrController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        if (! session()->has('hpr_reg_hpr_token')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'HPR login or verification is required before registering a facility.',
+            ], 401);
+        }
+
         $request->validate([
             'facilityName' => 'required|string|min:3',
             'ownershipCode' => 'required|string',
@@ -284,5 +293,107 @@ class HfrController extends Controller
                 ], 500);
             }
         }
+    }
+
+    /**
+     * Authenticate HPR credentials and cache the token in the session.
+     */
+    public function hprLogin(Request $request, HprAccountService $hprService): JsonResponse
+    {
+        $request->validate([
+            'hpr_id' => 'required_without:mobile|nullable|string',
+            'mobile' => 'required_if:auth_method,MOBILE_OTP|nullable|digits:10',
+            'auth_method' => 'required|string|in:PASSWORD,MOBILE_OTP,AADHAAR_OTP,OTP',
+            'password' => 'required_if:auth_method,PASSWORD|nullable|string',
+            'otp' => 'required_if:auth_method,AADHAAR_OTP,OTP|nullable|digits:6',
+            'txn_id' => 'required_if:auth_method,MOBILE_OTP,AADHAAR_OTP,OTP|nullable|string',
+            'selected_hpr_id' => 'required_if:auth_method,MOBILE_OTP|nullable|string',
+        ]);
+
+        $authMethod = $request->input('auth_method');
+        $hprId = trim($request->input('selected_hpr_id') ?: $request->input('hpr_id') ?: '');
+        $otp = $request->input('otp');
+        $password = $request->input('password');
+        $txnId = $request->input('txn_id');
+
+        $realApiMode = session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false));
+
+        if ($realApiMode) {
+            try {
+                if ($authMethod === 'PASSWORD') {
+                    $authResponse = $hprService->confirmHprAuthWithPassword($hprId, $password);
+                    $hprToken = $authResponse['token'] ?? null;
+                } elseif ($authMethod === 'MOBILE_OTP') {
+                    $authResponse = $hprService->loginWithHprId($hprId, $txnId);
+                    $hprToken = $authResponse['token'] ?? null;
+                } elseif ($authMethod === 'AADHAAR_OTP') {
+                    $authResponse = $hprService->confirmHprAuthWithAadhaarOtp($txnId, $otp);
+                    $hprToken = $authResponse['token'] ?? null;
+                } else {
+                    $authResponse = $hprService->confirmHprAuthWithOtp($txnId, $otp);
+                    $hprToken = $authResponse['token'] ?? null;
+                }
+
+                if (empty($hprToken)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Authentication succeeded but no HPR access token was returned.',
+                    ], 500);
+                }
+
+                // Cache HPR Token in session
+                session(['hpr_reg_hpr_token' => $hprToken]);
+                session(['hpr_reg_hpr_id' => $hprId]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => "Successfully authenticated HPR ID {$hprId}!",
+                    'hpr_id' => $hprId,
+                ]);
+            } catch (Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Authentication failed: '.$e->getMessage(),
+                ], 500);
+            }
+        }
+
+        // Simulated Mode fallback
+        if ($authMethod === 'PASSWORD' && strtolower($password) === 'wrong') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid HPR credentials / password. Please try again.',
+            ], 422);
+        }
+
+        if (($authMethod === 'AADHAAR_OTP' || $authMethod === 'OTP') && $otp !== '123456') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid OTP. Please enter 123456 for simulated verification.',
+            ], 422);
+        }
+
+        $mockToken = 'simulated-jwt-token-'.Str::random(10);
+        session(['hpr_reg_hpr_token' => $mockToken]);
+        session(['hpr_reg_hpr_id' => $hprId]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "HPR ID {$hprId} successfully authenticated (Simulated Mode)!",
+            'hpr_id' => $hprId,
+        ]);
+    }
+
+    /**
+     * Clear the HPR session cache.
+     */
+    public function hprLogout(): JsonResponse
+    {
+        session()->forget(['hpr_reg_hpr_token', 'hpr_reg_hpr_id']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'HPR session cleared successfully.',
+        ]);
     }
 }

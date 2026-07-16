@@ -100,6 +100,24 @@ class HfrManagementTest extends TestCase
         $response->assertJsonPath('facilities.0.facilityId', 'IN2710001111');
     }
 
+    public function test_create_facility_fails_without_hpr_session(): void
+    {
+        session(['nhpr_real_api_mode' => false]);
+
+        $payload = [
+            'facilityName' => 'No Session Clinic',
+            'ownershipCode' => 'P',
+            'stateLGDCode' => '05',
+            'address' => 'Rajpur Road, Dehradun',
+        ];
+
+        $response = $this->postJson(route('nhpr.hfr.create'), $payload);
+
+        $response->assertStatus(401);
+        $response->assertJsonPath('success', false);
+        $response->assertJsonPath('message', 'HPR login or verification is required before registering a facility.');
+    }
+
     public function test_create_facility_simulated(): void
     {
         session(['nhpr_real_api_mode' => false]);
@@ -117,7 +135,10 @@ class HfrManagementTest extends TestCase
             'facilityEmailId' => 'contact@utclinic.org',
         ];
 
-        $response = $this->postJson(route('nhpr.hfr.create'), $payload);
+        $response = $this->withSession([
+            'hpr_reg_hpr_token' => 'mock-hpr-token-jwt-111',
+            'hpr_reg_hpr_id' => 'practitioner@hpr.abdm',
+        ])->postJson(route('nhpr.hfr.create'), $payload);
 
         $response->assertStatus(200);
         $response->assertJsonPath('success', true);
@@ -157,7 +178,10 @@ class HfrManagementTest extends TestCase
             'facilityEmailId' => 'contact@utclinic.org',
         ];
 
-        $response = $this->postJson(route('nhpr.hfr.create'), $payload);
+        $response = $this->withSession([
+            'hpr_reg_hpr_token' => 'mock-hpr-token-jwt-111',
+            'hpr_reg_hpr_id' => 'practitioner@hpr.abdm',
+        ])->postJson(route('nhpr.hfr.create'), $payload);
 
         $response->assertStatus(200);
         $response->assertJsonPath('success', true);

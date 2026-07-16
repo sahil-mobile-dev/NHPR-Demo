@@ -302,6 +302,7 @@ class HfrFacilityService
             'Authorization' => 'Bearer '.$token,
             'x-hprid-auth' => str_starts_with($hprToken, 'Bearer ') ? substr($hprToken, 7) : $hprToken,
             'HPIRId-auth' => str_starts_with($hprToken, 'Bearer ') ? substr($hprToken, 7) : $hprToken,
+            'x-hpird-auth' => str_starts_with($hprToken, 'Bearer ') ? substr($hprToken, 7) : $hprToken,
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
             'REQUEST-ID' => $requestId,

@@ -521,7 +521,7 @@ class HprAccountService
             'body' => [
                 'hprId' => $hprId,
                 'Encryptedpassword' => $encryptedPassword,
-                'password' => $password
+                'password' => $password,
             ],
         ]);
 
@@ -586,7 +586,7 @@ class HprAccountService
             'Content-Type' => 'application/json',
         ];
 
-        $payload = [            
+        $payload = [
             'mobile' => $mobile,
         ];
 
@@ -627,7 +627,7 @@ class HprAccountService
             throw $e;
         }
     }
-    
+
     /**
      * Verify mobile OTP to retrieve HPR Profiles linked to that mobile.
      *

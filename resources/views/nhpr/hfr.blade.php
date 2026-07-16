@@ -777,157 +777,289 @@
                 </div>
 
                 <div class="tab-panel" id="tab-create">
-                    <div class="card">
-                        <div class="card-header">
-                            <span class="card-title"><i class="fa-solid fa-hospital"></i> HFR Facility Registration Form</span>
+                    @if(!$hprAuthenticated)
+                        <!-- HPR Authentication Block -->
+                        <div id="hpr-auth-card" class="card" style="max-width: 600px; margin: 0 auto;">
+                            <div class="card-header" style="background: linear-gradient(135deg, #1565c0, #1e88e5); color: #fff; padding: 16px 20px;">
+                                <span class="card-title" style="color: #fff; font-weight: 700;"><i class="fa-solid fa-lock"></i> HPR Authentication Required</span>
+                            </div>
+                            <div class="card-body" style="padding: 24px;">
+                                <p style="font-size: 13.5px; color: var(--muted); margin-bottom: 20px; line-height: 1.6;">
+                                    To register a new healthcare facility in the Health Facility Registry (HFR), you must first verify and log in using your Healthcare Professional Registry (HPR) ID.
+                                </p>
+                                
+                                <!-- Step 1: Base Details (Verify HPR ID) -->
+                                <div id="login-step-1">
+                                    <div class="form-group" style="margin-bottom: 16px;">
+                                        <label for="hpr-login-id" style="font-weight: 600; margin-bottom: 6px; display: block;">HPR ID / Practitioner ID <span class="req">*</span></label>
+                                        <input type="text" id="hpr-login-id" class="form-control" placeholder="e.g. doctor@hpr.abdm" style="padding: 10px 14px;" required>
+                                        <span style="font-size: 11px; color: var(--muted); display: block; margin-top: 4px;">Enter your registered HPR ID (e.g., username@hpr.abdm).</span>
+                                    </div>
+                                    <div style="text-align: right; margin-top: 20px;">
+                                        <button type="button" class="btn" id="btn-login-verify-hpr" onclick="verifyLoginHprId()" style="background: var(--primary); color: #fff; padding: 10px 20px; border-radius: 6px; font-weight: 600;">
+                                            <i class="fa-solid fa-user-shield"></i> Verify HPR Profile
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Step 2: HPR Login Options (Hidden until verified) -->
+                                <div id="login-step-2" style="display: none; margin-top: 14px;">
+                                    <!-- Profile Card -->
+                                    <div class="hpr-profile-card" style="padding: 16px; background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px; margin-bottom: 20px;">
+                                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                                            <div style="font-size: 24px; color: var(--primary-light);"><i class="fa-solid fa-user-doctor"></i></div>
+                                            <div>
+                                                <div style="font-weight: 700; font-size: 15px;" id="hpr-login-profile-name">Loading...</div>
+                                                <div style="font-size: 11px; color: var(--muted);" id="hpr-login-profile-id">ID: </div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-2" style="font-size: 12px; gap: 8px; color: var(--muted2); margin-top: 12px;">
+                                            <div><strong>Medical Council:</strong> <span id="hpr-login-profile-council">—</span></div>
+                                            <div><strong>Reg No:</strong> <span id="hpr-login-profile-regno">—</span></div>
+                                            <div><strong>Mobile:</strong> <span id="hpr-login-profile-mobile">—</span></div>
+                                            <div><strong>DOB:</strong> <span id="hpr-login-profile-dob">—</span></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Auth Method Selection -->
+                                    <div class="form-group" style="margin-bottom: 14px;">
+                                        <label for="hpr-login-auth-method" style="font-weight: 600; display: block; margin-bottom: 6px;">Select Authentication Method <span class="req">*</span></label>
+                                        <select id="hpr-login-auth-method" class="form-control" onchange="toggleLoginAuthFields()" style="padding: 10px 14px;">
+                                            <option value="PASSWORD">Login Via Password API</option>
+                                            <option value="MOBILE_OTP">Login Via Mobile OTP API</option>
+                                            <option value="AADHAAR_OTP">Login Via Aadhaar OTP API</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Password Fields -->
+                                    <div class="form-group login-auth-field" id="login-auth-password-group" style="margin-bottom: 14px;">
+                                        <label for="hpr-login-password" style="font-weight: 600; display: block; margin-bottom: 6px;">HPR Password <span class="req">*</span></label>
+                                        <input type="password" id="hpr-login-password" class="form-control" placeholder="Enter HPR Registry Password" style="padding: 10px 14px;">
+                                    </div>
+
+                                    <!-- Mobile Fields -->
+                                    <div class="form-group login-auth-field" id="login-auth-mobile-group" style="margin-bottom: 14px; display: none;">
+                                        <label for="hpr-login-mobile-number" style="font-weight: 600; display: block; margin-bottom: 6px;">Registered Mobile Number <span class="req">*</span></label>
+                                        <input type="text" id="hpr-login-mobile-number" class="form-control" maxlength="10" placeholder="e.g. 9876543210" style="padding: 10px 14px;">
+                                    </div>
+
+                                    <!-- OTP Fields (Common for Mobile OTP / Aadhaar OTP) -->
+                                    <div class="form-group login-auth-field" id="login-auth-otp-group" style="margin-bottom: 14px; display: none;">
+                                        <!-- Send OTP Button -->
+                                        <div id="login-otp-request-container" style="text-align: center; margin-bottom: 10px;">
+                                            <p style="font-size: 12.5px; color: var(--muted); margin-bottom: 10px;" id="login-otp-message-text">OTP will be sent to the registered mobile number.</p>
+                                            <button type="button" class="btn" id="btn-login-send-otp" onclick="triggerLoginSendOtp()" style="background: var(--primary); color: #fff; width: 100%; padding: 10px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                                                <i class="fa-solid fa-paper-plane"></i> Send OTP
+                                            </button>
+                                        </div>
+
+                                        <!-- OTP Input Fields -->
+                                        <div id="login-otp-input-container" style="display: none;">
+                                            <label for="hpr-login-otp" style="font-weight: 600; display: block; margin-bottom: 6px;">Enter 6-Digit OTP <span class="req">*</span></label>
+                                            <div style="display: flex; gap: 10px; margin-top: 6px; margin-bottom: 6px;">
+                                                <input type="text" id="hpr-login-otp" class="form-control font-mono" maxlength="6" placeholder="Enter OTP (e.g. 123456)" style="flex: 1; padding: 10px 14px;">
+                                                <button type="button" class="btn" id="btn-login-resend-otp" onclick="triggerLoginSendOtp()" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border2); padding: 8px 16px; border-radius: 6px; font-size: 13px;">
+                                                    <i class="fa-solid fa-rotate-right"></i> Resend OTP
+                                                </button>
+                                            </div>
+                                            <span style="font-size: 11px; color: var(--muted); display: block; margin-top: 4px;">For simulated mode, enter `123456`.</span>
+                                            
+                                            <!-- Button to Verify OTP for Mobile Login -->
+                                            <button type="button" class="btn" id="btn-login-verify-mobile-otp" onclick="verifyLoginMobileOtpAction()" style="background: var(--primary); color: #fff; width: 100%; padding: 10px 14px; margin-top: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; display: none;">
+                                                <i class="fa-solid fa-shield-halved"></i> Verify OTP & Fetch Profiles
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Linked HPR Profiles list dropdown (For Mobile OTP only) -->
+                                    <div class="form-group login-auth-field" id="login-auth-profiles-group" style="margin-bottom: 14px; display: none;">
+                                        <label for="hpr-login-selected-hpr-id" style="font-weight: 600; display: block; margin-bottom: 6px;">Select HPR Profile / HPID <span class="req">*</span></label>
+                                        <select id="hpr-login-selected-hpr-id" class="form-control" style="padding: 10px 14px;">
+                                            <!-- Populated dynamically via JS -->
+                                        </select>
+                                        <span style="font-size: 11px; color: var(--muted); display: block; margin-top: 4px;">Select the HPR ID profile you wish to log in with.</span>
+                                    </div>
+
+                                    <div style="margin-top: 24px; display: flex; justify-content: space-between; align-items: center;">
+                                        <button type="button" class="btn" id="btn-login-back-step1" onclick="goBackToLoginStep1()" style="background: rgba(255,255,255,0.05); color: #fff; padding: 10px 20px; border-radius: 6px;">
+                                            <i class="fa-solid fa-arrow-left"></i> Back
+                                        </button>
+                                        <button type="button" class="btn" id="btn-login-submit" onclick="submitHprLogin()" style="background: var(--success); color: #fff; padding: 10px 20px; border-radius: 6px; font-weight: 600;">
+                                            <i class="fa-solid fa-right-to-bracket"></i> Login & Authenticate
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="card-body">
-                            <form id="create-form">
-                                <!-- Section 1: Basic Facility Information -->
-                                <div class="form-section-header">
-                                    <i class="fa-solid fa-circle-info"></i> Basic Facility Details
+                    @else
+                        <!-- HPR Authenticated Banner -->
+                        <div style="background: rgba(46, 125, 50, 0.1); border: 1px solid rgba(46, 125, 50, 0.3); padding: 16px 20px; border-radius: 12px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="width: 36px; height: 36px; background: rgba(46, 125, 50, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #81c784; font-size: 18px;">
+                                    <i class="fa-solid fa-user-check"></i>
                                 </div>
-                                <div class="grid-2">
-                                    <div class="form-group">
-                                        <label for="fac-name">Facility Name <span class="req">*</span></label>
-                                        <input type="text" id="fac-name" class="form-control" placeholder="e.g. Sunrise Multispeciality Hospital" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="fac-ownership">Ownership Type <span class="req">*</span></label>
-                                        <select id="fac-ownership" class="form-control" required>
-                                            <option value="P">Private (P)</option>
-                                            <option value="G">Government / Public (G)</option>
-                                            <option value="NGO">Non-Governmental Organization (NGO)</option>
-                                            <option value="T">Charitable Trust (T)</option>
-                                        </select>
-                                    </div>
+                                <div>
+                                    <h4 style="margin: 0; font-size: 14px; color: #e8f0fe; font-weight: 700;">HPR Profile Authenticated</h4>
+                                    <p style="margin: 2px 0 0 0; font-size: 12px; color: var(--muted);">Logged in as: <strong style="color: var(--primary-light);">{{ $loggedInHprId }}</strong></p>
                                 </div>
-
-                                <div class="grid-2" style="margin-top: 14px;">
-                                    <div class="form-group">
-                                        <label for="fac-medicine">System of Medicine</label>
-                                        <select id="fac-medicine" class="form-control">
-                                            <option value="M">Modern Medicine / Allopathy (M)</option>
-                                            <option value="A">Ayurveda (A)</option>
-                                            <option value="H">Homeopathy (H)</option>
-                                            <option value="U">Unani (U)</option>
-                                            <option value="S">Siddha (S)</option>
-                                            <option value="Y">Yoga & Naturopathy (Y)</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="fac-type">Facility Category/Type</label>
-                                        <select id="fac-type" class="form-control">
-                                            <option value="HOSPITAL">Hospital</option>
-                                            <option value="CLINIC">Clinic / O.P.D.</option>
-                                            <option value="DIAGNOSTIC_CENTRE">Diagnostic Lab</option>
-                                            <option value="PHARMACY">Pharmacy</option>
-                                            <option value="NURSING_HOME">Nursing Home</option>
-                                            <option value="DISPENSARY">Dispensary</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <!-- Section 2: Address & Location Details -->
-                                <div class="form-section-header">
-                                    <i class="fa-solid fa-map-location-dot"></i> Address & Location Details
-                                </div>
-                                <div class="form-group">
-                                    <label for="fac-address">Complete Address <span class="req">*</span></label>
-                                    <textarea id="fac-address" class="form-control" style="resize: vertical; min-height: 80px;" placeholder="e.g. SG Highway, Ahmedabad" required></textarea>
-                                </div>
-
-                                <div class="grid-3" style="margin-top: 14px;">
-                                    <div class="form-group">
-                                        <label for="fac-state">State LGD Code <span class="req">*</span></label>
-                                        <input type="text" id="fac-state" class="form-control" placeholder="e.g. 24" value="24" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="fac-district">District LGD Code</label>
-                                        <input type="text" id="fac-district" class="form-control" placeholder="e.g. 474" value="474">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="fac-subdistrict">Sub-District LGD Code</label>
-                                        <input type="text" id="fac-subdistrict" class="form-control" placeholder="e.g. 3924" value="3924">
-                                    </div>
-                                </div>
-
-                                <div class="grid-3" style="margin-top: 14px;">
-                                    <div class="form-group">
-                                        <label for="fac-pincode">Pincode</label>
-                                        <input type="text" id="fac-pincode" class="form-control" maxlength="6" placeholder="e.g. 380051">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="fac-latitude">Latitude</label>
-                                        <input type="text" id="fac-latitude" class="form-control" placeholder="e.g. 23.0395">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="fac-longitude">Longitude</label>
-                                        <input type="text" id="fac-longitude" class="form-control" placeholder="e.g. 72.5660">
-                                    </div>
-                                </div>
-
-                                <!-- Section 3: Contact Details -->
-                                <div class="form-section-header">
-                                    <i class="fa-solid fa-address-book"></i> Contact Details
-                                </div>
-                                <div class="grid-4">
-                                    <div class="form-group">
-                                        <label for="fac-email">Facility Email ID</label>
-                                        <input type="email" id="fac-email" class="form-control" placeholder="e.g. info@sunrisehospital.com">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="fac-contact">Facility Mobile Number</label>
-                                        <input type="tel" id="fac-contact" class="form-control" maxlength="10" placeholder="e.g. 9876543210">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="fac-std">STD Code</label>
-                                        <input type="text" id="fac-std" class="form-control" placeholder="e.g. 079">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="fac-landline">Landline Number</label>
-                                        <input type="text" id="fac-landline" class="form-control" placeholder="e.g. 40000000">
-                                    </div>
-                                </div>
-
-                                <!-- Section 4: Identifiers & Registrations -->
-                                <div class="form-section-header">
-                                    <i class="fa-solid fa-id-card"></i> Identifiers & Registrations (Optional)
-                                </div>
-                                <div class="grid-3">
-                                    <div class="form-group">
-                                        <label for="fac-abpmjay">AB-PMJAY ID</label>
-                                        <input type="text" id="fac-abpmjay" class="form-control" placeholder="AB-PMJAY ID">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="fac-nin">National Identification Number (NIN ID)</label>
-                                        <input type="text" id="fac-nin" class="form-control" placeholder="NIN ID">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="fac-cea">CEA ID (Clinical Establishment Act)</label>
-                                        <input type="text" id="fac-cea" class="form-control" placeholder="CEA ID">
-                                    </div>
-                                </div>
-
-                                <div class="grid-2" style="margin-top: 14px;">
-                                    <div class="form-group">
-                                        <label for="fac-hrpsource">HRP Source</label>
-                                        <input type="text" id="fac-hrpsource" class="form-control" placeholder="e.g. NIC-HIMS">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="fac-hrp-facid">HRP Source Facility ID</label>
-                                        <input type="text" id="fac-hrp-facid" class="form-control" placeholder="External Facility ID">
-                                    </div>
-                                </div>
-
-                                <div style="margin-top: 24px; text-align: right;">
-                                    <button type="submit" class="btn" id="btn-create-fac">
-                                        <i class="fa-solid fa-circle-check"></i> Register Facility
-                                    </button>
-                                </div>
-                            </form>
+                            </div>
+                            <button type="button" class="btn" onclick="logoutHpr()" style="background: rgba(211, 47, 47, 0.1); border-color: rgba(211, 47, 47, 0.3); color: #ef5350; padding: 6px 14px; font-size: 12px; font-weight: 600;">
+                                <i class="fa-solid fa-right-from-bracket"></i> Logout HPR
+                            </button>
                         </div>
-                    </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <span class="card-title"><i class="fa-solid fa-hospital"></i> HFR Facility Registration Form</span>
+                            </div>
+                            <div class="card-body">
+                                <form id="create-form">
+                                    <!-- Section 1: Basic Facility Information -->
+                                    <div class="form-section-header">
+                                        <i class="fa-solid fa-circle-info"></i> Basic Facility Details
+                                    </div>
+                                    <div class="grid-2">
+                                        <div class="form-group">
+                                            <label for="fac-name">Facility Name <span class="req">*</span></label>
+                                            <input type="text" id="fac-name" class="form-control" placeholder="e.g. Sunrise Multispeciality Hospital" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="fac-ownership">Ownership Type <span class="req">*</span></label>
+                                            <select id="fac-ownership" class="form-control" required>
+                                                <option value="P">Private (P)</option>
+                                                <option value="G">Government / Public (G)</option>
+                                                <option value="NGO">Non-Governmental Organization (NGO)</option>
+                                                <option value="T">Charitable Trust (T)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="grid-2" style="margin-top: 14px;">
+                                        <div class="form-group">
+                                            <label for="fac-medicine">System of Medicine</label>
+                                            <select id="fac-medicine" class="form-control">
+                                                <option value="M">Modern Medicine / Allopathy (M)</option>
+                                                <option value="A">Ayurveda (A)</option>
+                                                <option value="H">Homeopathy (H)</option>
+                                                <option value="U">Unani (U)</option>
+                                                <option value="S">Siddha (S)</option>
+                                                <option value="Y">Yoga & Naturopathy (Y)</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="fac-type">Facility Category/Type</label>
+                                            <select id="fac-type" class="form-control">
+                                                <option value="HOSPITAL">Hospital</option>
+                                                <option value="CLINIC">Clinic / O.P.D.</option>
+                                                <option value="DIAGNOSTIC_CENTRE">Diagnostic Lab</option>
+                                                <option value="PHARMACY">Pharmacy</option>
+                                                <option value="NURSING_HOME">Nursing Home</option>
+                                                <option value="DISPENSARY">Dispensary</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Section 2: Address & Location Details -->
+                                    <div class="form-section-header">
+                                        <i class="fa-solid fa-map-location-dot"></i> Address & Location Details
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="fac-address">Complete Address <span class="req">*</span></label>
+                                        <textarea id="fac-address" class="form-control" style="resize: vertical; min-height: 80px;" placeholder="e.g. SG Highway, Ahmedabad" required></textarea>
+                                    </div>
+
+                                    <div class="grid-3" style="margin-top: 14px;">
+                                        <div class="form-group">
+                                            <label for="fac-state">State LGD Code <span class="req">*</span></label>
+                                            <input type="text" id="fac-state" class="form-control" placeholder="e.g. 24" value="24" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="fac-district">District LGD Code</label>
+                                            <input type="text" id="fac-district" class="form-control" placeholder="e.g. 474" value="474">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="fac-subdistrict">Sub-District LGD Code</label>
+                                            <input type="text" id="fac-subdistrict" class="form-control" placeholder="e.g. 3924" value="3924">
+                                        </div>
+                                    </div>
+
+                                    <div class="grid-3" style="margin-top: 14px;">
+                                        <div class="form-group">
+                                            <label for="fac-pincode">Pincode</label>
+                                            <input type="text" id="fac-pincode" class="form-control" maxlength="6" placeholder="e.g. 380051">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="fac-latitude">Latitude</label>
+                                            <input type="text" id="fac-latitude" class="form-control" placeholder="e.g. 23.0395">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="fac-longitude">Longitude</label>
+                                            <input type="text" id="fac-longitude" class="form-control" placeholder="e.g. 72.5660">
+                                        </div>
+                                    </div>
+
+                                    <!-- Section 3: Contact Details -->
+                                    <div class="form-section-header">
+                                        <i class="fa-solid fa-address-book"></i> Contact Details
+                                    </div>
+                                    <div class="grid-4">
+                                        <div class="form-group">
+                                            <label for="fac-email">Facility Email ID</label>
+                                            <input type="email" id="fac-email" class="form-control" placeholder="e.g. info@sunrisehospital.com">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="fac-contact">Facility Mobile Number</label>
+                                            <input type="tel" id="fac-contact" class="form-control" maxlength="10" placeholder="e.g. 9876543210">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="fac-std">STD Code</label>
+                                            <input type="text" id="fac-std" class="form-control" placeholder="e.g. 079">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="fac-landline">Landline Number</label>
+                                            <input type="text" id="fac-landline" class="form-control" placeholder="e.g. 40000000">
+                                        </div>
+                                    </div>
+
+                                    <!-- Section 4: Identifiers & Registrations -->
+                                    <div class="form-section-header">
+                                        <i class="fa-solid fa-id-card"></i> Identifiers & Registrations (Optional)
+                                    </div>
+                                    <div class="grid-3">
+                                        <div class="form-group">
+                                            <label for="fac-abpmjay">AB-PMJAY ID</label>
+                                            <input type="text" id="fac-abpmjay" class="form-control" placeholder="AB-PMJAY ID">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="fac-nin">National Identification Number (NIN ID)</label>
+                                            <input type="text" id="fac-nin" class="form-control" placeholder="NIN ID">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="fac-cea">CEA ID (Clinical Establishment Act)</label>
+                                            <input type="text" id="fac-cea" class="form-control" placeholder="CEA ID">
+                                        </div>
+                                    </div>
+
+                                    <div class="grid-2" style="margin-top: 14px;">
+                                        <div class="form-group">
+                                            <label for="fac-hrpsource">HRP Source</label>
+                                            <input type="text" id="fac-hrpsource" class="form-control" placeholder="e.g. NIC-HIMS">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="fac-hrp-facid">HRP Source Facility ID</label>
+                                            <input type="text" id="fac-hrp-facid" class="form-control" placeholder="External Facility ID">
+                                        </div>
+                                    </div>
+
+                                    <div style="margin-top: 24px; text-align: right;">
+                                        <button type="submit" class="btn" id="btn-create-fac">
+                                            <i class="fa-solid fa-circle-check"></i> Register Facility
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    @endif
                 </div>
 
                 <!-- TAB 3: Link HPR/Facility Manager -->
@@ -1067,6 +1199,351 @@
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         let hfrOtpSent = false;
         let hfrOtpTxnId = null;
+        let loginOtpSent = false;
+        let loginOtpTxnId = null;
+
+        // HPR Login Functions
+        function verifyLoginHprId() {
+            const hprId = document.getElementById('hpr-login-id').value.trim();
+            if (!hprId) {
+                showToast('Please enter an HPR ID.', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('btn-login-verify-hpr');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...';
+
+            fetch('{{ route("nhpr.register.fetch-hpr-profile") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({ hpr_id: hprId })
+            })
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error('Verification failed.');
+                }
+                return res.json();
+            })
+            .then(data => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-user-shield"></i> Verify HPR Profile';
+
+                if (data.success && data.profile) {
+                    const prof = data.profile;
+                    document.getElementById('hpr-login-profile-name').innerText = prof.name || 'Healthcare Professional';
+                    document.getElementById('hpr-login-profile-id').innerText = 'ID: ' + (prof.hprId || hprId);
+                    document.getElementById('hpr-login-profile-council').innerText = prof.council || '—';
+                    document.getElementById('hpr-login-profile-regno').innerText = prof.registrationNumber || '—';
+                    document.getElementById('hpr-login-profile-mobile').innerText = prof.maskedMobile || '—';
+                    document.getElementById('hpr-login-profile-dob').innerText = prof.dob || '—';
+
+                    // Reset OTP state and set auth selection back to default Password Login
+                    loginOtpSent = false;
+                    loginOtpTxnId = null;
+                    document.getElementById('hpr-login-auth-method').value = 'PASSWORD';
+                    document.getElementById('hpr-login-selected-hpr-id').innerHTML = '';
+                    toggleLoginAuthFields();
+
+                    // Slide to Step 2
+                    document.getElementById('login-step-1').style.display = 'none';
+                    document.getElementById('login-step-2').style.display = 'block';
+                    showToast('Practitioner profile retrieved successfully!');
+                } else {
+                    showToast(data.message || 'HPR ID not found.', 'error');
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-user-shield"></i> Verify HPR Profile';
+                showToast('HPR verification service offline.', 'error');
+            });
+        }
+
+        function goBackToLoginStep1() {
+            document.getElementById('login-step-2').style.display = 'none';
+            document.getElementById('login-step-1').style.display = 'block';
+        }
+
+        function toggleLoginAuthFields() {
+            const method = document.getElementById('hpr-login-auth-method').value;
+            const authPasswordGroup = document.getElementById('login-auth-password-group');
+            const authMobileGroup = document.getElementById('login-auth-mobile-group');
+            const authOtpGroup = document.getElementById('login-auth-otp-group');
+            const authProfilesGroup = document.getElementById('login-auth-profiles-group');
+            
+            const otpRequestContainer = document.getElementById('login-otp-request-container');
+            const otpInputContainer = document.getElementById('login-otp-input-container');
+            const btnVerifyMobileOtp = document.getElementById('btn-login-verify-mobile-otp');
+            const btnLoginSubmit = document.getElementById('btn-login-submit');
+
+            // Hide all auth fields initially
+            authPasswordGroup.style.display = 'none';
+            authMobileGroup.style.display = 'none';
+            authOtpGroup.style.display = 'none';
+            authProfilesGroup.style.display = 'none';
+            btnLoginSubmit.style.display = 'block'; // Show login button by default
+
+            if (method === 'PASSWORD') {
+                authPasswordGroup.style.display = 'block';
+                btnLoginSubmit.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Login & Authenticate';
+            } else if (method === 'MOBILE_OTP') {
+                authMobileGroup.style.display = 'block';
+                authOtpGroup.style.display = 'block';
+                document.getElementById('login-otp-message-text').innerText = 'OTP will be sent to this mobile number.';
+                
+                if (loginOtpSent) {
+                    otpRequestContainer.style.display = 'none';
+                    otpInputContainer.style.display = 'block';
+                    
+                    if (document.getElementById('hpr-login-selected-hpr-id').options.length > 0) {
+                        authProfilesGroup.style.display = 'block';
+                        btnLoginSubmit.style.display = 'block';
+                        btnLoginSubmit.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Login Selected HPR';
+                        btnVerifyMobileOtp.style.display = 'none';
+                    } else {
+                        btnVerifyMobileOtp.style.display = 'block';
+                        btnLoginSubmit.style.display = 'none';
+                    }
+                } else {
+                    otpRequestContainer.style.display = 'block';
+                    otpInputContainer.style.display = 'none';
+                    btnVerifyMobileOtp.style.display = 'none';
+                    btnLoginSubmit.style.display = 'none';
+                }
+            } else if (method === 'AADHAAR_OTP') {
+                authOtpGroup.style.display = 'block';
+                document.getElementById('login-otp-message-text').innerText = 'OTP will be sent to the Aadhaar-linked mobile number.';
+                
+                if (loginOtpSent) {
+                    otpRequestContainer.style.display = 'none';
+                    otpInputContainer.style.display = 'block';
+                    btnLoginSubmit.style.display = 'block';
+                    btnLoginSubmit.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Verify OTP & Login';
+                } else {
+                    otpRequestContainer.style.display = 'block';
+                    otpInputContainer.style.display = 'none';
+                    btnLoginSubmit.style.display = 'none';
+                }
+            }
+        }
+
+        function triggerLoginSendOtp() {
+            const method = document.getElementById('hpr-login-auth-method').value;
+            const btnElement = document.getElementById('btn-login-send-otp');
+            const payload = { auth_method: method };
+
+            if (method === 'MOBILE_OTP') {
+                const mobile = document.getElementById('hpr-login-mobile-number').value.trim();
+                if (!mobile || mobile.length !== 10) {
+                    showToast('Please enter a valid 10-digit mobile number.', 'warning');
+                    return;
+                }
+                payload.mobile = mobile;
+            } else {
+                const hprId = document.getElementById('hpr-login-id').value.trim();
+                if (!hprId) {
+                    showToast('Please enter HPR ID.', 'warning');
+                    return;
+                }
+                payload.hpr_id = hprId;
+            }
+
+            btnElement.disabled = true;
+            btnElement.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
+
+            fetch('{{ route("nhpr.register.link-existing.send-otp") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                btnElement.disabled = false;
+                btnElement.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Send OTP';
+
+                if (data.success) {
+                    loginOtpSent = true;
+                    loginOtpTxnId = data.txnId;
+                    document.getElementById('hpr-login-selected-hpr-id').innerHTML = ''; // clear previous profiles
+
+                    document.getElementById('login-otp-request-container').style.display = 'none';
+                    document.getElementById('login-otp-input-container').style.display = 'block';
+                    
+                    toggleLoginAuthFields();
+                    showToast(data.message || 'OTP sent successfully!');
+                } else {
+                    showToast(data.message || 'Failed to send OTP.', 'error');
+                }
+            })
+            .catch(() => {
+                btnElement.disabled = false;
+                btnElement.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Send OTP';
+                showToast('Failed to send OTP.', 'error');
+            });
+        }
+
+        function verifyLoginMobileOtpAction() {
+            const mobile = document.getElementById('hpr-login-mobile-number').value.trim();
+            const otp = document.getElementById('hpr-login-otp').value.trim();
+            const btn = document.getElementById('btn-login-verify-mobile-otp');
+            
+            if (!otp || otp.length !== 6) {
+                showToast('Please enter a valid 6-digit OTP.', 'warning');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying OTP...';
+
+            fetch('{{ route("nhpr.register.link-existing.verify-mobile-otp") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({
+                    mobile: mobile,
+                    txn_id: loginOtpTxnId,
+                    otp: otp
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Verify OTP & Fetch Profiles';
+
+                if (data.success) {
+                    loginOtpTxnId = data.txnId;
+                    const dropdown = document.getElementById('hpr-login-selected-hpr-id');
+                    dropdown.innerHTML = '';
+
+                    if (data.profiles && data.profiles.length > 0) {
+                        data.profiles.forEach(p => {
+                            const opt = document.createElement('option');
+                            opt.value = p.hprId;
+                            opt.innerText = `${p.name} (${p.hprId})`;
+                            dropdown.appendChild(opt);
+                        });
+                        toggleLoginAuthFields();
+                        showToast('HPR profiles fetched successfully! Select HPR profile to complete login.');
+                    } else {
+                        showToast('No HPR profiles found linked to this mobile number.', 'error');
+                    }
+                } else {
+                    showToast(data.message || 'OTP verification failed.', 'error');
+                }
+            })
+            .catch(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Verify OTP & Fetch Profiles';
+                showToast('OTP verification failed.', 'error');
+            });
+        }
+
+        function submitHprLogin() {
+            const btn = document.getElementById('btn-login-submit');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Authenticating...';
+
+            const authMethod = document.getElementById('hpr-login-auth-method').value;
+            const payload = {
+                auth_method: authMethod
+            };
+
+            if (authMethod === 'PASSWORD') {
+                const passVal = document.getElementById('hpr-login-password').value;
+                if (!passVal) {
+                    showToast('Please enter HPR password.', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Login & Authenticate';
+                    return;
+                }
+                payload.hpr_id = document.getElementById('hpr-login-id').value.trim();
+                payload.password = passVal;
+            } else if (authMethod === 'MOBILE_OTP') {
+                const selectedHpr = document.getElementById('hpr-login-selected-hpr-id').value;
+                if (!selectedHpr) {
+                    showToast('Please select HPR Profile first.', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Login Selected HPR';
+                    return;
+                }
+                payload.mobile = document.getElementById('hpr-login-mobile-number').value.trim();
+                payload.selected_hpr_id = selectedHpr;
+                payload.txn_id = loginOtpTxnId;
+            } else if (authMethod === 'AADHAAR_OTP') {
+                const otpVal = document.getElementById('hpr-login-otp').value.trim();
+                if (!otpVal) {
+                    showToast('Please enter the OTP.', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Verify OTP & Login';
+                    return;
+                }
+                payload.hpr_id = document.getElementById('hpr-login-id').value.trim();
+                payload.otp = otpVal;
+                payload.txn_id = loginOtpTxnId;
+            }
+
+            fetch('{{ route("nhpr.hfr.hpr-login") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Login & Authenticate';
+
+                if (data.success) {
+                    showToast(data.message || 'Successfully authenticated HPR profile!');
+                    // Reload to update views and populate the facility registration form
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showToast(data.message || 'Authentication failed.', 'error');
+                }
+            })
+            .catch(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Login & Authenticate';
+                showToast('HPR login request failed.', 'error');
+            });
+        }
+
+        function logoutHpr() {
+            fetch('{{ route("nhpr.hfr.hpr-logout") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message || 'Logged out successfully!');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showToast('Logout failed.', 'error');
+                }
+            })
+            .catch(() => {
+                showToast('Logout request failed.', 'error');
+            });
+        }
 
         // Toast Notification System
         function showToast(message, type = 'success') {
