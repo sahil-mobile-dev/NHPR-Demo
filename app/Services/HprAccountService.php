@@ -509,8 +509,10 @@ class HprAccountService
         ];
 
         $payload = [
+            'idType' => 'hpr_id',
+            'domainName' => '@hpr.abdm',
             'hprId' => $hprId,
-            'password' => $encryptedPassword,
+            'password' => $password,
         ];
 
         Log::info('HPR Auth Request: Password Auth', [
@@ -518,7 +520,8 @@ class HprAccountService
             'request_id' => $requestId,
             'body' => [
                 'hprId' => $hprId,
-                'password' => '[ENCRYPTED_MASKED]',
+                'Encryptedpassword' => $encryptedPassword,
+                'password' => $password
             ],
         ]);
 
@@ -583,7 +586,7 @@ class HprAccountService
             'Content-Type' => 'application/json',
         ];
 
-        $payload = [
+        $payload = [            
             'mobile' => $mobile,
         ];
 
