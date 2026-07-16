@@ -716,6 +716,9 @@
                     <button class="tab-btn" data-tab="tab-link">
                         <i class="fa-solid fa-link"></i> Link HPR/Facility Manager
                     </button>
+                    <button class="tab-btn" data-tab="tab-track">
+                        <i class="fa-solid fa-radar"></i> Track Registration
+                    </button>
                 </div>
 
                 <!-- TAB 1: Search HFR -->
@@ -918,43 +921,42 @@
                                     <div class="form-section-header">
                                         <i class="fa-solid fa-circle-info"></i> Basic Facility Details
                                     </div>
-                                    <div class="grid-2">
+                                    <div class="grid-3">
                                         <div class="form-group">
                                             <label for="fac-name">Facility Name <span class="req">*</span></label>
                                             <input type="text" id="fac-name" class="form-control" placeholder="e.g. Sunrise Multispeciality Hospital" required>
                                         </div>
                                         <div class="form-group">
                                             <label for="fac-ownership">Ownership Type <span class="req">*</span></label>
-                                            <select id="fac-ownership" class="form-control" required>
-                                                <option value="P">Private (P)</option>
-                                                <option value="G">Government / Public (G)</option>
-                                                <option value="NGO">Non-Governmental Organization (NGO)</option>
-                                                <option value="T">Charitable Trust (T)</option>
+                                            <select id="fac-ownership" class="form-control" onchange="triggerOwnershipChange()" required>
+                                                <option value="">Select Ownership Type</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="fac-ownership-subtype">Owner Subtype <span class="req">*</span></label>
+                                            <select id="fac-ownership-subtype" class="form-control" onchange="triggerOwnerSubtypeChange()" required disabled>
+                                                <option value="">Select Ownership First</option>
                                             </select>
                                         </div>
                                     </div>
 
-                                    <div class="grid-2" style="margin-top: 14px;">
+                                    <div class="grid-3" style="margin-top: 14px;">
+                                        <div class="form-group">
+                                            <label for="fac-ownership-subtype2">Owner Subtype 2 <span class="req">*</span></label>
+                                            <select id="fac-ownership-subtype2" class="form-control" required disabled>
+                                                <option value="">Select Subtype First</option>
+                                            </select>
+                                        </div>
                                         <div class="form-group">
                                             <label for="fac-medicine">System of Medicine</label>
-                                            <select id="fac-medicine" class="form-control">
-                                                <option value="M">Modern Medicine / Allopathy (M)</option>
-                                                <option value="A">Ayurveda (A)</option>
-                                                <option value="H">Homeopathy (H)</option>
-                                                <option value="U">Unani (U)</option>
-                                                <option value="S">Siddha (S)</option>
-                                                <option value="Y">Yoga & Naturopathy (Y)</option>
+                                            <select id="fac-medicine" class="form-control" onchange="triggerOwnershipOrMedicineChange()">
+                                                <option value="">Select System of Medicine</option>
                                             </select>
                                         </div>
                                         <div class="form-group">
                                             <label for="fac-type">Facility Category/Type</label>
-                                            <select id="fac-type" class="form-control">
-                                                <option value="HOSPITAL">Hospital</option>
-                                                <option value="CLINIC">Clinic / O.P.D.</option>
-                                                <option value="DIAGNOSTIC_CENTRE">Diagnostic Lab</option>
-                                                <option value="PHARMACY">Pharmacy</option>
-                                                <option value="NURSING_HOME">Nursing Home</option>
-                                                <option value="DISPENSARY">Dispensary</option>
+                                            <select id="fac-type" class="form-control" disabled>
+                                                <option value="">Select Ownership & Medicine First</option>
                                             </select>
                                         </div>
                                     </div>
@@ -971,15 +973,21 @@
                                     <div class="grid-3" style="margin-top: 14px;">
                                         <div class="form-group">
                                             <label for="fac-state">State LGD Code <span class="req">*</span></label>
-                                            <input type="text" id="fac-state" class="form-control" placeholder="e.g. 24" value="24" required>
+                                            <select id="fac-state" class="form-control" onchange="triggerStateChange()" required>
+                                                <option value="">Select State</option>
+                                            </select>
                                         </div>
                                         <div class="form-group">
                                             <label for="fac-district">District LGD Code</label>
-                                            <input type="text" id="fac-district" class="form-control" placeholder="e.g. 474" value="474">
+                                            <select id="fac-district" class="form-control" onchange="triggerDistrictChange()" required disabled>
+                                                <option value="">Select State First</option>
+                                            </select>
                                         </div>
                                         <div class="form-group">
                                             <label for="fac-subdistrict">Sub-District LGD Code</label>
-                                            <input type="text" id="fac-subdistrict" class="form-control" placeholder="e.g. 3924" value="3924">
+                                            <select id="fac-subdistrict" class="form-control" required disabled>
+                                                <option value="">Select District First</option>
+                                            </select>
                                         </div>
                                     </div>
 
@@ -1186,6 +1194,69 @@
                                     </div>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: Track Registration -->
+                <div class="tab-panel" id="tab-track">
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title"><i class="fa-solid fa-magnifying-glass"></i> Look Up Registered Facility</span>
+                        </div>
+                        <div class="card-body">
+                            <p style="color:var(--text-muted);margin-bottom:20px;">
+                                Enter the <strong>HFR Facility ID</strong> (e.g. <code>IN2710000059</code>) to look up its current status and details.
+                                <br><small style="opacity:.7;"><i class="fa-solid fa-circle-info"></i> The numeric Tracking ID is only used during registration and cannot be queried after submission.</small>
+                            </p>
+                            <div class="grid-2" style="align-items:flex-end;gap:14px;">
+                                <div class="form-group" style="margin-bottom:0;">
+                                    <label for="track-id-input">HFR Facility ID <span class="req">*</span></label>
+                                    <input type="text" id="track-id-input" class="form-control" placeholder="e.g. IN2710000059" autocomplete="off">
+                                </div>
+                                <div>
+                                    <button class="btn" id="btn-track" onclick="trackRegistration()">
+                                        <i class="fa-solid fa-magnifying-glass"></i> Look Up
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Result Panel -->
+                            <div id="track-result" style="margin-top:28px;display:none;">
+                                <!-- Summary header -->
+                                <div id="track-summary-card" style="background:var(--card-bg,#1e2535);border:1px solid var(--border-color,#2a3347);border-radius:12px;padding:20px 24px;margin-bottom:20px;">
+                                    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px;">
+                                        <div style="flex:2;">
+                                            <div style="font-size:12px;color:var(--text-muted);margin-bottom:3px;">Facility Name</div>
+                                            <div id="track-facility-name" style="font-size:17px;font-weight:700;">—</div>
+                                        </div>
+                                        <div style="flex:1;">
+                                            <div style="font-size:12px;color:var(--text-muted);margin-bottom:3px;">Facility ID</div>
+                                            <div id="track-facility-id" style="font-size:15px;font-weight:600;color:var(--primary);">—</div>
+                                        </div>
+                                        <div style="flex:1;">
+                                            <div style="font-size:12px;color:var(--text-muted);margin-bottom:3px;">Status</div>
+                                            <div id="track-status-badge"></div>
+                                        </div>
+                                    </div>
+                                    <!-- Detail grid -->
+                                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;border-top:1px solid var(--border-color,#2a3347);padding-top:14px;">
+                                        <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Ownership</div><div id="track-ownership" style="font-size:13px;font-weight:500;">—</div></div>
+                                        <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Facility Type</div><div id="track-facility-type" style="font-size:13px;font-weight:500;">—</div></div>
+                                        <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">System of Medicine</div><div id="track-medicine" style="font-size:13px;font-weight:500;">—</div></div>
+                                        <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">State</div><div id="track-state" style="font-size:13px;font-weight:500;">—</div></div>
+                                        <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">District</div><div id="track-district" style="font-size:13px;font-weight:500;">—</div></div>
+                                        <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Pincode</div><div id="track-pincode" style="font-size:13px;font-weight:500;">—</div></div>
+                                        <div style="grid-column:1/-1;"><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Address</div><div id="track-address" style="font-size:13px;font-weight:500;">—</div></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Error panel -->
+                            <div id="track-error" style="margin-top:24px;display:none;" class="alert alert-error">
+                                <i class="fa-solid fa-circle-exclamation"></i>
+                                <span id="track-error-text">Something went wrong.</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1680,6 +1751,8 @@
             const payload = {
                 facilityName: document.getElementById('fac-name').value,
                 ownershipCode: document.getElementById('fac-ownership').value,
+                ownershipSubTypeCode: document.getElementById('fac-ownership-subtype').value,
+                ownershipSubTypeCode2: document.getElementById('fac-ownership-subtype2').value,
                 systemOfMedicineCode: document.getElementById('fac-medicine').value,
                 facilityTypeCode: document.getElementById('fac-type').value,
                 pincode: document.getElementById('fac-pincode').value,
@@ -1722,6 +1795,12 @@
                     document.getElementById('link-facility-name').value = data.facilityName;
                     document.getElementById('link-facility-address').value = payload.address || 'Dehradun';
                     document.getElementById('link-facility-pincode').value = payload.pincode || '248001';
+
+                    // Pre-fill the Track Registration tab with the new facilityId
+                    if (data.facilityId) {
+                        document.getElementById('track-id-input').value = data.facilityId;
+                        showToast(`Facility ID: ${data.facilityId} — switch to "Look Up Facility" tab to view details.`, 'info');
+                    }
                     
                     // Auto switch to linkage tab
                     const tabLinkBtn = document.querySelector('.tab-btn[data-tab="tab-link"]');
@@ -2002,7 +2081,278 @@
                     });
                 });
             }
+
+            // Initialize HFR Master Dropdowns if authenticated/form present
+            initMasterDropdowns();
         });
+
+        // Initialize HFR Master Dropdowns
+        function initMasterDropdowns() {
+            const createForm = document.getElementById('create-form');
+            if (!createForm) return;
+
+            // Load LGD States
+            fetch('{{ route("nhpr.hfr.masters.states") }}')
+                .then(res => res.json())
+                .then(res => {
+                    if (res.success && res.data) {
+                        const stateSel = document.getElementById('fac-state');
+                        stateSel.innerHTML = '<option value="">Select State</option>';
+                        res.data.forEach(state => {
+                            const opt = document.createElement('option');
+                            opt.value = state.code;
+                            opt.innerText = `${state.name} (${state.code})`;
+                            stateSel.appendChild(opt);
+                        });
+                        // Set default to Uttarakhand (05)
+                        stateSel.value = "05";
+                        triggerStateChange();
+                    }
+                })
+                .catch(err => console.error('Failed to load states', err));
+            // Load Ownership Types from Master Data API
+            fetch('{{ route("nhpr.hfr.masters.data") }}?type=OWNER')
+                .then(res => res.json())
+                .then(res => {
+                    if (res.success && res.data) {
+                        const ownerSel = document.getElementById('fac-ownership');
+                        ownerSel.innerHTML = '<option value="">Select Ownership Type</option>';
+                        res.data.forEach(item => {
+                            const opt = document.createElement('option');
+                            opt.value = item.code.trim();
+                            opt.innerText = `${item.value} (${item.code.trim()})`;
+                            ownerSel.appendChild(opt);
+                        });
+                        ownerSel.value = "P";
+                        triggerOwnershipChange();
+                    }
+                })
+                .catch(err => console.error('Failed to load ownership types', err));
+
+            // Load Systems of Medicine from Master Data API
+            fetch('{{ route("nhpr.hfr.masters.data") }}?type=MEDICINE')
+                .then(res => res.json())
+                .then(res => {
+                    if (res.success && res.data) {
+                        const medSel = document.getElementById('fac-medicine');
+                        medSel.innerHTML = '<option value="">Select System of Medicine</option>';
+                        res.data.forEach(item => {
+                            const opt = document.createElement('option');
+                            opt.value = item.code.trim();
+                            opt.innerText = `${item.value} (${item.code.trim()})`;
+                            medSel.appendChild(opt);
+                        });
+                        medSel.value = "M";
+                        triggerOwnershipOrMedicineChange();
+                    }
+                })
+                .catch(err => console.error('Failed to load systems of medicine', err));
+        }
+
+        function triggerStateChange() {
+            const stateCode = document.getElementById('fac-state').value;
+            const distSel = document.getElementById('fac-district');
+            const subdistSel = document.getElementById('fac-subdistrict');
+
+            distSel.innerHTML = '<option value="">Select District</option>';
+            distSel.disabled = true;
+            subdistSel.innerHTML = '<option value="">Select District First</option>';
+            subdistSel.disabled = true;
+
+            if (!stateCode) return;
+
+            distSel.innerHTML = '<option value="">Loading districts...</option>';
+            fetch(`{{ route("nhpr.hfr.masters.districts") }}?stateCode=${stateCode}`)
+                .then(res => res.json())
+                .then(res => {
+                    distSel.innerHTML = '<option value="">Select District</option>';
+                    if (res.success && res.data) {
+                        res.data.forEach(dist => {
+                            const opt = document.createElement('option');
+                            opt.value = dist.code;
+                            opt.innerText = `${dist.name} (${dist.code})`;
+                            distSel.appendChild(opt);
+                        });
+                        distSel.disabled = false;
+                        if (stateCode === "05") {
+                            distSel.value = "060";
+                        } else if (stateCode === "24") {
+                            distSel.value = "474";
+                        }
+                        triggerDistrictChange();
+                    }
+                })
+                .catch(err => {
+                    distSel.innerHTML = '<option value="">Error loading districts</option>';
+                    console.error(err);
+                });
+        }
+
+        function triggerDistrictChange() {
+            const distCode = document.getElementById('fac-district').value;
+            const subdistSel = document.getElementById('fac-subdistrict');
+
+            subdistSel.innerHTML = '<option value="">Select Sub-District</option>';
+            subdistSel.disabled = true;
+
+            if (!distCode) return;
+
+            subdistSel.innerHTML = '<option value="">Loading sub-districts...</option>';
+            fetch(`{{ route("nhpr.hfr.masters.subdistricts") }}?districtCode=${distCode}`)
+                .then(res => res.json())
+                .then(res => {
+                    subdistSel.innerHTML = '<option value="">Select Sub-District</option>';
+                    if (res.success && res.data) {
+                        res.data.forEach(sub => {
+                            const opt = document.createElement('option');
+                            opt.value = sub.code;
+                            opt.innerText = `${sub.name} (${sub.code})`;
+                            subdistSel.appendChild(opt);
+                        });
+                        subdistSel.disabled = false;
+                        if (distCode === "060") {
+                            subdistSel.value = "0501";
+                        } else if (distCode === "474") {
+                            subdistSel.value = "3924";
+                        }
+                    }
+                })
+                .catch(err => {
+                    subdistSel.innerHTML = '<option value="">Error loading sub-districts</option>';
+                    console.error(err);
+                });
+        }
+
+        function triggerOwnershipOrMedicineChange() {
+            const ownershipCode = document.getElementById('fac-ownership').value;
+            const systemOfMedicineCode = document.getElementById('fac-medicine').value;
+            const typeSel = document.getElementById('fac-type');
+
+            typeSel.innerHTML = '<option value="">Select Facility Category/Type</option>';
+            typeSel.disabled = true;
+
+            if (!ownershipCode || !systemOfMedicineCode) return;
+
+            typeSel.innerHTML = '<option value="">Loading facility types...</option>';
+            fetch('{{ route("nhpr.hfr.masters.facility-types") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({ ownershipCode, systemOfMedicineCode })
+            })
+            .then(res => res.json())
+            .then(res => {
+                typeSel.innerHTML = '<option value="">Select Facility Category/Type</option>';
+                if (res.success && res.data) {
+                    res.data.forEach(item => {
+                        const opt = document.createElement('option');
+                        opt.value = item.code.trim();
+                        opt.innerText = `${item.value} (${item.code.trim()})`;
+                        typeSel.appendChild(opt);
+                    });
+                    typeSel.disabled = false;
+                    typeSel.value = "5";
+                }
+            })
+            .catch(err => {
+                typeSel.innerHTML = '<option value="">Error loading facility types</option>';
+                console.error(err);
+            });
+        }
+
+        function triggerOwnershipChange() {
+            const ownershipCode = document.getElementById('fac-ownership').value;
+            const subtypeSel = document.getElementById('fac-ownership-subtype');
+            const subtype2Sel = document.getElementById('fac-ownership-subtype2');
+
+            subtypeSel.innerHTML = '<option value="">Select Owner Subtype</option>';
+            subtypeSel.disabled = true;
+            subtype2Sel.innerHTML = '<option value="">Select Subtype First</option>';
+            subtype2Sel.disabled = true;
+
+            triggerOwnershipOrMedicineChange();
+
+            if (!ownershipCode) return;
+
+            subtypeSel.innerHTML = '';
+            if (ownershipCode === "G") {
+                const options = [
+                    { code: "S", value: "State Government" },
+                    { code: "C", value: "Central Government" },
+                    { code: "L", value: "Local Body" }
+                ];
+                options.forEach(opt => {
+                    const el = document.createElement('option');
+                    el.value = opt.code;
+                    el.innerText = `${opt.value} (${opt.code})`;
+                    subtypeSel.appendChild(el);
+                });
+                subtypeSel.disabled = false;
+                subtypeSel.value = "S";
+            } else if (ownershipCode === "P" || ownershipCode === "PP") {
+                const options = [
+                    { code: "P", value: "Profit" },
+                    { code: "NP", value: "Non-Profit" }
+                ];
+                options.forEach(opt => {
+                    const el = document.createElement('option');
+                    el.value = opt.code;
+                    el.innerText = `${opt.value} (${opt.code})`;
+                    subtypeSel.appendChild(el);
+                });
+                subtypeSel.disabled = false;
+                subtypeSel.value = "P";
+            }
+
+            triggerOwnerSubtypeChange();
+        }
+
+        function triggerOwnerSubtypeChange() {
+            const ownershipCode = document.getElementById('fac-ownership').value;
+            const ownerSubtypeCode = document.getElementById('fac-ownership-subtype').value;
+            const subtype2Sel = document.getElementById('fac-ownership-subtype2');
+
+            subtype2Sel.innerHTML = '<option value="">Select Owner Subtype 2</option>';
+            subtype2Sel.disabled = true;
+
+            if (!ownershipCode || !ownerSubtypeCode) return;
+
+            subtype2Sel.innerHTML = '<option value="">Loading subtypes...</option>';
+            fetch('{{ route("nhpr.hfr.masters.owner-subtypes") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({ ownershipCode: ownershipCode, ownerSubtypeCode: ownerSubtypeCode })
+            })            .then(res => res.json())
+            .then(res => {
+                subtype2Sel.innerHTML = '<option value="">Select Owner Subtype 2</option>';
+                if (res.success && res.data && res.data.length > 0) {
+                    res.data.forEach(item => {
+                        const opt = document.createElement('option');
+                        opt.value = item.code.trim();
+                        opt.innerText = `${item.value} (${item.code.trim()})`;
+                        subtype2Sel.appendChild(opt);
+                    });
+                    subtype2Sel.disabled = false;
+                    if (ownershipCode === "G" && ownerSubtypeCode === "S") {
+                        subtype2Sel.value = "MOHF";
+                    } else if (ownershipCode === "P" && ownerSubtypeCode === "P") {
+                        subtype2Sel.value = "PP01";
+                    }
+                } else {
+                    subtype2Sel.innerHTML = '<option value="">Not Applicable</option>';
+                    subtype2Sel.disabled = true;
+                }
+            })
+            .catch(err => {
+                subtype2Sel.innerHTML = '<option value="">Error loading subtypes</option>';
+                console.error(err);
+            });
+        }
 
         // Final submit linkage form (Password, Mobile OTP or Aadhaar OTP)
         function submitLinkageForm(event) {
@@ -2144,6 +2494,83 @@
                 });
             });
         }
+
+        // ─── TAB 4: Look Up Facility ────────────────────────────────────────
+        function trackRegistration() {
+            const facilityId = document.getElementById('track-id-input').value.trim();
+            if (!facilityId) {
+                showToast('Please enter an HFR Facility ID (e.g. IN2710000059).', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('btn-track');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Looking up...';
+
+            // Hide previous results/errors
+            document.getElementById('track-result').style.display = 'none';
+            document.getElementById('track-error').style.display  = 'none';
+
+            fetch('{{ route("nhpr.hfr.track") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({ facilityId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Look Up';
+
+                if (!data.success) {
+                    document.getElementById('track-error-text').textContent = data.message || 'Facility not found.';
+                    document.getElementById('track-error').style.display = 'flex';
+                    return;
+                }
+
+                const fac = data.facility || {};
+
+                // Name & ID
+                document.getElementById('track-facility-name').textContent = fac.facilityName || data.facilityId || '—';
+                document.getElementById('track-facility-id').textContent   = fac.facilityId   || data.facilityId || '—';
+
+                // Detail fields
+                document.getElementById('track-ownership').textContent     = fac.ownership     || fac.ownershipCode || '—';
+                document.getElementById('track-facility-type').textContent = fac.facilityType  || fac.facilityTypeCode || '—';
+                document.getElementById('track-medicine').textContent      = fac.systemOfMedicine || fac.systemOfMedicineCode || '—';
+                document.getElementById('track-state').textContent         = fac.stateName     || '—';
+                document.getElementById('track-district').textContent      = fac.districtName  || '—';
+                document.getElementById('track-pincode').textContent       = fac.pincode       || '—';
+                document.getElementById('track-address').textContent       = fac.address       || '—';
+
+                // Status badge
+                const statusColors = {
+                    'SUBMITTED': 'var(--success)',
+                    'APPROVED':  'var(--success)',
+                    'PENDING':   'var(--warning,#f59e0b)',
+                    'DRAFT':     'var(--text-muted)',
+                    'REJECTED':  'var(--danger,#ef4444)',
+                };
+                const st    = (fac.facilityStatus || data.status || 'UNKNOWN').toUpperCase();
+                const color = statusColors[st] || 'var(--primary)';
+                document.getElementById('track-status-badge').innerHTML =
+                    `<span style="background:${color}22;color:${color};padding:4px 14px;border-radius:20px;font-size:13px;font-weight:600;">${st}</span>`;
+
+                document.getElementById('track-result').style.display = 'block';
+                showToast('Facility details loaded successfully.');
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Look Up';
+                const msg = err.message || 'An error occurred.';
+                document.getElementById('track-error-text').textContent = msg;
+                document.getElementById('track-error').style.display = 'flex';
+                showToast(msg, 'error');
+            });
+        }
+        // ────────────────────────────────────────────────────────────────────
     </script>
 </body>
 

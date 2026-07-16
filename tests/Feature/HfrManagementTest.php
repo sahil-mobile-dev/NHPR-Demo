@@ -230,4 +230,132 @@ class HfrManagementTest extends TestCase
         $response->assertJsonPath('success', true);
         $response->assertJsonPath('message', 'Linked bridge to facility successfully.');
     }
+
+    /**
+     * Test HFR master data types in simulated and real modes.
+     */
+    public function test_masters_types_endpoint(): void
+    {
+        // 1. Simulated
+        session(['nhpr_real_api_mode' => false]);
+        $response = $this->getJson(route('nhpr.hfr.masters.types'));
+        $response->assertStatus(200);
+        $response->assertJsonPath('success', true);
+        $response->assertJsonStructure(['success', 'data']);
+        $response->assertJsonFragment(['type' => 'MEDICINE']);
+
+        // 2. Real
+        session(['nhpr_real_api_mode' => true]);
+        Http::fake([
+            'https://mock-api.abdm.gov.in/v4/int/v1.5/facility/get-master-types' => Http::response([
+                'masterTypes' => [
+                    ['type' => 'MEDICINE', 'desc' => 'System Of Medicine'],
+                ],
+            ], 200),
+        ]);
+        $response = $this->getJson(route('nhpr.hfr.masters.types'));
+        $response->assertStatus(200);
+        $response->assertJsonPath('success', true);
+        $response->assertJsonPath('data.0.type', 'MEDICINE');
+    }
+
+    /**
+     * Test HFR master data values.
+     */
+    public function test_masters_data_endpoint(): void
+    {
+        // 1. Simulated
+        session(['nhpr_real_api_mode' => false]);
+        $response = $this->getJson(route('nhpr.hfr.masters.data', ['type' => 'OWNER']));
+        $response->assertStatus(200);
+        $response->assertJsonPath('success', true);
+        $response->assertJsonFragment(['code' => 'G', 'value' => 'Government']);
+
+        // 2. Real
+        session(['nhpr_real_api_mode' => true]);
+        Http::fake([
+            'https://mock-api.abdm.gov.in/v4/int/v1.5/facility/get-master-data?type=OWNER' => Http::response([
+                'type' => 'OWNER',
+                'data' => [
+                    ['code' => 'G', 'value' => 'Government'],
+                ],
+            ], 200),
+        ]);
+        $response = $this->getJson(route('nhpr.hfr.masters.data', ['type' => 'OWNER']));
+        $response->assertStatus(200);
+        $response->assertJsonPath('success', true);
+        $response->assertJsonPath('data.0.code', 'G');
+    }
+
+    /**
+     * Test HFR LGD endpoints (states, districts, subdistricts).
+     */
+    public function test_masters_lgd_endpoints(): void
+    {
+        // 1. Simulated states
+        session(['nhpr_real_api_mode' => false]);
+        $response = $this->getJson(route('nhpr.hfr.masters.states'));
+        $response->assertStatus(200);
+        $response->assertJsonFragment(['code' => '05', 'name' => 'Uttarakhand']);
+
+        // 2. Simulated districts
+        $response = $this->getJson(route('nhpr.hfr.masters.districts', ['stateCode' => '05']));
+        $response->assertStatus(200);
+        $response->assertJsonFragment(['code' => '060', 'name' => 'Dehradun']);
+
+        // 3. Simulated subdistricts
+        $response = $this->getJson(route('nhpr.hfr.masters.subdistricts', ['districtCode' => '060']));
+        $response->assertStatus(200);
+        $response->assertJsonFragment(['code' => '0501', 'name' => 'Dehradun Tehsil']);
+
+        // 4. Real states
+        session(['nhpr_real_api_mode' => true]);
+        Http::fake([
+            'https://mock-api.abdm.gov.in/v4/int/v1.5/facility/lgd/states' => Http::response([
+                ['code' => '05', 'name' => 'Uttarakhand'],
+            ], 200),
+            'https://mock-api.abdm.gov.in/v4/int/v1.5/facility/lgd/districts?stateCode=05' => Http::response([
+                ['code' => '060', 'name' => 'Dehradun'],
+            ], 200),
+            'https://mock-api.abdm.gov.in/v4/int/v1.5/facility/lgd/subdistricts?districtCode=060' => Http::response([
+                ['code' => '0501', 'name' => 'Dehradun Tehsil'],
+            ], 200),
+        ]);
+
+        $response = $this->getJson(route('nhpr.hfr.masters.states'));
+        $response->assertStatus(200);
+        $response->assertJsonPath('data.0.code', '05');
+
+        $response = $this->getJson(route('nhpr.hfr.masters.districts', ['stateCode' => '05']));
+        $response->assertStatus(200);
+        $response->assertJsonPath('data.0.code', '060');
+
+        $response = $this->getJson(route('nhpr.hfr.masters.subdistricts', ['districtCode' => '060']));
+        $response->assertStatus(200);
+        $response->assertJsonPath('data.0.code', '0501');
+    }
+
+    /**
+     * Test POST master endpoints.
+     */
+    public function test_masters_post_endpoints(): void
+    {
+        // Fetch facility type real API mock
+        session(['nhpr_real_api_mode' => true]);
+        Http::fake([
+            'https://mock-api.abdm.gov.in/v4/int/v1.5/facility/fetch-facility-type' => Http::response([
+                'type' => 'FACILITY-TYPE',
+                'data' => [
+                    ['code' => '5', 'value' => 'Hospital'],
+                ],
+            ], 200),
+        ]);
+
+        $response = $this->postJson(route('nhpr.hfr.masters.facility-types'), [
+            'ownershipCode' => 'P',
+            'systemOfMedicineCode' => 'M',
+        ]);
+        $response->assertStatus(200);
+        $response->assertJsonPath('data.0.code', '5');
+    }
 }

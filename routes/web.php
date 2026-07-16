@@ -41,14 +41,24 @@ Route::prefix('nhpr/register')->name('nhpr.register.')->group(function () {
 
 Route::get('/nhpr/track', [NhprRegistrationController::class, 'showTracker'])->name('nhpr.track.show');
 Route::post('/nhpr/track', [NhprRegistrationController::class, 'trackStatus'])->name('nhpr.track.post');
-
 Route::prefix('nhpr/hfr')->name('nhpr.hfr.')->group(function () {
     Route::get('/', [HfrController::class, 'index'])->name('index');
     Route::post('/search', [HfrController::class, 'search'])->name('search');
     Route::post('/create', [HfrController::class, 'store'])->name('create');
     Route::post('/link', [HfrController::class, 'linkBridge'])->name('link');
+    Route::post('/track', [HfrController::class, 'trackFacility'])->name('track');
     Route::post('/hpr-login', [HfrController::class, 'hprLogin'])->name('hpr-login');
     Route::post('/hpr-logout', [HfrController::class, 'hprLogout'])->name('hpr-logout');
+
+    Route::get('/masters/types', [HfrController::class, 'masterTypes'])->name('masters.types');
+    Route::get('/masters/data', [HfrController::class, 'masterData'])->name('masters.data');
+    Route::get('/masters/states', [HfrController::class, 'lgdStates'])->name('masters.states');
+    Route::get('/masters/districts', [HfrController::class, 'lgdDistricts'])->name('masters.districts');
+    Route::get('/masters/subdistricts', [HfrController::class, 'lgdSubdistricts'])->name('masters.subdistricts');
+    Route::post('/masters/facility-types', [HfrController::class, 'fetchFacilityTypes'])->name('masters.facility-types');
+    Route::post('/masters/owner-subtypes', [HfrController::class, 'getOwnerSubtypes'])->name('masters.owner-subtypes');
+    Route::post('/masters/specialities', [HfrController::class, 'getSpecialities'])->name('masters.specialities');
+    Route::post('/masters/facility-subtypes', [HfrController::class, 'fetchFacilitySubtypes'])->name('masters.facility-subtypes');
 });
 
 Route::prefix('abha')->name('abha.')->group(function () {

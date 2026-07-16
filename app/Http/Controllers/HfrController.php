@@ -7,6 +7,7 @@ use App\Services\HprAccountService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -113,10 +114,11 @@ class HfrController extends Controller
                 'message' => 'HPR login or verification is required before registering a facility.',
             ], 401);
         }
-
         $request->validate([
             'facilityName' => 'required|string|min:3',
             'ownershipCode' => 'required|string',
+            'ownershipSubTypeCode' => 'nullable|string',
+            'ownershipSubTypeCode2' => 'nullable|string',
             'stateLGDCode' => 'required|string',
             'districtLGDCode' => 'nullable|string',
             'subDistrictLGDCode' => 'nullable|string',
@@ -153,9 +155,9 @@ class HfrController extends Controller
 
         try {
             $data = $request->only([
-                'facilityName', 'ownershipCode', 'stateLGDCode', 'districtLGDCode',
-                'subDistrictLGDCode', 'address', 'pincode', 'facilityEmailId',
-                'facilityContactNumber', 'facilityLandlineNumber', 'facilityStdCode',
+                'facilityName', 'ownershipCode', 'ownershipSubTypeCode', 'ownershipSubTypeCode2',
+                'stateLGDCode', 'districtLGDCode', 'subDistrictLGDCode', 'address', 'pincode',
+                'facilityEmailId', 'facilityContactNumber', 'facilityLandlineNumber', 'facilityStdCode',
                 'latitude', 'longitude', 'systemOfMedicineCode', 'facilityTypeCode',
                 'abpmjayId', 'ninID', 'ceaId', 'hrpSource', 'hrpSourceFacilityId',
             ]);
@@ -163,11 +165,12 @@ class HfrController extends Controller
             $result = $this->hfrService->createFacility($data);
 
             return response()->json([
-                'success' => true,
-                'facilityId' => $result['facilityId'],
-                'facilityName' => $result['facilityName'],
-                'status' => $result['status'] ?? 'PENDING_APPROVAL',
-                'message' => $result['message'],
+                'success'     => true,
+                'facilityId'  => $result['facilityId'],
+                'facilityName'=> $result['facilityName'],
+                'trackingId'  => $result['trackingId'] ?? null,
+                'status'      => $result['status'] ?? 'PENDING_APPROVAL',
+                'message'     => $result['message'],
             ]);
         } catch (Exception $e) {
             return response()->json([
@@ -395,5 +398,306 @@ class HfrController extends Controller
             'success' => true,
             'message' => 'HPR session cleared successfully.',
         ]);
+    }
+
+    /**
+     * Fetch all HFR master types.
+     */
+    public function masterTypes(Request $request): JsonResponse
+    {
+        try {
+            $types = $this->hfrService->getMasterTypes();
+
+            return response()->json([
+                'success' => true,
+                'data' => $types['masterTypes'] ?? [],
+            ]);
+        } catch (Exception $e) {
+            Log::error('HFR Controller - masterTypes: '.$e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Fetch master data values for a specific type.
+     */
+    public function masterData(Request $request): JsonResponse
+    {
+        $request->validate([
+            'type' => 'required|string',
+        ]);
+
+        try {
+            $type = $request->input('type');
+            $result = $this->hfrService->getMasterData($type);
+
+            return response()->json([
+                'success' => true,
+                'type' => $result['type'] ?? $type,
+                'data' => $result['data'] ?? [],
+            ]);
+        } catch (Exception $e) {
+            Log::error('HFR Controller - masterData: '.$e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Fetch all LGD states.
+     */
+    public function lgdStates(Request $request): JsonResponse
+    {
+        try {
+            $states = $this->hfrService->getLgdStates();
+
+            return response()->json([
+                'success' => true,
+                'data' => $states,
+            ]);
+        } catch (Exception $e) {
+            Log::error('HFR Controller - lgdStates: '.$e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Fetch LGD districts for a state.
+     */
+    public function lgdDistricts(Request $request): JsonResponse
+    {
+        $request->validate([
+            'stateCode' => 'required|string',
+        ]);
+
+        try {
+            $districts = $this->hfrService->getLgdDistricts($request->input('stateCode'));
+
+            return response()->json([
+                'success' => true,
+                'data' => $districts,
+            ]);
+        } catch (Exception $e) {
+            Log::error('HFR Controller - lgdDistricts: '.$e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Fetch LGD subdistricts for a district.
+     */
+    public function lgdSubdistricts(Request $request): JsonResponse
+    {
+        $request->validate([
+            'districtCode' => 'required|string',
+        ]);
+
+        try {
+            $subdistricts = $this->hfrService->getLgdSubdistricts($request->input('districtCode'));
+
+            return response()->json([
+                'success' => true,
+                'data' => $subdistricts,
+            ]);
+        } catch (Exception $e) {
+            Log::error('HFR Controller - lgdSubdistricts: '.$e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Fetch facility types.
+     */
+    public function fetchFacilityTypes(Request $request): JsonResponse
+    {
+        $request->validate([
+            'ownershipCode' => 'required|string',
+            'systemOfMedicineCode' => 'required|string',
+        ]);
+
+        try {
+            $result = $this->hfrService->fetchFacilityType(
+                $request->input('ownershipCode'),
+                $request->input('systemOfMedicineCode')
+            );
+
+            return response()->json([
+                'success' => true,
+                'data' => $result['data'] ?? [],
+            ]);
+        } catch (Exception $e) {
+            Log::error('HFR Controller - fetchFacilityTypes: '.$e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Fetch owner subtypes.
+     */
+    public function getOwnerSubtypes(Request $request): JsonResponse
+    {
+        $request->validate([
+            'ownershipCode' => 'required|string',
+            'ownerSubtypeCode' => 'nullable|string',
+        ]);
+
+        try {
+            $result = $this->hfrService->getOwnerSubtype(
+                $request->input('ownershipCode'),
+                $request->input('ownerSubtypeCode')
+            );
+
+            return response()->json([
+                'success' => true,
+                'data' => $result['data'] ?? [],
+            ]);
+        } catch (Exception $e) {
+            Log::error('HFR Controller - getOwnerSubtypes: '.$e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Fetch specialties.
+     */
+    public function getSpecialities(Request $request): JsonResponse
+    {
+        $request->validate([
+            'systemOfMedicineCode' => 'required|string',
+        ]);
+
+        try {
+            $result = $this->hfrService->getSpecialities($request->input('systemOfMedicineCode'));
+
+            return response()->json([
+                'success' => true,
+                'data' => $result['data'] ?? [],
+            ]);
+        } catch (Exception $e) {
+            Log::error('HFR Controller - getSpecialities: '.$e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Fetch facility subtypes.
+     */
+    public function fetchFacilitySubtypes(Request $request): JsonResponse
+    {
+        $request->validate([
+            'facilityTypeCode' => 'required|string',
+        ]);
+
+        try {
+            $result = $this->hfrService->fetchFacilitySubtype($request->input('facilityTypeCode'));
+
+            return response()->json([
+                'success' => true,
+                'data' => $result['data'] ?? [],
+            ]);
+        } catch (Exception $e) {
+            Log::error('HFR Controller - fetchFacilitySubtypes: '.$e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Track / look up a registered health facility by its HFR Facility ID.
+     *
+     * The HFR API does not expose a status endpoint for the draft trackingId.
+     * Once a facility is submitted, it receives an IN-prefixed facilityId that
+     * can be queried via the documented facility/search endpoint.
+     */
+    public function trackFacility(Request $request): JsonResponse
+    {
+        $request->validate([
+            'facilityId' => 'required|string|min:3',
+        ]);
+
+        $facilityId  = trim($request->input('facilityId'));
+        $realApiMode = session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false));
+
+        if (! $realApiMode) {
+            return response()->json([
+                'success'    => true,
+                'facilityId' => $facilityId,
+                'status'     => 'Submitted',
+                'message'    => 'Facility found in HFR registry (Simulated Mode).',
+                'facility'   => [
+                    'facilityId'   => $facilityId,
+                    'facilityName' => 'Sample Hospital (Simulated)',
+                    'facilityStatus' => 'Submitted',
+                    'ownership'    => 'PRIVATE',
+                    'facilityType' => 'Hospital',
+                    'stateName'    => 'Gujarat',
+                    'districtName' => 'Ahmedabad',
+                    'address'      => 'Vejalpur, Ahmedabad',
+                    'pincode'      => '380051',
+                ],
+            ]);
+        }
+
+        try {
+            $result = $this->hfrService->lookupFacilityById($facilityId);
+
+            $facility = $result['facilities'][0] ?? null;
+
+            if (! $facility) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "No facility found for ID: {$facilityId}",
+                ], 404);
+            }
+
+            return response()->json([
+                'success'    => true,
+                'facilityId' => $facilityId,
+                'status'     => $facility['facilityStatus'] ?? 'Unknown',
+                'message'    => $result['message'] ?? 'Facility found.',
+                'facility'   => $facility,
+            ]);
+        } catch (Exception $e) {
+            Log::error('HFR Controller - trackFacility: '.$e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 }
