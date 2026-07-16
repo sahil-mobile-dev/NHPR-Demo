@@ -989,18 +989,31 @@
                                     <div class="form-group" style="margin-bottom: 14px;">
                                         <label for="link-auth-method">Select Authentication Method <span class="req">*</span></label>
                                         <select id="link-auth-method" class="form-control" onchange="toggleAuthFields()">
-                                            <option value="OTP">OTP Verification (via Registered Mobile)</option>
-                                            <option value="PASSWORD">Password Authentication</option>
+                                            <option value="PASSWORD">Login Via Password API</option>
+                                            <option value="MOBILE_OTP">Login Via Mobile OTP API</option>
+                                            <option value="AADHAAR_OTP">Login Via Aadhaar OTP API</option>
                                         </select>
                                     </div>
 
-                                    <!-- Verification Fields -->
-                                    <div class="form-group id-auth-field" id="auth-otp-group" style="margin-bottom: 14px;">
-                                        <!-- Step A: Send OTP Button (Shown initially when OTP mode is selected) -->
+                                    <!-- Password Fields -->
+                                    <div class="form-group id-auth-field" id="auth-password-group" style="margin-bottom: 14px;">
+                                        <label for="link-password">HPR Password <span class="req">*</span></label>
+                                        <input type="password" id="link-password" class="form-control" placeholder="Enter HPR Registry Password">
+                                    </div>
+
+                                    <!-- Mobile Fields -->
+                                    <div class="form-group id-auth-field" id="auth-mobile-group" style="margin-bottom: 14px; display: none;">
+                                        <label for="link-mobile-number">Registered Mobile Number <span class="req">*</span></label>
+                                        <input type="text" id="link-mobile-number" class="form-control" maxlength="10" placeholder="e.g. 9876543210">
+                                    </div>
+
+                                    <!-- OTP Fields (Common for Mobile OTP / Aadhaar OTP) -->
+                                    <div class="form-group id-auth-field" id="auth-otp-group" style="margin-bottom: 14px; display: none;">
+                                        <!-- Step A: Send OTP Button -->
                                         <div id="hfr-otp-request-container" style="text-align: center; margin-bottom: 10px;">
-                                            <p style="font-size: 12.5px; color: var(--muted); margin-bottom: 10px;">OTP will be sent to the mobile number registered with your HPR ID.</p>
+                                            <p style="font-size: 12.5px; color: var(--muted); margin-bottom: 10px;" id="otp-message-text">OTP will be sent to the registered mobile number.</p>
                                             <button type="button" class="btn" id="btn-hfr-send-otp" style="background: var(--primary); color: #fff; width: 100%; padding: 10px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
-                                                <i class="fa-solid fa-paper-plane"></i> Send OTP to Mobile
+                                                <i class="fa-solid fa-paper-plane"></i> Send OTP
                                             </button>
                                         </div>
 
@@ -1014,12 +1027,21 @@
                                                 </button>
                                             </div>
                                             <span style="font-size: 11px; color: var(--muted); display: block; margin-top: 4px;">For simulated mode, enter `123456`.</span>
+                                            
+                                            <!-- Button to Verify OTP for Mobile Login (Intermediate Step) -->
+                                            <button type="button" class="btn" id="btn-hfr-verify-mobile-otp" style="background: var(--primary); color: #fff; width: 100%; padding: 10px 14px; margin-top: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; display: none;">
+                                                <i class="fa-solid fa-shield-halved"></i> Verify OTP & Fetch Profiles
+                                            </button>
                                         </div>
                                     </div>
 
-                                    <div class="form-group id-auth-field" id="auth-password-group" style="margin-bottom: 14px; display: none;">
-                                        <label for="link-password">HPR Password <span class="req">*</span></label>
-                                        <input type="password" id="link-password" class="form-control" placeholder="Enter HPR Registry Password">
+                                    <!-- Linked HPR Profiles list dropdown (For Mobile OTP only) -->
+                                    <div class="form-group id-auth-field" id="auth-profiles-group" style="margin-bottom: 14px; display: none;">
+                                        <label for="link-selected-hpr-id">Select HPR Profile / HPID <span class="req">*</span></label>
+                                        <select id="link-selected-hpr-id" class="form-control">
+                                            <!-- Populated dynamically via JS -->
+                                        </select>
+                                        <span style="font-size: 11px; color: var(--muted); display: block; margin-top: 4px;">Select the HPR ID profile you wish to link to this facility.</span>
                                     </div>
 
                                     <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
@@ -1238,18 +1260,57 @@
             });
         });
 
-        // Toggle Authentication fields based on selection (OTP vs PASSWORD)
+        // Toggle Authentication fields based on selection (Password vs Mobile OTP vs Aadhaar OTP)
         function toggleAuthFields() {
             const method = document.getElementById('link-auth-method').value;
-            const authOtpGroup = document.getElementById('auth-otp-group');
             const authPasswordGroup = document.getElementById('auth-password-group');
+            const authMobileGroup = document.getElementById('auth-mobile-group');
+            const authOtpGroup = document.getElementById('auth-otp-group');
+            const authProfilesGroup = document.getElementById('auth-profiles-group');
+            
             const hfrOtpRequestContainer = document.getElementById('hfr-otp-request-container');
             const hfrOtpInputContainer = document.getElementById('hfr-otp-input-container');
+            const btnHfrVerifyMobileOtp = document.getElementById('btn-hfr-verify-mobile-otp');
             const btnLinkFac = document.getElementById('btn-link-fac');
 
-            if (method === 'OTP') {
+            // Hide all auth fields initially
+            authPasswordGroup.style.display = 'none';
+            authMobileGroup.style.display = 'none';
+            authOtpGroup.style.display = 'none';
+            authProfilesGroup.style.display = 'none';
+            btnLinkFac.style.display = 'none';
+
+            if (method === 'PASSWORD') {
+                authPasswordGroup.style.display = 'block';
+                btnLinkFac.style.display = 'block';
+                btnLinkFac.innerHTML = '<i class="fa-solid fa-link"></i> Link HPR/Facility Manager';
+            } else if (method === 'MOBILE_OTP') {
+                authMobileGroup.style.display = 'block';
                 authOtpGroup.style.display = 'block';
-                authPasswordGroup.style.display = 'none';
+                document.getElementById('otp-message-text').innerText = 'OTP will be sent to this mobile number.';
+                
+                if (hfrOtpSent) {
+                    hfrOtpRequestContainer.style.display = 'none';
+                    hfrOtpInputContainer.style.display = 'block';
+                    
+                    if (document.getElementById('link-selected-hpr-id').options.length > 0) {
+                        authProfilesGroup.style.display = 'block';
+                        btnLinkFac.style.display = 'block';
+                        btnLinkFac.innerHTML = '<i class="fa-solid fa-link"></i> Link Selected HPR';
+                        btnHfrVerifyMobileOtp.style.display = 'none';
+                    } else {
+                        btnHfrVerifyMobileOtp.style.display = 'block';
+                        btnLinkFac.style.display = 'none';
+                    }
+                } else {
+                    hfrOtpRequestContainer.style.display = 'block';
+                    hfrOtpInputContainer.style.display = 'none';
+                    btnHfrVerifyMobileOtp.style.display = 'none';
+                }
+            } else if (method === 'AADHAAR_OTP') {
+                authOtpGroup.style.display = 'block';
+                document.getElementById('otp-message-text').innerText = 'OTP will be sent to the Aadhaar-linked mobile number for HPR ID.';
+                
                 if (hfrOtpSent) {
                     hfrOtpRequestContainer.style.display = 'none';
                     hfrOtpInputContainer.style.display = 'block';
@@ -1258,13 +1319,7 @@
                 } else {
                     hfrOtpRequestContainer.style.display = 'block';
                     hfrOtpInputContainer.style.display = 'none';
-                    btnLinkFac.style.display = 'none';
                 }
-            } else {
-                authOtpGroup.style.display = 'none';
-                authPasswordGroup.style.display = 'block';
-                btnLinkFac.style.display = 'block';
-                btnLinkFac.innerHTML = '<i class="fa-solid fa-link"></i> Link HPR/Facility Manager';
             }
         }
 
@@ -1307,9 +1362,11 @@
                     document.getElementById('hpr-profile-mobile').innerText = prof.maskedMobile || '—';
                     document.getElementById('hpr-profile-dob').innerText = prof.dob || '—';
 
-                    // Reset OTP state and set auth selection back to default OTP
+                    // Reset OTP state and set auth selection back to default Password Login
                     hfrOtpSent = false;
-                    document.getElementById('link-auth-method').value = 'OTP';
+                    hfrOtpTxnId = null;
+                    document.getElementById('link-auth-method').value = 'PASSWORD';
+                    document.getElementById('link-selected-hpr-id').innerHTML = '';
                     toggleAuthFields();
 
                     // Slide to Step 2
@@ -1333,101 +1390,144 @@
             document.getElementById('link-step-1').style.display = 'block';
         }
 
-        // Bind Send OTP and Resend OTP buttons after DOM loads
+        // Bind buttons after DOM loads
         document.addEventListener('DOMContentLoaded', function() {
             const btnHfrSendOtp = document.getElementById('btn-hfr-send-otp');
             const btnHfrResendOtp = document.getElementById('btn-hfr-resend-otp');
+            const btnHfrVerifyMobileOtp = document.getElementById('btn-hfr-verify-mobile-otp');
             const hfrOtpRequestContainer = document.getElementById('hfr-otp-request-container');
             const hfrOtpInputContainer = document.getElementById('hfr-otp-input-container');
-            const btnLinkFac = document.getElementById('btn-link-fac');
 
-            if (btnHfrSendOtp) {
-                btnHfrSendOtp.addEventListener('click', function() {
+            function triggerSendOtp(btnElement) {
+                const method = document.getElementById('link-auth-method').value;
+                const payload = { auth_method: method };
+
+                if (method === 'MOBILE_OTP') {
+                    const mobile = document.getElementById('link-mobile-number').value.trim();
+                    if (!mobile || mobile.length !== 10) {
+                        showToast('Please enter a valid 10-digit mobile number.', 'warning');
+                        return;
+                    }
+                    payload.mobile = mobile;
+                } else {
                     const hprId = document.getElementById('link-hpr-id').value.trim();
                     if (!hprId) {
                         showToast('Please enter HPR ID.', 'warning');
                         return;
                     }
+                    payload.hpr_id = hprId;
+                }
 
-                    btnHfrSendOtp.disabled = true;
-                    btnHfrSendOtp.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending OTP...';
+                btnElement.disabled = true;
+                btnElement.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
 
-                    fetch('{{ route("nhpr.register.link-existing.send-otp") }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': csrfToken
-                        },
-                        body: JSON.stringify({ hpr_id: hprId })
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        btnHfrSendOtp.disabled = false;
-                        btnHfrSendOtp.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Send OTP to Mobile';
+                fetch('{{ route("nhpr.register.link-existing.send-otp") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    btnElement.disabled = false;
+                    btnElement.innerHTML = btnElement.id === 'btn-hfr-send-otp' ? '<i class="fa-solid fa-paper-plane"></i> Send OTP' : '<i class="fa-solid fa-rotate-right"></i> Resend OTP';
 
-                        if (data.success) {
-                            hfrOtpSent = true;
-                            hfrOtpTxnId = data.txnId;
+                    if (data.success) {
+                        hfrOtpSent = true;
+                        hfrOtpTxnId = data.txnId;
+                        document.getElementById('link-selected-hpr-id').innerHTML = ''; // clear previous profiles
 
-                            hfrOtpRequestContainer.style.display = 'none';
-                            hfrOtpInputContainer.style.display = 'block';
-                            btnLinkFac.style.display = 'block';
-                            btnLinkFac.innerHTML = '<i class="fa-solid fa-link"></i> Verify OTP & Link HPR';
+                        hfrOtpRequestContainer.style.display = 'none';
+                        hfrOtpInputContainer.style.display = 'block';
+                        
+                        toggleAuthFields();
+                        showToast(data.message || 'OTP sent successfully!');
+                    } else {
+                        showToast(data.message || 'Failed to send OTP.', 'error');
+                    }
+                })
+                .catch(() => {
+                    btnElement.disabled = false;
+                    btnElement.innerHTML = btnElement.id === 'btn-hfr-send-otp' ? '<i class="fa-solid fa-paper-plane"></i> Send OTP' : '<i class="fa-solid fa-rotate-right"></i> Resend OTP';
+                    showToast('Failed to send OTP.', 'error');
+                });
+            }
 
-                            showToast(data.message || 'OTP sent successfully!');
-                        } else {
-                            showToast(data.message || 'Failed to send OTP.', 'error');
-                        }
-                    })
-                    .catch(() => {
-                        btnHfrSendOtp.disabled = false;
-                        btnHfrSendOtp.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Send OTP to Mobile';
-                        showToast('Failed to send OTP.', 'error');
-                    });
+            if (btnHfrSendOtp) {
+                btnHfrSendOtp.addEventListener('click', function() {
+                    triggerSendOtp(btnHfrSendOtp);
                 });
             }
 
             if (btnHfrResendOtp) {
                 btnHfrResendOtp.addEventListener('click', function() {
-                    const hprId = document.getElementById('link-hpr-id').value.trim();
-                    if (!hprId) {
-                        showToast('Please enter HPR ID.', 'warning');
+                    triggerSendOtp(btnHfrResendOtp);
+                });
+            }
+
+            if (btnHfrVerifyMobileOtp) {
+                btnHfrVerifyMobileOtp.addEventListener('click', function() {
+                    const mobile = document.getElementById('link-mobile-number').value.trim();
+                    const otp = document.getElementById('link-otp').value.trim();
+                    
+                    if (!otp || otp.length !== 6) {
+                        showToast('Please enter a valid 6-digit OTP.', 'warning');
                         return;
                     }
 
-                    btnHfrResendOtp.disabled = true;
-                    btnHfrResendOtp.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Resending...';
+                    btnHfrVerifyMobileOtp.disabled = true;
+                    btnHfrVerifyMobileOtp.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying OTP...';
 
-                    fetch('{{ route("nhpr.register.link-existing.send-otp") }}', {
+                    fetch('{{ route("nhpr.register.link-existing.verify-mobile-otp") }}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': csrfToken
                         },
-                        body: JSON.stringify({ hpr_id: hprId })
+                        body: JSON.stringify({
+                            mobile: mobile,
+                            txn_id: hfrOtpTxnId,
+                            otp: otp
+                        })
                     })
                     .then(res => res.json())
                     .then(data => {
-                        btnHfrResendOtp.disabled = false;
-                        btnHfrResendOtp.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Resend OTP';
+                        btnHfrVerifyMobileOtp.disabled = false;
+                        btnHfrVerifyMobileOtp.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Verify OTP & Fetch Profiles';
 
                         if (data.success) {
                             hfrOtpTxnId = data.txnId;
-                            showToast(data.message || 'OTP resent successfully!');
+                            const dropdown = document.getElementById('link-selected-hpr-id');
+                            dropdown.innerHTML = '';
+
+                            if (data.profiles && data.profiles.length > 0) {
+                                data.profiles.forEach(p => {
+                                    const opt = document.createElement('option');
+                                    opt.value = p.hprId;
+                                    opt.innerText = `${p.name} (${p.hprId})`;
+                                    dropdown.appendChild(opt);
+                                });
+                                toggleAuthFields();
+                                showToast('HPR profiles fetched successfully! Select HPR profile to complete linkage.');
+                            } else {
+                                showToast('No HPR profiles found linked to this mobile number.', 'error');
+                            }
                         } else {
-                            showToast(data.message || 'Failed to resend OTP.', 'error');
+                            showToast(data.message || 'OTP verification failed.', 'error');
                         }
                     })
                     .catch(() => {
-                        btnHfrResendOtp.disabled = false;
-                        btnHfrResendOtp.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Resend OTP';
-                        showToast('Failed to resend OTP.', 'error');
+                        btnHfrVerifyMobileOtp.disabled = false;
+                        btnHfrVerifyMobileOtp.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Verify OTP & Fetch Profiles';
+                        showToast('OTP verification failed.', 'error');
                     });
                 });
             }
         });
 
-        // Final submit linkage form (reusing link-existing API)
+        // Final submit linkage form (Password, Mobile OTP or Aadhaar OTP)
         function submitLinkageForm(event) {
             event.preventDefault();
             const btn = document.getElementById('btn-link-fac');
@@ -1436,31 +1536,14 @@
 
             const authMethod = document.getElementById('link-auth-method').value;
             const payload = {
-                hpr_id: document.getElementById('link-hpr-id').value.trim(),
                 auth_method: authMethod,
-                txn_id: hfrOtpTxnId,
                 facility_id: document.getElementById('link-facility-id').value,
                 facility_name: document.getElementById('link-facility-name').value,
                 facility_address: document.getElementById('link-facility-address').value || 'Dehradun',
                 facility_pincode: document.getElementById('link-facility-pincode').value || '248001',
             };
 
-            if (authMethod === 'OTP') {
-                if (!hfrOtpSent) {
-                    showToast('Please send OTP first.', 'error');
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fa-solid fa-link"></i> Verify OTP & Link HPR';
-                    return;
-                }
-                const otpVal = document.getElementById('link-otp').value.trim();
-                if (!otpVal) {
-                    showToast('Please enter the OTP.', 'error');
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fa-solid fa-link"></i> Verify OTP & Link HPR';
-                    return;
-                }
-                payload.otp = otpVal;
-            } else {
+            if (authMethod === 'PASSWORD') {
                 const passVal = document.getElementById('link-password').value;
                 if (!passVal) {
                     showToast('Please enter HPR password.', 'error');
@@ -1468,7 +1551,30 @@
                     btn.innerHTML = '<i class="fa-solid fa-link"></i> Link HPR/Facility Manager';
                     return;
                 }
+                payload.hpr_id = document.getElementById('link-hpr-id').value.trim();
                 payload.password = passVal;
+            } else if (authMethod === 'MOBILE_OTP') {
+                const selectedHpr = document.getElementById('link-selected-hpr-id').value;
+                if (!selectedHpr) {
+                    showToast('Please select HPR Profile first.', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-link"></i> Link Selected HPR';
+                    return;
+                }
+                payload.mobile = document.getElementById('link-mobile-number').value.trim();
+                payload.selected_hpr_id = selectedHpr;
+                payload.txn_id = hfrOtpTxnId;
+            } else if (authMethod === 'AADHAAR_OTP') {
+                const otpVal = document.getElementById('link-otp').value.trim();
+                if (!otpVal) {
+                    showToast('Please enter the OTP.', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-link"></i> Verify OTP & Link HPR';
+                    return;
+                }
+                payload.hpr_id = document.getElementById('link-hpr-id').value.trim();
+                payload.otp = otpVal;
+                payload.txn_id = hfrOtpTxnId;
             }
 
             fetch('{{ route("nhpr.register.link-existing") }}', {
@@ -1482,9 +1588,7 @@
             .then(res => res.json())
             .then(data => {
                 btn.disabled = false;
-                btn.innerHTML = authMethod === 'OTP' 
-                    ? '<i class="fa-solid fa-link"></i> Verify OTP & Link HPR' 
-                    : '<i class="fa-solid fa-link"></i> Link HPR/Facility Manager';
+                btn.innerHTML = '<i class="fa-solid fa-link"></i> Link HPR/Facility Manager';
 
                 if (data.success) {
                     showToast(data.message || 'Successfully linked HFR with HPR/Facility Manager!');
@@ -1494,6 +1598,8 @@
                     document.getElementById('link-facility-name').value = '';
                     document.getElementById('link-otp').value = '';
                     document.getElementById('link-password').value = '';
+                    document.getElementById('link-mobile-number').value = '';
+                    document.getElementById('link-selected-hpr-id').innerHTML = '';
                     hfrOtpSent = false;
                     hfrOtpTxnId = null;
                     

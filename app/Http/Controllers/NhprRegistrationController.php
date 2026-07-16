@@ -1327,20 +1327,28 @@ class NhprRegistrationController extends Controller
     public function sendLinkageOtp(Request $request): JsonResponse
     {
         $request->validate([
-            'hpr_id' => 'required|string',
+            'auth_method' => 'nullable|string|in:MOBILE_OTP,AADHAAR_OTP,OTP',
+            'hpr_id' => 'required_without:mobile|nullable|string',
+            'mobile' => 'required_if:auth_method,MOBILE_OTP|nullable|digits:10',
         ]);
 
-        $hprId = trim($request->input('hpr_id'));
+        $authMethod = $request->input('auth_method') ?: 'OTP';
         $realApiMode = session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false));
 
         if ($realApiMode) {
             try {
-                $txnId = $this->hprService->initiateHprAuth($hprId, 'MOBILE_OTP');
+                if ($authMethod === 'MOBILE_OTP') {
+                    $mobile = $request->input('mobile');
+                    $txnId = $this->hprService->sendMobileLoginOtp($mobile);
+                } else {
+                    $hprId = trim($request->input('hpr_id'));
+                    $txnId = $this->hprService->initiateHprAuth($hprId, $authMethod === 'AADHAAR_OTP' ? 'AADHAAR_OTP' : 'MOBILE_OTP');
+                }
 
                 return response()->json([
                     'success' => true,
                     'txnId' => $txnId,
-                    'message' => 'OTP sent successfully via ABDM to registered mobile number!',
+                    'message' => 'OTP sent successfully via ABDM!',
                 ]);
             } catch (Exception $e) {
                 return response()->json([
@@ -1354,7 +1362,77 @@ class NhprRegistrationController extends Controller
         return response()->json([
             'success' => true,
             'txnId' => 'mock-txn-uuid-'.Str::random(8),
-            'message' => 'Simulated OTP sent to registered mobile number! Enter 123456.',
+            'message' => 'Simulated OTP sent successfully! Enter 123456.',
+        ]);
+    }
+
+    /**
+     * Verify Mobile Login OTP and return list of linked HPR profiles.
+     */
+    public function verifyLinkageMobileOtp(Request $request): JsonResponse
+    {
+        $request->validate([
+            'mobile' => 'required|digits:10',
+            'txn_id' => 'required|string',
+            'otp' => 'required|digits:6',
+        ]);
+
+        $mobile = $request->input('mobile');
+        $txnId = $request->input('txn_id');
+        $otp = $request->input('otp');
+
+        $realApiMode = session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false));
+
+        if ($realApiMode) {
+            try {
+                $result = $this->hprService->verifyMobileLoginOtp($mobile, $txnId, $otp);
+                $newTxnId = $result['txnId'] ?? $txnId;
+
+                // Extract linked profiles
+                $profiles = [];
+                if (isset($result['mobileLinkedHpIdDTO']) && is_array($result['mobileLinkedHpIdDTO'])) {
+                    foreach ($result['mobileLinkedHpIdDTO'] as $profile) {
+                        $profiles[] = [
+                            'hprId' => $profile['hprId'] ?? '',
+                            'name' => $profile['name'] ?? '',
+                            'hprIdNumber' => $profile['hprIdNumber'] ?? '',
+                        ];
+                    }
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'txnId' => $newTxnId,
+                    'profiles' => $profiles,
+                    'message' => 'OTP verified successfully. Please select your HPR profile.',
+                ]);
+            } catch (Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'OTP verification failed: '.$e->getMessage(),
+                ], 500);
+            }
+        }
+
+        // Simulated Mode fallback
+        if ($otp !== '123456') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid OTP. Please enter 123456 for simulated verification.',
+            ], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'txnId' => 'mock-txn-uuid-linked-'.Str::random(8),
+            'profiles' => [
+                [
+                    'hprId' => 'simulated-doctor@hpr.abdm',
+                    'name' => 'Dr. Simulated Doctor',
+                    'hprIdNumber' => '12-3456-7890-12',
+                ],
+            ],
+            'message' => 'Simulated OTP verified successfully. Profiles loaded.',
         ]);
     }
 
@@ -1364,19 +1442,21 @@ class NhprRegistrationController extends Controller
     public function linkExistingHpr(Request $request): JsonResponse
     {
         $request->validate([
-            'hpr_id' => 'required|string',
-            'auth_method' => 'required|string|in:PASSWORD,OTP',
+            'hpr_id' => 'required_without:mobile|nullable|string',
+            'mobile' => 'required_if:auth_method,MOBILE_OTP|nullable|digits:10',
+            'auth_method' => 'required|string|in:PASSWORD,MOBILE_OTP,AADHAAR_OTP,OTP',
             'password' => 'required_if:auth_method,PASSWORD|nullable|string',
-            'otp' => 'required_if:auth_method,OTP|nullable|digits:6',
-            'txn_id' => 'required_if:auth_method,OTP|nullable|string',
+            'otp' => 'required_if:auth_method,AADHAAR_OTP,OTP|nullable|digits:6',
+            'txn_id' => 'required_if:auth_method,MOBILE_OTP,AADHAAR_OTP,OTP|nullable|string',
             'facility_id' => 'required|string',
             'facility_name' => 'required|string',
             'facility_address' => 'required|string',
             'facility_pincode' => 'required|digits:6',
+            'selected_hpr_id' => 'required_if:auth_method,MOBILE_OTP|nullable|string',
         ]);
 
-        $hprId = trim($request->input('hpr_id'));
         $authMethod = $request->input('auth_method');
+        $hprId = trim($request->input('selected_hpr_id') ?: $request->input('hpr_id') ?: '');
         $facilityId = $request->input('facility_id');
         $facilityName = $request->input('facility_name');
         $otp = $request->input('otp');
@@ -1387,19 +1467,20 @@ class NhprRegistrationController extends Controller
 
         if ($realApiMode) {
             try {
-                if ($authMethod === 'OTP') {
-                    if (empty($txnId)) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'Transaction ID is missing. Please request OTP first.',
-                        ], 400);
-                    }
-                    $authResponse = $this->hprService->confirmHprAuthWithOtp($txnId, $otp);
-                } else {
+                if ($authMethod === 'PASSWORD') {
                     $authResponse = $this->hprService->confirmHprAuthWithPassword($hprId, $password);
+                    $hprToken = $authResponse['token'] ?? null;
+                } elseif ($authMethod === 'MOBILE_OTP') {
+                    $authResponse = $this->hprService->loginWithHprId($hprId, $txnId);
+                    $hprToken = $authResponse['token'] ?? null;
+                } elseif ($authMethod === 'AADHAAR_OTP') {
+                    $authResponse = $this->hprService->confirmHprAuthWithAadhaarOtp($txnId, $otp);
+                    $hprToken = $authResponse['token'] ?? null;
+                } else {
+                    $authResponse = $this->hprService->confirmHprAuthWithOtp($txnId, $otp);
+                    $hprToken = $authResponse['token'] ?? null;
                 }
 
-                $hprToken = $authResponse['token'] ?? null;
                 if (empty($hprToken)) {
                     return response()->json([
                         'success' => false,
@@ -1407,15 +1488,42 @@ class NhprRegistrationController extends Controller
                     ], 500);
                 }
 
+                // Call HFR linkage API mapping professional practitioner to facility
+                $payload = [
+                    'hprToken' => $hprToken,
+                    'practitioner' => [
+                        'healthProfessionalType' => 'doctor',
+                        'apiClientId' => '',
+                        'personalInformation' => [
+                            'nationality' => '356',
+                        ],
+                        'currentWorkDetails' => [
+                            'currentlyWorking' => '1',
+                            'purposeOfWork' => 'Practice',
+                            'chooseWorkStatus' => '1',
+                            'facilityDeclarationData' => [
+                                'facilityId' => $facilityId,
+                                'facilityName' => $facilityName,
+                                'facilityAddress' => $request->input('facility_address', 'Dehradun'),
+                                'facilityPincode' => $request->input('facility_pincode', '248001'),
+                                'state' => '05', // Uttarakhand
+                                'district' => '060',
+                                'facilityType' => 'Hospital',
+                            ],
+                        ],
+                    ],
+                ];
+
+                $linkResult = $this->hfrService->registerProfessional($payload);
+
                 // Cache HPR Token in session for other facility actions
                 session(['hpr_reg_hpr_token' => $hprToken]);
                 session(['hpr_reg_hpr_id' => $hprId]);
 
-                // Construct mapping payload / return response
                 return response()->json([
                     'success' => true,
                     'message' => "Successfully authenticated HPR ID {$hprId} and linked to facility {$facilityName}!",
-                    'referenceNumber' => 'LINK-'.strtoupper(Str::random(10)),
+                    'referenceNumber' => $linkResult['referenceNumber'] ?? 'LINK-'.strtoupper(Str::random(10)),
                 ]);
             } catch (Exception $e) {
                 return response()->json([
@@ -1426,17 +1534,17 @@ class NhprRegistrationController extends Controller
         }
 
         // Simulated Mode fallback
-        if ($authMethod === 'OTP' && $otp !== '123456') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid OTP. Please enter 123456 for simulated verification.',
-            ], 422);
-        }
-
         if ($authMethod === 'PASSWORD' && strtolower($password) === 'wrong') {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid HPR credentials / password. Please try again.',
+            ], 422);
+        }
+
+        if (($authMethod === 'AADHAAR_OTP' || $authMethod === 'OTP') && $otp !== '123456') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid OTP. Please enter 123456 for simulated verification.',
             ], 422);
         }
 

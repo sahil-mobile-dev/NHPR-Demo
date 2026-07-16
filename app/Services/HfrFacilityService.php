@@ -143,8 +143,11 @@ class HfrFacilityService
         $requestId = (string) Str::uuid();
         $timestamp = now()->toIso8601String();
 
+        $hprToken = $data['hprToken'] ?? '';
         $headers = [
             'Authorization' => 'Bearer '.$token,
+            'x-hprid-auth' => str_starts_with($hprToken, 'Bearer ') ? substr($hprToken, 7) : $hprToken,
+            'HPIRId-auth' => str_starts_with($hprToken, 'Bearer ') ? substr($hprToken, 7) : $hprToken,
             'REQUEST-ID' => $requestId,
             'TIMESTAMP' => $timestamp,
             'X-CM-ID' => $xCmId,
@@ -298,6 +301,7 @@ class HfrFacilityService
         $headers = [
             'Authorization' => 'Bearer '.$token,
             'x-hprid-auth' => str_starts_with($hprToken, 'Bearer ') ? substr($hprToken, 7) : $hprToken,
+            'HPIRId-auth' => str_starts_with($hprToken, 'Bearer ') ? substr($hprToken, 7) : $hprToken,
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
             'REQUEST-ID' => $requestId,
@@ -418,6 +422,7 @@ class HfrFacilityService
 
             if ($submitResponse->successful()) {
                 $responseBody = $submitBody['data'] ?? $submitBody;
+
                 return [
                     'facilityId' => $responseBody['hfrId'] ?? $responseBody['facilityId'] ?? 'IN'.rand(1000000000, 9999999999),
                     'facilityName' => $responseBody['facilityName'] ?? ($data['facilityName'] ?? ''),

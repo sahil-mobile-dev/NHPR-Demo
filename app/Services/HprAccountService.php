@@ -353,6 +353,8 @@ class HprAccountService
         ];
 
         $payload = [
+            'idType' => 'hpr_id',
+            'domainName' => '@hpr.abdm',
             'authMethod' => $authMethod,
             'hprId' => $hprId,
         ];
@@ -549,6 +551,294 @@ class HprAccountService
             throw new Exception("HPR Auth password failed (HTTP {$statusCode}): {$message}");
         } catch (Exception $e) {
             Log::error('HPR Account Service Exception in confirmHprAuthWithPassword: '.$e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Send OTP to a mobile number to initiate HPR Login.
+     *
+     * @return string Transaction ID (txnId).
+     *
+     * @throws Exception
+     */
+    public function sendMobileLoginOtp(string $mobile): string
+    {
+        $token = $this->gatewayService->getValidToken();
+        if (empty($token)) {
+            throw new Exception('HPR Account Service: Failed to fetch gateway authorization token.');
+        }
+
+        $apiUrl = config('services.nhpr.api_url', 'https://apihspsbx.abdm.gov.in');
+        $endpoint = rtrim($apiUrl, '/').'/v4/int/api/v2/auth/loginViaMobileSendOTP';
+
+        $requestId = (string) Str::uuid();
+        $timestamp = now()->toIso8601String();
+
+        $headers = [
+            'Authorization' => 'Bearer '.$token,
+            'REQUEST-ID' => $requestId,
+            'TIMESTAMP' => $timestamp,
+            'X-CM-ID' => config('services.nhpr.x_cm_id', 'sbx'),
+            'Content-Type' => 'application/json',
+        ];
+
+        $payload = [
+            'mobile' => $mobile,
+        ];
+
+        Log::info('HPR Auth Request: Send Mobile Login OTP', [
+            'url' => $endpoint,
+            'request_id' => $requestId,
+            'body' => $payload,
+        ]);
+
+        try {
+            $response = Http::when(! config('services.nhpr.verify_ssl'), fn ($q) => $q->withoutVerifying())
+                ->withHeaders($headers)
+                ->timeout(10)
+                ->retry(3, 100, throw: false)
+                ->post($endpoint, $payload);
+
+            $statusCode = $response->status();
+            $body = $response->json();
+
+            Log::info('HPR Auth Response: Send Mobile Login OTP', [
+                'status' => $statusCode,
+                'body' => $body,
+            ]);
+
+            if ($response->successful()) {
+                $retTxnId = $body['transactionId'] ?? $body['txnId'] ?? null;
+                if (empty($retTxnId)) {
+                    throw new Exception('ABDM HPR mobile login send OTP succeeded but transaction ID was empty.');
+                }
+
+                return $retTxnId;
+            }
+
+            $message = $body['error']['message'] ?? $body['message'] ?? 'Unable to send OTP.';
+            throw new Exception("HPR Mobile Login Send OTP failed (HTTP {$statusCode}): {$message}");
+        } catch (Exception $e) {
+            Log::error('HPR Account Service Exception in sendMobileLoginOtp: '.$e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Verify mobile OTP to retrieve HPR Profiles linked to that mobile.
+     *
+     * @return array Contains txnId and mobileLinkedHpIdDTO profiles array.
+     *
+     * @throws Exception
+     */
+    public function verifyMobileLoginOtp(string $mobile, string $txnId, string $otp): array
+    {
+        $token = $this->gatewayService->getValidToken();
+        if (empty($token)) {
+            throw new Exception('HPR Account Service: Failed to fetch gateway authorization token.');
+        }
+
+        $apiUrl = config('services.nhpr.api_url', 'https://apihspsbx.abdm.gov.in');
+        $endpoint = rtrim($apiUrl, '/').'/v4/int/api/v2/auth/loginViaMobileSendOTP';
+
+        $encryptedOtp = AbdmEncryptionHelper::encrypt($otp);
+
+        $requestId = (string) Str::uuid();
+        $timestamp = now()->toIso8601String();
+
+        $headers = [
+            'Authorization' => 'Bearer '.$token,
+            'REQUEST-ID' => $requestId,
+            'TIMESTAMP' => $timestamp,
+            'X-CM-ID' => config('services.nhpr.x_cm_id', 'sbx'),
+            'Content-Type' => 'application/json',
+        ];
+
+        $payload = [
+            'mobile' => $mobile,
+            'txnId' => $txnId,
+            'otp' => $encryptedOtp,
+        ];
+
+        Log::info('HPR Auth Request: Verify Mobile Login OTP', [
+            'url' => $endpoint,
+            'request_id' => $requestId,
+            'body' => [
+                'mobile' => $mobile,
+                'txnId' => $txnId,
+                'otp' => '[ENCRYPTED_MASKED]',
+            ],
+        ]);
+
+        try {
+            $response = Http::when(! config('services.nhpr.verify_ssl'), fn ($q) => $q->withoutVerifying())
+                ->withHeaders($headers)
+                ->timeout(10)
+                ->retry(3, 100, throw: false)
+                ->post($endpoint, $payload);
+
+            $statusCode = $response->status();
+            $body = $response->json();
+
+            Log::info('HPR Auth Response: Verify Mobile Login OTP', [
+                'status' => $statusCode,
+                'body' => $body,
+            ]);
+
+            if ($response->successful()) {
+                return $body;
+            }
+
+            $message = $body['error']['message'] ?? $body['message'] ?? 'OTP verification failed.';
+            throw new Exception("HPR Mobile Login OTP verification failed (HTTP {$statusCode}): {$message}");
+        } catch (Exception $e) {
+            Log::error('HPR Account Service Exception in verifyMobileLoginOtp: '.$e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Retrieve final HPR Token for a selected HPR ID.
+     *
+     * @throws Exception
+     */
+    public function loginWithHprId(string $hpId, string $txnId): array
+    {
+        $token = $this->gatewayService->getValidToken();
+        if (empty($token)) {
+            throw new Exception('HPR Account Service: Failed to fetch gateway authorization token.');
+        }
+
+        $apiUrl = config('services.nhpr.api_url', 'https://apihspsbx.abdm.gov.in');
+        $endpoint = rtrim($apiUrl, '/').'/v4/int/api/v2/auth/login/userAuthorizedToken';
+
+        $requestId = (string) Str::uuid();
+        $timestamp = now()->toIso8601String();
+
+        $headers = [
+            'Authorization' => 'Bearer '.$token,
+            'REQUEST-ID' => $requestId,
+            'TIMESTAMP' => $timestamp,
+            'X-CM-ID' => config('services.nhpr.x_cm_id', 'sbx'),
+            'Content-Type' => 'application/json',
+        ];
+
+        $payload = [
+            'hpId' => $hpId,
+            'txnId' => $txnId,
+        ];
+
+        Log::info('HPR Auth Request: Login with HPR ID', [
+            'url' => $endpoint,
+            'request_id' => $requestId,
+            'body' => $payload,
+        ]);
+
+        try {
+            $response = Http::when(! config('services.nhpr.verify_ssl'), fn ($q) => $q->withoutVerifying())
+                ->withHeaders($headers)
+                ->timeout(10)
+                ->retry(3, 100, throw: false)
+                ->post($endpoint, $payload);
+
+            $statusCode = $response->status();
+            $body = $response->json();
+
+            // Mask returned JWT token for logging
+            $maskedBody = $body;
+            if (is_array($maskedBody) && ! empty($maskedBody['token'])) {
+                $maskedBody['token'] = substr($maskedBody['token'], 0, 10).'...[PROTECTED_HPR_TOKEN]...'.substr($maskedBody['token'], -10);
+            }
+
+            Log::info('HPR Auth Response: Login with HPR ID', [
+                'status' => $statusCode,
+                'body' => $maskedBody,
+            ]);
+
+            if ($response->successful()) {
+                return $body;
+            }
+
+            $message = $body['error']['message'] ?? $body['message'] ?? 'Login failed.';
+            throw new Exception("HPR Login with HPR ID failed (HTTP {$statusCode}): {$message}");
+        } catch (Exception $e) {
+            Log::error('HPR Account Service Exception in loginWithHprId: '.$e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Confirm HPR authentication using Aadhaar OTP to get a real HPR Token.
+     *
+     * @throws Exception
+     */
+    public function confirmHprAuthWithAadhaarOtp(string $txnId, string $otp): array
+    {
+        $token = $this->gatewayService->getValidToken();
+        if (empty($token)) {
+            throw new Exception('HPR Account Service: Failed to fetch gateway authorization token.');
+        }
+
+        $apiUrl = config('services.nhpr.api_url', 'https://apihspsbx.abdm.gov.in');
+        $endpoint = rtrim($apiUrl, '/').'/v4/int/api/v1/auth/confirmWithAadhaarOtp';
+
+        $encryptedOtp = AbdmEncryptionHelper::encrypt($otp);
+
+        $requestId = (string) Str::uuid();
+        $timestamp = now()->toIso8601String();
+
+        $headers = [
+            'Authorization' => 'Bearer '.$token,
+            'REQUEST-ID' => $requestId,
+            'TIMESTAMP' => $timestamp,
+            'X-CM-ID' => config('services.nhpr.x_cm_id', 'sbx'),
+            'Content-Type' => 'application/json',
+        ];
+
+        $payload = [
+            'otp' => $encryptedOtp,
+            'transactionId' => $txnId,
+        ];
+
+        Log::info('HPR Auth Request: Confirm Aadhaar OTP', [
+            'url' => $endpoint,
+            'request_id' => $requestId,
+            'body' => [
+                'otp' => '[ENCRYPTED_MASKED]',
+                'transactionId' => $txnId,
+            ],
+        ]);
+
+        try {
+            $response = Http::when(! config('services.nhpr.verify_ssl'), fn ($q) => $q->withoutVerifying())
+                ->withHeaders($headers)
+                ->timeout(10)
+                ->retry(3, 100, throw: false)
+                ->post($endpoint, $payload);
+
+            $statusCode = $response->status();
+            $body = $response->json();
+
+            // Mask returned JWT token for logging
+            $maskedBody = $body;
+            if (is_array($maskedBody) && ! empty($maskedBody['token'])) {
+                $maskedBody['token'] = substr($maskedBody['token'], 0, 10).'...[PROTECTED_HPR_TOKEN]...'.substr($maskedBody['token'], -10);
+            }
+
+            Log::info('HPR Auth Response: Confirm Aadhaar OTP', [
+                'status' => $statusCode,
+                'body' => $maskedBody,
+            ]);
+
+            if ($response->successful()) {
+                return $body;
+            }
+
+            $message = $body['error']['message'] ?? $body['message'] ?? 'Aadhaar OTP verification failed.';
+            throw new Exception("HPR Auth confirm Aadhaar OTP failed (HTTP {$statusCode}): {$message}");
+        } catch (Exception $e) {
+            Log::error('HPR Account Service Exception in confirmHprAuthWithAadhaarOtp: '.$e->getMessage());
             throw $e;
         }
     }

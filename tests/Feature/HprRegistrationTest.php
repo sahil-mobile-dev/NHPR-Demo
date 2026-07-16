@@ -973,6 +973,11 @@ class HprRegistrationTest extends TestCase
             'https://mock-api.abdm.gov.in/v4/int/api/v1/auth/authPassword' => Http::response([
                 'token' => 'real-mocked-jwt-token-hpr',
             ], 200),
+            'https://mock-api.abdm.gov.in/v4/int/apis/v1/doctors/register-professional-new' => Http::response([
+                'referenceNumber' => 'LINK-REAL-12345',
+                'status' => 'true',
+                'message' => 'Successfully registered professional.',
+            ], 200),
         ]);
 
         $response = $this->postJson(route('nhpr.register.link-existing'), [
@@ -1005,6 +1010,11 @@ class HprRegistrationTest extends TestCase
             'https://mock-api.abdm.gov.in/v4/int/api/v1/auth/confirmWithMobileOTP' => Http::response([
                 'token' => 'real-mocked-jwt-token-hpr-otp',
             ], 200),
+            'https://mock-api.abdm.gov.in/v4/int/apis/v1/doctors/register-professional-new' => Http::response([
+                'referenceNumber' => 'LINK-REAL-56789',
+                'status' => 'true',
+                'message' => 'Successfully registered professional.',
+            ], 200),
         ]);
 
         $response = $this->postJson(route('nhpr.register.link-existing'), [
@@ -1025,5 +1035,146 @@ class HprRegistrationTest extends TestCase
             ->assertJsonStructure(['referenceNumber']);
 
         $this->assertEquals('real-mocked-jwt-token-hpr-otp', session('hpr_reg_hpr_token'));
+    }
+
+    /**
+     * Test sending linkage OTP for Mobile OTP flow.
+     */
+    public function test_send_linkage_otp_real_mobile_otp_success(): void
+    {
+        session(['nhpr_real_api_mode' => true]);
+
+        Http::fake([
+            'https://mock-api.abdm.gov.in/v4/int/api/v2/auth/loginViaMobileSendOTP' => Http::response([
+                'txnId' => 'real-mobile-txn-uuid-88888',
+            ], 200),
+        ]);
+
+        $response = $this->postJson(route('nhpr.register.link-existing.send-otp'), [
+            'auth_method' => 'MOBILE_OTP',
+            'mobile' => '9876543210',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'txnId' => 'real-mobile-txn-uuid-88888',
+            ]);
+    }
+
+    /**
+     * Test verifying mobile login OTP.
+     */
+    public function test_verify_linkage_mobile_otp_success(): void
+    {
+        session(['nhpr_real_api_mode' => true]);
+
+        Http::fake([
+            'https://mock-api.abdm.gov.in/v4/int/api/v2/auth/loginViaMobileSendOTP' => Http::response([
+                'txnId' => 'real-mobile-txn-uuid-99999',
+                'mobileLinkedHpIdDTO' => [
+                    [
+                        'hprId' => 'doctor@hpr.abdm',
+                        'name' => 'Dr. Ramesh Kumar',
+                        'hprIdNumber' => '71-1234-5678-9012',
+                    ],
+                ],
+            ], 200),
+        ]);
+
+        $response = $this->postJson(route('nhpr.register.link-existing.verify-mobile-otp'), [
+            'mobile' => '9876543210',
+            'txn_id' => 'real-mobile-txn-uuid-88888',
+            'otp' => '123456',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'txnId' => 'real-mobile-txn-uuid-99999',
+                'profiles' => [
+                    [
+                        'hprId' => 'doctor@hpr.abdm',
+                        'name' => 'Dr. Ramesh Kumar',
+                        'hprIdNumber' => '71-1234-5678-9012',
+                    ],
+                ],
+            ]);
+    }
+
+    /**
+     * Test final linkage using Mobile OTP after selecting profile.
+     */
+    public function test_link_existing_hpr_real_mobile_otp_success(): void
+    {
+        session(['nhpr_real_api_mode' => true]);
+
+        Http::fake([
+            'https://mock-api.abdm.gov.in/v4/int/api/v2/auth/login/userAuthorizedToken' => Http::response([
+                'token' => 'real-mocked-jwt-token-hpr-mobile-authorized',
+            ], 200),
+            'https://mock-api.abdm.gov.in/v4/int/apis/v1/doctors/register-professional-new' => Http::response([
+                'referenceNumber' => 'LINK-REAL-MOBILE-11111',
+                'status' => 'true',
+                'message' => 'Successfully registered professional.',
+            ], 200),
+        ]);
+
+        $response = $this->postJson(route('nhpr.register.link-existing'), [
+            'mobile' => '9876543210',
+            'auth_method' => 'MOBILE_OTP',
+            'selected_hpr_id' => 'doctor@hpr.abdm',
+            'txn_id' => 'real-mobile-txn-uuid-99999',
+            'facility_id' => 'IN2710000059',
+            'facility_name' => 'Civil Hospital',
+            'facility_address' => 'Dehradun',
+            'facility_pincode' => '248001',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'referenceNumber' => 'LINK-REAL-MOBILE-11111',
+            ]);
+
+        $this->assertEquals('real-mocked-jwt-token-hpr-mobile-authorized', session('hpr_reg_hpr_token'));
+    }
+
+    /**
+     * Test final linkage using Aadhaar OTP.
+     */
+    public function test_link_existing_hpr_real_aadhaar_otp_success(): void
+    {
+        session(['nhpr_real_api_mode' => true]);
+
+        Http::fake([
+            'https://mock-api.abdm.gov.in/v4/int/api/v1/auth/confirmWithAadhaarOtp' => Http::response([
+                'token' => 'real-mocked-jwt-token-hpr-aadhaar',
+            ], 200),
+            'https://mock-api.abdm.gov.in/v4/int/apis/v1/doctors/register-professional-new' => Http::response([
+                'referenceNumber' => 'LINK-REAL-AADHAAR-22222',
+                'status' => 'true',
+                'message' => 'Successfully registered professional.',
+            ], 200),
+        ]);
+
+        $response = $this->postJson(route('nhpr.register.link-existing'), [
+            'hpr_id' => 'doctor@hpr.abdm',
+            'auth_method' => 'AADHAAR_OTP',
+            'otp' => '123456',
+            'txn_id' => 'real-aadhaar-txn-uuid-33333',
+            'facility_id' => 'IN2710000059',
+            'facility_name' => 'Civil Hospital',
+            'facility_address' => 'Dehradun',
+            'facility_pincode' => '248001',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'referenceNumber' => 'LINK-REAL-AADHAAR-22222',
+            ]);
+
+        $this->assertEquals('real-mocked-jwt-token-hpr-aadhaar', session('hpr_reg_hpr_token'));
     }
 }
