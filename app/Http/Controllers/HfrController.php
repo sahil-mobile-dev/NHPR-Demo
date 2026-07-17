@@ -123,20 +123,34 @@ class HfrController extends Controller
             'districtLGDCode' => 'nullable|string',
             'subDistrictLGDCode' => 'nullable|string',
             'address' => 'required|string',
-            'pincode' => 'nullable|string',
+            'address2' => 'nullable|string',
+            'pincode' => 'required|digits:6',
             'facilityEmailId' => 'nullable|email',
             'facilityContactNumber' => 'nullable|string',
             'facilityLandlineNumber' => 'nullable|string',
             'facilityStdCode' => 'nullable|string',
+            'websiteLink' => 'nullable|url',
             'latitude' => 'nullable|string',
             'longitude' => 'nullable|string',
             'systemOfMedicineCode' => 'nullable|string',
             'facilityTypeCode' => 'nullable|string',
+            'typeOfServiceCode' => 'nullable|string',
+            'specialityTypeCode' => 'nullable|string',
+            'facilityRegion' => 'nullable|string|in:U,R',
             'abpmjayId' => 'nullable|string',
             'ninID' => 'nullable|string',
             'ceaId' => 'nullable|string',
             'hrpSource' => 'nullable|string',
             'hrpSourceFacilityId' => 'nullable|string',
+            // Facility Photos
+            'facilityBuildingPhotoName' => 'nullable|string',
+            'facilityBuildingPhotoValue' => 'nullable|string',
+            'facilityBoardPhotoName' => 'nullable|string',
+            'facilityBoardPhotoValue' => 'nullable|string',
+            // Facility Timings
+            'timingsOfFacility' => 'nullable|array',
+            'timingsOfFacility.*.workingDays' => 'required_with:timingsOfFacility|string',
+            'timingsOfFacility.*.openingHours' => 'required_with:timingsOfFacility|string',
         ]);
 
         $realApiMode = session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false));
@@ -156,10 +170,16 @@ class HfrController extends Controller
         try {
             $data = $request->only([
                 'facilityName', 'ownershipCode', 'ownershipSubTypeCode', 'ownershipSubTypeCode2',
-                'stateLGDCode', 'districtLGDCode', 'subDistrictLGDCode', 'address', 'pincode',
+                'stateLGDCode', 'districtLGDCode', 'subDistrictLGDCode', 'address', 'address2', 'pincode',
                 'facilityEmailId', 'facilityContactNumber', 'facilityLandlineNumber', 'facilityStdCode',
-                'latitude', 'longitude', 'systemOfMedicineCode', 'facilityTypeCode',
+                'websiteLink', 'latitude', 'longitude', 'systemOfMedicineCode', 'facilityTypeCode',
+                'typeOfServiceCode', 'specialityTypeCode', 'facilityRegion',
                 'abpmjayId', 'ninID', 'ceaId', 'hrpSource', 'hrpSourceFacilityId',
+                // Facility Photos
+                'facilityBuildingPhotoName', 'facilityBuildingPhotoValue',
+                'facilityBoardPhotoName', 'facilityBoardPhotoValue',
+                // Facility Timings
+                'timingsOfFacility',
             ]);
 
             $result = $this->hfrService->createFacility($data);

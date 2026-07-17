@@ -319,10 +319,10 @@ class HfrFacilityService
                     'stateLGDCode' => $data['stateLGDCode'] ?? '',
                     'districtLGDCode' => $data['districtLGDCode'] ?? '',
                     'subDistrictLGDCode' => $data['subDistrictLGDCode'] ?? '',
-                    'facilityRegion' => 'U',
+                    'facilityRegion' => $data['facilityRegion'] ?? 'U',
                     'villageCityTownLGDCode' => '',
                     'addressLine1' => $data['address'] ?? '',
-                    'addressLine2' => '',
+                    'addressLine2' => $data['address2'] ?? '',
                     'pincode' => $data['pincode'] ?? '',
                     'latitude' => $data['latitude'] ?? '24.068570',
                     'longitude' => $data['longitude'] ?? '24.068570',
@@ -330,15 +330,15 @@ class HfrFacilityService
                 'facilityContactInformation' => [
                     'facilityEmailId' => $data['facilityEmailId'] ?? '',
                     'facilityContactNumber' => $data['facilityContactNumber'] ?? '',
-                    'websiteLink' => 'http://example.org',
+                    'websiteLink' => $data['websiteLink'] ?? '',
                     'facilityLandlineNumber' => $data['facilityLandlineNumber'] ?? '',
                     'facilityStdCode' => $data['facilityStdCode'] ?? '',
                 ],
                 'ownershipCode' => $data['ownershipCode'] ?? 'P',
                 'ownershipSubTypeCode' => $data['ownershipSubTypeCode'] ?? 'S',
                 'ownershipSubTypeCode2' => $data['ownershipSubTypeCode2'] ?? 'PP01',
-                'typeOfServiceCode' => 'IPD',
-                'specialityTypeCode' => 'SINGLE',
+                'typeOfServiceCode' => $data['typeOfServiceCode'] ?? 'IPD',
+                'specialityTypeCode' => $data['specialityTypeCode'] ?? 'SINGLE',
                 'systemOfMedicineCode' => $data['systemOfMedicineCode'] ?? 'M',
                 'facilityTypeCode' => $data['facilityTypeCode'] ?? '5',
                 'facilityUploads' => [
@@ -904,8 +904,8 @@ class HfrFacilityService
 
             $message = $body['error']['message'] ?? $body['message'] ?? 'HFR Master request failed.';
             throw new Exception("HFR Master request failed (HTTP {$statusCode}): {$message}");
-        } catch (\Exception $e) {
-            \Log::error("HFR Master POST Exception: " . $e->getMessage());
+        } catch (Exception $e) {
+            Log::error("HFR Master POST Exception: " . $e->getMessage());
             throw $e;
         }
     }
@@ -919,7 +919,7 @@ class HfrFacilityService
         $xCmId = config('services.nhpr.x_cm_id');
         $baseUrl = config('services.nhpr.api_url');
         $endpointUrl = rtrim($baseUrl, '/') . '/v4/int/v1.5/facility/search-by-tracking-id';
-        $requestId = (string) \Str::uuid();
+        $requestId = (string) Str::uuid();
         $timestamp = now()->toIso8601String();
 
         $hprToken = session('hpr_reg_hpr_token', '');
@@ -937,7 +937,7 @@ class HfrFacilityService
             'Accept' => 'application/json',
         ];
 
-        \Log::info('HFR Track Facility Request', [
+        Log::info('HFR Track Facility Request', [
             'url' => $endpointUrl,
             'tracking_id' => $trackingId,
             'request_id' => $requestId,
@@ -953,7 +953,7 @@ class HfrFacilityService
             $statusCode = $response->status();
             $body = $response->json();
 
-            \Log::info('HFR Track Facility Response', [
+            Log::info('HFR Track Facility Response', [
                 'status' => $statusCode,
                 'body' => $body,
             ]);
@@ -963,9 +963,9 @@ class HfrFacilityService
             }
 
             $message = $body['error']['message'] ?? $body['message'] ?? 'Track facility request failed.';
-            throw new \Exception("HFR Track Facility failed (HTTP {$statusCode}): {$message}");
-        } catch (\Exception $e) {
-            \Log::error('HFR Track Facility Exception: ' . $e->getMessage());
+            throw new Exception("HFR Track Facility failed (HTTP {$statusCode}): {$message}");
+        } catch (Exception $e) {
+            Log::error('HFR Track Facility Exception: ' . $e->getMessage());
             throw $e;
         }
     }

@@ -829,7 +829,6 @@
                                         <label for="hpr-login-auth-method" style="font-weight: 600; display: block; margin-bottom: 6px;">Select Authentication Method <span class="req">*</span></label>
                                         <select id="hpr-login-auth-method" class="form-control" onchange="toggleLoginAuthFields()" style="padding: 10px 14px;">
                                             <option value="PASSWORD">Login Via Password API</option>
-                                            <option value="MOBILE_OTP">Login Via Mobile OTP API</option>
                                             <option value="AADHAAR_OTP">Login Via Aadhaar OTP API</option>
                                         </select>
                                     </div>
@@ -961,13 +960,51 @@
                                         </div>
                                     </div>
 
+                                    <div class="grid-3" style="margin-top: 14px;">
+                                        <div class="form-group">
+                                            <label for="fac-service-type">Type of Service</label>
+                                            <select id="fac-service-type" class="form-control">
+                                                <option value="">Select Type of Service</option>
+                                                <option value="IPD">IPD (In-Patient Department)</option>
+                                                <option value="OPD">OPD (Out-Patient Department)</option>
+                                                <option value="IPD_OPD" selected>IPD &amp; OPD (Both)</option>
+                                                <option value="DAYCARE">Day Care</option>
+                                                <option value="DIAGNOSTIC">Diagnostic Services</option>
+                                            </select>
+                                            <span style="font-size: 11px; color: var(--muted); display: block; margin-top: 4px;">Not needed for Diagnostic Lab, Imaging, Cath Lab, Dialysis, Blood Bank, Pharmacy.</span>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="fac-speciality-type">Speciality Type</label>
+                                            <select id="fac-speciality-type" class="form-control">
+                                                <option value="">Select Speciality Type</option>
+                                                <option value="SINGLE" selected>Single Speciality</option>
+                                                <option value="MULTI">Multi Speciality</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="fac-region">Facility Region</label>
+                                            <select id="fac-region" class="form-control">
+                                                <option value="">Select Region</option>
+                                                <option value="U" selected>Urban</option>
+                                                <option value="R">Rural</option>
+                                            </select>
+                                            <span style="font-size: 11px; color: var(--muted); display: block; margin-top: 4px;">API accepts: U (Urban) or R (Rural)</span>
+                                        </div>
+                                    </div>
+
                                     <!-- Section 2: Address & Location Details -->
                                     <div class="form-section-header">
-                                        <i class="fa-solid fa-map-location-dot"></i> Address & Location Details
+                                        <i class="fa-solid fa-map-location-dot"></i> Address &amp; Location Details
                                     </div>
-                                    <div class="form-group">
-                                        <label for="fac-address">Complete Address <span class="req">*</span></label>
-                                        <textarea id="fac-address" class="form-control" style="resize: vertical; min-height: 80px;" placeholder="e.g. SG Highway, Ahmedabad" required></textarea>
+                                    <div class="grid-2">
+                                        <div class="form-group">
+                                            <label for="fac-address">Address Line 1 <span class="req">*</span></label>
+                                            <input type="text" id="fac-address" class="form-control" placeholder="e.g. SG Highway, Vejalpur" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="fac-address2">Address Line 2 <span style="font-size: 11px; font-weight: 400; color: var(--muted);">(Optional)</span></label>
+                                            <input type="text" id="fac-address2" class="form-control" placeholder="e.g. Near Civil Hospital, Block B">
+                                        </div>
                                     </div>
 
                                     <div class="grid-3" style="margin-top: 14px;">
@@ -993,8 +1030,8 @@
 
                                     <div class="grid-3" style="margin-top: 14px;">
                                         <div class="form-group">
-                                            <label for="fac-pincode">Pincode</label>
-                                            <input type="text" id="fac-pincode" class="form-control" maxlength="6" placeholder="e.g. 380051">
+                                            <label for="fac-pincode">Pincode <span class="req">*</span></label>
+                                            <input type="text" id="fac-pincode" class="form-control" maxlength="6" placeholder="e.g. 380051" required pattern="[0-9]{6}">
                                         </div>
                                         <div class="form-group">
                                             <label for="fac-latitude">Latitude</label>
@@ -1010,7 +1047,7 @@
                                     <div class="form-section-header">
                                         <i class="fa-solid fa-address-book"></i> Contact Details
                                     </div>
-                                    <div class="grid-4">
+                                    <div class="grid-3">
                                         <div class="form-group">
                                             <label for="fac-email">Facility Email ID</label>
                                             <input type="email" id="fac-email" class="form-control" placeholder="e.g. info@sunrisehospital.com">
@@ -1019,6 +1056,12 @@
                                             <label for="fac-contact">Facility Mobile Number</label>
                                             <input type="tel" id="fac-contact" class="form-control" maxlength="10" placeholder="e.g. 9876543210">
                                         </div>
+                                        <div class="form-group">
+                                            <label for="fac-website">Website URL <span style="font-size: 11px; font-weight: 400; color: var(--muted);">(Optional)</span></label>
+                                            <input type="url" id="fac-website" class="form-control" placeholder="e.g. https://sunrisehospital.com">
+                                        </div>
+                                    </div>
+                                    <div class="grid-2" style="margin-top: 14px;">
                                         <div class="form-group">
                                             <label for="fac-std">STD Code</label>
                                             <input type="text" id="fac-std" class="form-control" placeholder="e.g. 079">
@@ -1057,6 +1100,130 @@
                                             <label for="fac-hrp-facid">HRP Source Facility ID</label>
                                             <input type="text" id="fac-hrp-facid" class="form-control" placeholder="External Facility ID">
                                         </div>
+                                    </div>
+
+                                    <!-- Section 5: Facility Photos -->
+                                    <div class="form-section-header" style="margin-top: 20px;">
+                                        <i class="fa-solid fa-images"></i> Facility Photos <span style="font-size: 11px; font-weight: 400; color: var(--muted); margin-left: 6px;">(Optional — Building & Board photos)</span>
+                                    </div>
+                                    <div class="grid-2">
+                                        <!-- Building Photo -->
+                                        <div class="form-group">
+                                            <label for="fac-building-photo">Building / Exterior Photo</label>
+                                            <div style="border: 1px dashed var(--border2); border-radius: 8px; padding: 14px; background: rgba(255,255,255,0.02); cursor: pointer;" onclick="document.getElementById('fac-building-photo').click()">
+                                                <div id="fac-building-photo-preview" style="display: none; margin-bottom: 10px; text-align: center;">
+                                                    <img id="fac-building-photo-img" src="" alt="Building Photo Preview" style="max-height: 120px; max-width: 100%; border-radius: 6px; border: 1px solid var(--border2);">
+                                                </div>
+                                                <div id="fac-building-photo-placeholder" style="text-align: center; color: var(--muted); font-size: 13px; padding: 8px 0;">
+                                                    <i class="fa-solid fa-cloud-arrow-up" style="font-size: 22px; margin-bottom: 6px; display: block;"></i>
+                                                    Click to upload building photo<br>
+                                                    <span style="font-size: 11px;">JPG, PNG — max 2 MB</span>
+                                                </div>
+                                            </div>
+                                            <input type="file" id="fac-building-photo" accept="image/jpeg,image/png" style="display: none;" onchange="handleFacilityPhotoUpload(this, 'building')">
+                                            <input type="hidden" id="fac-building-photo-name" value="">
+                                            <input type="hidden" id="fac-building-photo-value" value="">
+                                        </div>
+
+                                        <!-- Board / Sign Photo -->
+                                        <div class="form-group">
+                                            <label for="fac-board-photo">Board / Sign Photo</label>
+                                            <div style="border: 1px dashed var(--border2); border-radius: 8px; padding: 14px; background: rgba(255,255,255,0.02); cursor: pointer;" onclick="document.getElementById('fac-board-photo').click()">
+                                                <div id="fac-board-photo-preview" style="display: none; margin-bottom: 10px; text-align: center;">
+                                                    <img id="fac-board-photo-img" src="" alt="Board Photo Preview" style="max-height: 120px; max-width: 100%; border-radius: 6px; border: 1px solid var(--border2);">
+                                                </div>
+                                                <div id="fac-board-photo-placeholder" style="text-align: center; color: var(--muted); font-size: 13px; padding: 8px 0;">
+                                                    <i class="fa-solid fa-cloud-arrow-up" style="font-size: 22px; margin-bottom: 6px; display: block;"></i>
+                                                    Click to upload board/sign photo<br>
+                                                    <span style="font-size: 11px;">JPG, PNG — max 2 MB</span>
+                                                </div>
+                                            </div>
+                                            <input type="file" id="fac-board-photo" accept="image/jpeg,image/png" style="display: none;" onchange="handleFacilityPhotoUpload(this, 'board')">
+                                            <input type="hidden" id="fac-board-photo-name" value="">
+                                            <input type="hidden" id="fac-board-photo-value" value="">
+                                        </div>
+                                    </div>
+
+                                    <!-- Section 6: Facility Timings -->
+                                    <div class="form-section-header" style="margin-top: 20px;">
+                                        <i class="fa-solid fa-clock"></i> Facility Timings
+                                    </div>
+                                    <div style="margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                                        <span style="font-size: 12px; color: var(--muted);">Check the days your facility is open and set working hours for each.</span>
+                                        <div style="display: flex; gap: 8px; align-items: center;">
+                                            <label style="font-size: 12px; color: var(--muted2); font-weight: 600;">Apply to all open days:</label>
+                                            <select id="timing-bulk-open" class="form-control" style="padding: 5px 8px; font-size: 12px; width: auto;">
+                                                <option value="">Open</option>
+                                                @for ($h = 6; $h <= 22; $h++)
+                                                    @php $suffix = $h < 12 ? 'AM' : 'PM'; $hr = $h > 12 ? $h - 12 : ($h == 0 ? 12 : $h); @endphp
+                                                    <option value="{{ sprintf('%02d:00 %s', $hr, $suffix) }}">{{ sprintf('%02d:00 %s', $hr, $suffix) }}</option>
+                                                    <option value="{{ sprintf('%02d:30 %s', $hr, $suffix) }}">{{ sprintf('%02d:30 %s', $hr, $suffix) }}</option>
+                                                @endfor
+                                            </select>
+                                            <label style="font-size: 12px; color: var(--muted2); font-weight: 600;">to</label>
+                                            <select id="timing-bulk-close" class="form-control" style="padding: 5px 8px; font-size: 12px; width: auto;">
+                                                <option value="">Close</option>
+                                                @for ($h = 6; $h <= 23; $h++)
+                                                    @php $suffix = $h < 12 ? 'AM' : 'PM'; $hr = $h > 12 ? $h - 12 : ($h == 0 ? 12 : $h); @endphp
+                                                    <option value="{{ sprintf('%02d:00 %s', $hr, $suffix) }}" {{ $h === 18 ? 'selected' : '' }}>{{ sprintf('%02d:00 %s', $hr, $suffix) }}</option>
+                                                    <option value="{{ sprintf('%02d:30 %s', $hr, $suffix) }}">{{ sprintf('%02d:30 %s', $hr, $suffix) }}</option>
+                                                @endfor
+                                            </select>
+                                            <button type="button" class="btn" onclick="applyBulkTimings()" style="background: var(--primary); color:#fff; padding: 5px 12px; font-size: 12px; border-radius: 6px;"><i class="fa-solid fa-check-double"></i> Apply</button>
+                                        </div>
+                                    </div>
+                                    <div style="border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
+                                        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                                            <thead>
+                                                <tr style="background: rgba(255,255,255,0.04);">
+                                                    <th style="padding: 10px 14px; text-align: left; color: var(--muted2); font-weight: 600; border-bottom: 1px solid var(--border);">Day</th>
+                                                    <th style="padding: 10px 14px; text-align: center; color: var(--muted2); font-weight: 600; border-bottom: 1px solid var(--border);">Open</th>
+                                                    <th style="padding: 10px 14px; text-align: left; color: var(--muted2); font-weight: 600; border-bottom: 1px solid var(--border);">Opens At</th>
+                                                    <th style="padding: 10px 14px; text-align: left; color: var(--muted2); font-weight: 600; border-bottom: 1px solid var(--border);">Closes At</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="timings-table-body">
+                                                @php
+                                                    $days = [
+                                                        ['code' => 'MON', 'label' => 'Monday',    'default' => true],
+                                                        ['code' => 'TUE', 'label' => 'Tuesday',   'default' => true],
+                                                        ['code' => 'WED', 'label' => 'Wednesday', 'default' => true],
+                                                        ['code' => 'THU', 'label' => 'Thursday',  'default' => true],
+                                                        ['code' => 'FRI', 'label' => 'Friday',    'default' => true],
+                                                        ['code' => 'SAT', 'label' => 'Saturday',  'default' => false],
+                                                        ['code' => 'SUN', 'label' => 'Sunday',    'default' => false],
+                                                    ];
+                                                @endphp
+                                                @foreach($days as $i => $day)
+                                                <tr class="timing-row" id="timing-row-{{ $day['code'] }}" style="border-bottom: 1px solid var(--border); {{ !$day['default'] ? 'opacity: 0.5;' : '' }}">
+                                                    <td style="padding: 10px 14px; font-weight: 600;">{{ $day['label'] }}</td>
+                                                    <td style="padding: 10px 14px; text-align: center;">
+                                                        <input type="checkbox" id="timing-open-{{ $day['code'] }}" class="timing-day-check" data-day="{{ $day['code'] }}" {{ $day['default'] ? 'checked' : '' }} onchange="toggleTimingRow('{{ $day['code'] }}')" style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary-light);">
+                                                    </td>
+                                                    <td style="padding: 8px 14px;">
+                                                        <select id="timing-opens-{{ $day['code'] }}" class="form-control timing-time-select" style="padding: 6px 10px; font-size: 12px;" {{ !$day['default'] ? 'disabled' : '' }}>
+                                                            @for ($h = 6; $h <= 22; $h++)
+                                                                @php $suffix = $h < 12 ? 'AM' : 'PM'; $hr = $h > 12 ? $h - 12 : ($h == 0 ? 12 : $h); $val = sprintf('%02d:00 %s', $hr, $suffix); @endphp
+                                                                <option value="{{ $val }}" {{ $h === 9 ? 'selected' : '' }}>{{ $val }}</option>
+                                                                @php $val30 = sprintf('%02d:30 %s', $hr, $suffix); @endphp
+                                                                <option value="{{ $val30 }}">{{ $val30 }}</option>
+                                                            @endfor
+                                                        </select>
+                                                    </td>
+                                                    <td style="padding: 8px 14px;">
+                                                        <select id="timing-closes-{{ $day['code'] }}" class="form-control timing-time-select" style="padding: 6px 10px; font-size: 12px;" {{ !$day['default'] ? 'disabled' : '' }}>
+                                                            @for ($h = 6; $h <= 23; $h++)
+                                                                @php $suffix = $h < 12 ? 'AM' : 'PM'; $hr = $h > 12 ? $h - 12 : ($h == 0 ? 12 : $h); $val = sprintf('%02d:00 %s', $hr, $suffix); @endphp
+                                                                <option value="{{ $val }}" {{ $h === 18 ? 'selected' : '' }}>{{ $val }}</option>
+                                                                @php $val30 = sprintf('%02d:30 %s', $hr, $suffix); @endphp
+                                                                <option value="{{ $val30 }}">{{ $val30 }}</option>
+                                                            @endfor
+                                                        </select>
+                                                    </td>
+                                                </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
                                     </div>
 
                                     <div style="margin-top: 24px; text-align: right;">
@@ -1130,7 +1297,6 @@
                                         <label for="link-auth-method">Select Authentication Method <span class="req">*</span></label>
                                         <select id="link-auth-method" class="form-control" onchange="toggleAuthFields()">
                                             <option value="PASSWORD">Login Via Password API</option>
-                                            <option value="MOBILE_OTP">Login Via Mobile OTP API</option>
                                             <option value="AADHAAR_OTP">Login Via Aadhaar OTP API</option>
                                         </select>
                                     </div>
@@ -1755,13 +1921,19 @@
                 ownershipSubTypeCode2: document.getElementById('fac-ownership-subtype2').value,
                 systemOfMedicineCode: document.getElementById('fac-medicine').value,
                 facilityTypeCode: document.getElementById('fac-type').value,
+                // Type of service, speciality, region
+                typeOfServiceCode: document.getElementById('fac-service-type').value || null,
+                specialityTypeCode: document.getElementById('fac-speciality-type').value || null,
+                facilityRegion: document.getElementById('fac-region').value || null,
                 pincode: document.getElementById('fac-pincode').value,
                 stateLGDCode: document.getElementById('fac-state').value,
                 districtLGDCode: document.getElementById('fac-district').value,
                 subDistrictLGDCode: document.getElementById('fac-subdistrict').value,
                 address: document.getElementById('fac-address').value,
+                address2: document.getElementById('fac-address2').value || null,
                 facilityContactNumber: document.getElementById('fac-contact').value,
                 facilityEmailId: document.getElementById('fac-email').value,
+                websiteLink: document.getElementById('fac-website').value || null,
                 facilityLandlineNumber: document.getElementById('fac-landline').value,
                 facilityStdCode: document.getElementById('fac-std').value,
                 latitude: document.getElementById('fac-latitude').value,
@@ -1771,6 +1943,13 @@
                 ceaId: document.getElementById('fac-cea').value,
                 hrpSource: document.getElementById('fac-hrpsource').value,
                 hrpSourceFacilityId: document.getElementById('fac-hrp-facid').value,
+                // Facility Photos
+                facilityBuildingPhotoName: document.getElementById('fac-building-photo-name').value || null,
+                facilityBuildingPhotoValue: document.getElementById('fac-building-photo-value').value || null,
+                facilityBoardPhotoName: document.getElementById('fac-board-photo-name').value || null,
+                facilityBoardPhotoValue: document.getElementById('fac-board-photo-value').value || null,
+                // Facility Timings
+                timingsOfFacility: collectFacilityTimings(),
             };
 
             fetch('{{ route("nhpr.hfr.create") }}', {
@@ -2493,6 +2672,76 @@
                     liveModeSwitch.checked = !isLive;
                 });
             });
+        }
+
+        // ─── Facility Photo Upload Helper ────────────────────────────────────
+        function handleFacilityPhotoUpload(input, type) {
+            const file = input.files[0];
+            if (!file) return;
+
+            if (file.size > 2 * 1024 * 1024) {
+                showToast('Image must be under 2 MB.', 'error');
+                input.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const base64Full = e.target.result;   // data:image/png;base64,iVBOR...
+                const base64Only = base64Full.split(',')[1]; // strip data URI prefix
+                const prefix     = type === 'building' ? 'fac-building-photo' : 'fac-board-photo';
+
+                document.getElementById(prefix + '-name').value  = file.name;
+                document.getElementById(prefix + '-value').value = base64Only;
+
+                // Show preview
+                document.getElementById(prefix + '-img').src              = base64Full;
+                document.getElementById(prefix + '-preview').style.display = 'block';
+                document.getElementById(prefix + '-placeholder').style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // ─── Facility Timings Helper ──────────────────────────────────────────
+        function toggleTimingRow(dayCode) {
+            const checked = document.getElementById('timing-open-' + dayCode).checked;
+            const row     = document.getElementById('timing-row-' + dayCode);
+            row.style.opacity = checked ? '1' : '0.5';
+            document.getElementById('timing-opens-'  + dayCode).disabled = !checked;
+            document.getElementById('timing-closes-' + dayCode).disabled = !checked;
+        }
+
+        function applyBulkTimings() {
+            const openVal  = document.getElementById('timing-bulk-open').value;
+            const closeVal = document.getElementById('timing-bulk-close').value;
+            if (!openVal || !closeVal) {
+                showToast('Please select both open and close times.', 'error');
+                return;
+            }
+            const days = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
+            days.forEach(day => {
+                if (document.getElementById('timing-open-' + day).checked) {
+                    document.getElementById('timing-opens-'  + day).value = openVal;
+                    document.getElementById('timing-closes-' + day).value = closeVal;
+                }
+            });
+            showToast('Timings applied to all open days.');
+        }
+
+        function collectFacilityTimings() {
+            const days    = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
+            const timings = [];
+            days.forEach(day => {
+                if (document.getElementById('timing-open-' + day).checked) {
+                    const opensAt  = document.getElementById('timing-opens-'  + day).value;
+                    const closesAt = document.getElementById('timing-closes-' + day).value;
+                    timings.push({
+                        workingDays:  day,
+                        openingHours: opensAt + ' - ' + closesAt,
+                    });
+                }
+            });
+            return timings;
         }
 
         // ─── TAB 4: Look Up Facility ────────────────────────────────────────
