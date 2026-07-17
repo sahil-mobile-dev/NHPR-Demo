@@ -154,3 +154,32 @@ $callbackRoutes = function () {
 
 Route::prefix('v3')->group($callbackRoutes);
 Route::prefix('api/v3')->group($callbackRoutes);
+
+
+// ── Toggle Live/Sandbox mode ──────────────────────────────────────
+// Route::post('/nhpr/register/toggle-mode', function () {
+//     $mode = request()->boolean('real_api_mode');
+//     session(['nhpr_real_api_mode' => $mode]);
+//     return response()->json(['success' => true, 'mode' => $mode]);
+// })->name('nhpr.register.toggle-mode');
+
+// // ── HPR Profile Lookup (stub) ─────────────────────────────────────
+// Route::post('/nhpr/register/fetch-hpr-profile', function () {
+//     return response()->json(['success' => false, 'message' => 'Not yet implemented.'], 503);
+// })->name('nhpr.register.fetch-hpr-profile');
+
+// // ── Link HPR stubs ────────────────────────────────────────────────
+// Route::post('/nhpr/register/link-existing-hpr', function () {
+//     return response()->json(['success' => false, 'message' => 'Not yet implemented.'], 503);
+// })->name('nhpr.register.link-existing');
+
+// Route::post('/nhpr/register/link-existing-hpr/send-otp', function () {
+//     return response()->json(['success' => false, 'message' => 'Not yet implemented.'], 503);
+// })->name('nhpr.register.link-existing.send-otp');
+
+// Route::post('/nhpr/register/link-existing-hpr/verify-mobile-otp', function () {
+//     return response()->json(['success' => false, 'message' => 'Not yet implemented.'], 503);
+// })->name('nhpr.register.link-existing.verify-mobile-otp');
+
+// // ── Token page (for "Configure API Credentials" button) ──────────
+// Route::get('/nhpr/token', fn () => redirect()->back())->name('nhpr.token.show');
