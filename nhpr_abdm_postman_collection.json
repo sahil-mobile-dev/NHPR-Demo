@@ -1,0 +1,2931 @@
+{
+  "info": {
+    "_postman_id": "nhpr-abdm-api-collection-v1",
+    "name": "NHPR & ABDM Complete API Collection",
+    "description": "Complete Postman Collection containing all Web and ABDM Gateway APIs for NHPR Doctor/Nurse Registration, HFR Facility Registry, ABHA Enrollment & Verifier, HIP Care Context Linking, HIU Consent Manager, and Gateway Webhook Callbacks.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "gateway_base_url",
+      "value": "https://dev.abdm.gov.in",
+      "type": "string"
+    },
+    {
+      "key": "client_id",
+      "value": "YOUR_CLIENT_ID",
+      "type": "string"
+    },
+    {
+      "key": "client_secret",
+      "value": "YOUR_CLIENT_SECRET",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "x_cm_id",
+      "value": "sbx",
+      "type": "string"
+    },
+    {
+      "key": "txn_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "hpr_id",
+      "value": "doctor@hpr.abdm",
+      "type": "string"
+    },
+    {
+      "key": "abha_address",
+      "value": "patient@sbx",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "\ud83d\udd11 1. Gateway Token & Session Management",
+      "item": [
+        {
+          "name": "Show Token Credentials Page",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "text/html",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nhpr/token",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "token"
+              ]
+            },
+            "description": "Renders the web page for viewing/configuring ABDM API Gateway credentials."
+          }
+        },
+        {
+          "name": "Generate Gateway Bearer Token (Local Web Proxy)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clientId\": \"{{client_id}}\",\n  \"clientSecret\": \"{{client_secret}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nhpr/token",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "token"
+              ]
+            },
+            "description": "Requests an OAuth session Bearer token from the ABDM Gateway using configured Client ID and Client Secret."
+          }
+        },
+        {
+          "name": "Save Gateway API Credentials",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clientId\": \"SBX_001234\",\n  \"clientSecret\": \"sec_abc123xyz\",\n  \"baseUrl\": \"https://dev.abdm.gov.in\",\n  \"xCmId\": \"sbx\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nhpr/token/credentials",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "token",
+                "credentials"
+              ]
+            },
+            "description": "Saves gateway credentials dynamically into session/config for subsequent ABDM calls."
+          }
+        },
+        {
+          "name": "Clear Gateway API Credentials",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nhpr/token/credentials/clear",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "token",
+                "credentials",
+                "clear"
+              ]
+            },
+            "description": "Clears current ABDM gateway credentials from session state."
+          }
+        },
+        {
+          "name": "Direct ABDM Gateway OAuth Session Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clientId\": \"{{client_id}}\",\n  \"clientSecret\": \"{{client_secret}}\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway_base_url}}/api/hiecm/gateway/v3/sessions",
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "hiecm",
+                "gateway",
+                "v3",
+                "sessions"
+              ]
+            },
+            "description": "Direct Gateway call to generate ABDM OAuth token (v3 session)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "\ud83e\ude7a 2. NHPR Practitioner Onboarding (Doctor & Nurse)",
+      "item": [
+        {
+          "name": "Get Registration Wizard UI",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "text/html",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nhpr/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "register"
+              ]
+            },
+            "description": "Displays the multi-step onboarding wizard for doctor/nurse registration."
+          }
+        },
+        {
+          "name": "Toggle Live / Mock API Mode",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"real_api_mode\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nhpr/register/toggle-mode",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "register",
+                "toggle-mode"
+              ]
+            },
+            "description": "Toggles between Live Gateway API mode and Mock/Offline Simulation mode."
+          }
+        },
+        {
+          "name": "Generate Aadhaar Authentication Link",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"aadhaarNumber\": \"999999999999\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nhpr/register/aadhaar/generate-link",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "register",
+                "aadhaar",
+                "generate-link"
+              ]
+            },
+            "description": "Generates a secure redirect URL for web/webview-based Aadhaar auth."
+          }
+        },
+        {
+          "name": "Check Aadhaar Authentication Status",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refNo\": \"REF-123456789\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nhpr/register/aadhaar/check-status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "register",
+                "aadhaar",
+                "check-status"
+              ]
+            },
+            "description": "Polls status of Aadhaar authentication redirect."
+          }
+        },
+        {
+          "name": "Fetch Ministries Master List",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nhpr/register/masters/ministries",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "register",
+                "masters",
+                "ministries"
+              ]
+            },
+            "description": "Retrieves Government Ministries list for government practitioner registration."
+          }
+        },
+        {
+          "name": "Send Aadhaar OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"aadhaarNumber\": \"999999999999\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nhpr/register/aadhaar/send-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "register",
+                "aadhaar",
+                "send-otp"
+              ]
+            },
+            "description": "Dispatches Aadhaar OTP to practitioner's registered mobile."
+          }
+        },
+        {
+          "name": "Verify Aadhaar OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"txnId\": \"{{txn_id}}\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nhpr/register/aadhaar/verify-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "register",
+                "aadhaar",
+                "verify-otp"
+              ]
+            },
+            "description": "Verifies Aadhaar OTP and pulls practitioner eKYC profile."
+          }
+        },
+        {
+          "name": "Verify Mobile Demographic Match",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mobile\": \"9876543210\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nhpr/register/mobile/verify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "register",
+                "mobile",
+                "verify"
+              ]
+            },
+            "description": "Checks if provided communication mobile matches Aadhaar record."
+          }
+        },
+        {
+          "name": "Verify Mobile Fallback OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"txnId\": \"{{txn_id}}\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nhpr/register/mobile/verify-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "register",
+                "mobile",
+                "verify-otp"
+              ]
+            },
+            "description": "Verifies communication mobile OTP when demographic auth fails."
+          }
+        },
+        {
+          "name": "Get HPR Handle Username Suggestions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Ramesh\",\n  \"lastName\": \"Kumar\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nhpr/register/suggestions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "register",
+                "suggestions"
+              ]
+            },
+            "description": "Returns available @hpr.abdm username handles based on practitioner name."
+          }
+        },
+        {
+          "name": "Create HPR ID (Pre-Verified)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hprId\": \"dr.ramesh.kumar@hpr.abdm\",\n  \"password\": \"Password@123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nhpr/register/create-id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "register",
+                "create-id"
+              ]
+            },
+            "description": "Creates the practitioner's official HPR identifier with credentials."
+          }
+        },
+        {
+          "name": "Search Health Facility (HFR Mapping)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"AIIMS\",\n  \"stateCode\": \"05\",\n  \"districtCode\": \"001\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nhpr/register/facility/search",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "register",
+                "facility",
+                "search"
+              ]
+            },
+            "description": "Searches HFR registry to map workplace facility."
+          }
+        },
+        {
+          "name": "Submit Professional Registration",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"degree\": \"MBBS\",\n  \"councilName\": \"Medical Council of India\",\n  \"registrationNumber\": \"MCI-998877\",\n  \"yearOfPassing\": \"2018\",\n  \"university\": \"AIIMS Delhi\",\n  \"facilityId\": \"IN0510000123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nhpr/register/professional/submit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "register",
+                "professional",
+                "submit"
+              ]
+            },
+            "description": "Submits practitioner academic degree, council registration, and workplace details."
+          }
+        },
+        {
+          "name": "Fetch Document Checklist Blocks",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nhpr/register/documents/fetch",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "register",
+                "documents",
+                "fetch"
+              ]
+            },
+            "description": "Fetches required document upload checklist blocks."
+          }
+        },
+        {
+          "name": "Upload Qualification Document Attachment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"docType\": \"DEGREE_CERTIFICATE\",\n  \"file\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nhpr/register/documents/upload",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "register",
+                "documents",
+                "upload"
+              ]
+            },
+            "description": "Uploads Base64 degree/council certificates to ABDM document server."
+          }
+        },
+        {
+          "name": "Fetch HPR Profile Details",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hprId\": \"{{hpr_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nhpr/register/fetch-hpr-profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "register",
+                "fetch-hpr-profile"
+              ]
+            },
+            "description": "Fetches existing HPR profile metadata."
+          }
+        },
+        {
+          "name": "Link Existing HPR Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hprId\": \"{{hpr_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nhpr/register/link-existing-hpr",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "register",
+                "link-existing-hpr"
+              ]
+            },
+            "description": "Initiates linking an existing HPR profile."
+          }
+        },
+        {
+          "name": "Send Linkage Mobile OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hprId\": \"{{hpr_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nhpr/register/link-existing-hpr/send-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "register",
+                "link-existing-hpr",
+                "send-otp"
+              ]
+            },
+            "description": "Sends OTP to registered mobile for linking HPR."
+          }
+        },
+        {
+          "name": "Verify Linkage Mobile OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"txnId\": \"{{txn_id}}\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nhpr/register/link-existing-hpr/verify-mobile-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "register",
+                "link-existing-hpr",
+                "verify-mobile-otp"
+              ]
+            },
+            "description": "Verifies OTP to complete linking existing HPR."
+          }
+        },
+        {
+          "name": "Show Tracker View",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "text/html",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nhpr/track",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "track"
+              ]
+            },
+            "description": "Renders application tracker interface."
+          }
+        },
+        {
+          "name": "Track Onboarding Application Status",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"applicationId\": \"APP-2026-987654\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nhpr/track",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "track"
+              ]
+            },
+            "description": "Queries verification stages and approval progress of practitioner registration."
+          }
+        }
+      ]
+    },
+    {
+      "name": "\ud83c\udfe5 3. HFR (Health Facility Registry) & Master Data",
+      "item": [
+        {
+          "name": "HFR Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "text/html",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nhpr/hfr",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "hfr"
+              ]
+            },
+            "description": "Loads HFR management dashboard."
+          }
+        },
+        {
+          "name": "Search Registered Health Facility",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"facilityName\": \"City Hospital\",\n  \"state\": \"Uttarakhand\",\n  \"district\": \"Dehradun\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nhpr/hfr/search",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "hfr",
+                "search"
+              ]
+            },
+            "description": "Searches registered health facilities in ABDM HFR database."
+          }
+        },
+        {
+          "name": "Register New Facility",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"facilityName\": \"ParaCare Clinic\",\n  \"systemOfMedicine\": \"Modern Medicine\",\n  \"facilityType\": \"Clinic\",\n  \"stateCode\": \"05\",\n  \"districtCode\": \"001\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nhpr/hfr/create",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "hfr",
+                "create"
+              ]
+            },
+            "description": "Submits new health facility registration."
+          }
+        },
+        {
+          "name": "Link Facility Bridge Service",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"facilityId\": \"IN0510000123\",\n  \"bridgeId\": \"{{client_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nhpr/hfr/link",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "hfr",
+                "link"
+              ]
+            },
+            "description": "Links facility to ABDM HIMS bridge."
+          }
+        },
+        {
+          "name": "Track Facility Application Status",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"facilityId\": \"IN0510000123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nhpr/hfr/track",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "hfr",
+                "track"
+              ]
+            },
+            "description": "Tracks facility verification and approval status."
+          }
+        },
+        {
+          "name": "HPR Manager Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hprId\": \"{{hpr_id}}\",\n  \"password\": \"Password@123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nhpr/hfr/hpr-login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "hfr",
+                "hpr-login"
+              ]
+            },
+            "description": "Authenticates facility manager with HPR credentials."
+          }
+        },
+        {
+          "name": "HPR Manager Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nhpr/hfr/hpr-logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "hfr",
+                "hpr-logout"
+              ]
+            },
+            "description": "Logs out facility manager."
+          }
+        },
+        {
+          "name": "Get Master Types List",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nhpr/hfr/masters/types",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "hfr",
+                "masters",
+                "types"
+              ]
+            },
+            "description": "Returns list of available master data categories."
+          }
+        },
+        {
+          "name": "Get Master General Data",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nhpr/hfr/masters/data",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "hfr",
+                "masters",
+                "data"
+              ]
+            },
+            "description": "Returns general master options."
+          }
+        },
+        {
+          "name": "Get LGD States Master",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nhpr/hfr/masters/states",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "hfr",
+                "masters",
+                "states"
+              ]
+            },
+            "description": "Fetches standard LGD state codes."
+          }
+        },
+        {
+          "name": "Get LGD Districts Master",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nhpr/hfr/masters/districts?stateCode=05",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "hfr",
+                "masters",
+                "districts"
+              ],
+              "query": [
+                {
+                  "key": "stateCode",
+                  "value": "05"
+                }
+              ]
+            },
+            "description": "Fetches LGD districts for a given state code."
+          }
+        },
+        {
+          "name": "Get LGD Subdistricts Master",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nhpr/hfr/masters/subdistricts?districtCode=001",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "hfr",
+                "masters",
+                "subdistricts"
+              ],
+              "query": [
+                {
+                  "key": "districtCode",
+                  "value": "001"
+                }
+              ]
+            },
+            "description": "Fetches LGD subdistricts for a given district code."
+          }
+        },
+        {
+          "name": "Fetch Facility Types",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"systemOfMedicine\": \"Modern Medicine\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nhpr/hfr/masters/facility-types",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "hfr",
+                "masters",
+                "facility-types"
+              ]
+            },
+            "description": "Fetches facility types filtered by system of medicine."
+          }
+        },
+        {
+          "name": "Fetch Owner Subtypes",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ownershipCategory\": \"Government\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nhpr/hfr/masters/owner-subtypes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "hfr",
+                "masters",
+                "owner-subtypes"
+              ]
+            },
+            "description": "Fetches owner sub-categories."
+          }
+        },
+        {
+          "name": "Fetch Facility Specialities",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"facilityType\": \"Hospital\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nhpr/hfr/masters/specialities",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "hfr",
+                "masters",
+                "specialities"
+              ]
+            },
+            "description": "Fetches medical specialities list."
+          }
+        },
+        {
+          "name": "Fetch Facility Subtypes",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"facilityTypeId\": \"1\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nhpr/hfr/masters/facility-subtypes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nhpr",
+                "hfr",
+                "masters",
+                "facility-subtypes"
+              ]
+            },
+            "description": "Fetches sub-types for a facility type."
+          }
+        }
+      ]
+    },
+    {
+      "name": "\ud83e\udeaa 4. ABHA Number & Address (Enrollment, Finder & Verifier)",
+      "item": [
+        {
+          "name": "ABHA Enrollment - Request Aadhaar OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"aadhaarNumber\": \"999999999999\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/abha/create/request-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "abha",
+                "create",
+                "request-otp"
+              ]
+            },
+            "description": "Requests Aadhaar OTP to initiate ABHA creation wizard."
+          }
+        },
+        {
+          "name": "ABHA Enrollment - Verify Aadhaar OTP & Enrol",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"txnId\": \"{{txn_id}}\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/abha/create/verify-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "abha",
+                "create",
+                "verify-otp"
+              ]
+            },
+            "description": "Verifies OTP and creates initial ABHA profile."
+          }
+        },
+        {
+          "name": "ABHA Enrollment - Request Communication Mobile OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"txnId\": \"{{txn_id}}\",\n  \"mobile\": \"9876543210\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/abha/create/request-mobile-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "abha",
+                "create",
+                "request-mobile-otp"
+              ]
+            },
+            "description": "Dispatches OTP to link communication mobile number."
+          }
+        },
+        {
+          "name": "ABHA Enrollment - Verify Mobile OTP & Finalize Card",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"txnId\": \"{{txn_id}}\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/abha/create/verify-mobile-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "abha",
+                "create",
+                "verify-mobile-otp"
+              ]
+            },
+            "description": "Completes mobile verification and generates ABHA Card."
+          }
+        },
+        {
+          "name": "Download ABHA Card",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userToken\": \"{{user_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/abha/card/download",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "abha",
+                "card",
+                "download"
+              ]
+            },
+            "description": "Fetches Base64 encoded ABHA card image and QR code."
+          }
+        },
+        {
+          "name": "ABHA Finder - Search ABHA Accounts by Mobile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mobile\": \"9876543210\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/abha/find/search-mobile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "abha",
+                "find",
+                "search-mobile"
+              ]
+            },
+            "description": "Finds existing ABHA cards linked to a mobile number."
+          }
+        },
+        {
+          "name": "ABHA Finder - Select Profile Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"healthId\": \"91-1234-5678-9012\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/abha/find/select",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "abha",
+                "find",
+                "select"
+              ]
+            },
+            "description": "Selects target profile from search results."
+          }
+        },
+        {
+          "name": "ABHA Verifier - Search Address Auth Methods",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"abhaAddress\": \"{{abha_address}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/abha/verify/search",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "abha",
+                "verify",
+                "search"
+              ]
+            },
+            "description": "Queries available auth modes (MOBILE_OTP, AADHAAR_OTP) for an ABHA address."
+          }
+        },
+        {
+          "name": "ABHA Verifier - Request Auth OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"abhaAddress\": \"{{abha_address}}\",\n  \"otpSystem\": \"aadhaar\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/abha/verify/request-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "abha",
+                "verify",
+                "request-otp"
+              ]
+            },
+            "description": "Requests verification OTP for ABHA login."
+          }
+        },
+        {
+          "name": "ABHA Verifier - Confirm OTP & Fetch Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"txnId\": \"{{txn_id}}\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/abha/verify/confirm",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "abha",
+                "verify",
+                "confirm"
+              ]
+            },
+            "description": "Confirms OTP and returns user session token (`X-Token`)."
+          }
+        },
+        {
+          "name": "ABHA Verifier - Verify via QR Code Scan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrData\": \"{\\\\\\\"hidn\\\\\\\":\\\\\\\"91-1234-5678-9012\\\\\\\",\\\\\\\"name\\\\\\\":\\\\\\\"John Doe\\\\\\\"}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/abha/verify/qr",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "abha",
+                "verify",
+                "qr"
+              ]
+            },
+            "description": "Parses and verifies scanned ABHA QR Code string."
+          }
+        },
+        {
+          "name": "ABHA Verifier - Demographic Match Check",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"gender\": \"M\",\n  \"dob\": \"1990-01-01\",\n  \"mobile\": \"9876543210\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/abha/verify/demographics",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "abha",
+                "verify",
+                "demographics"
+              ]
+            },
+            "description": "Performs demographic validation against ABDM registry."
+          }
+        }
+      ]
+    },
+    {
+      "name": "\ud83c\udfe5 5. HIP (Health Information Provider - Care Context Linking & Callbacks)",
+      "item": [
+        {
+          "name": "Create Clinical Record",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": \"P-1002\",\n  \"careContextName\": \"General OPD Visit\",\n  \"abhaAddress\": \"{{abha_address}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/hip/record/create",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "hip",
+                "record",
+                "create"
+              ]
+            },
+            "description": "Creates local patient visit care context record."
+          }
+        },
+        {
+          "name": "Link Care Context to Patient ABHA",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"abhaAddress\": \"{{abha_address}}\",\n  \"careContexts\": [\n    {\n      \"referenceNumber\": \"VISIT-2026-001\",\n      \"display\": \"OPD Consultation\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/hip/link",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "hip",
+                "link"
+              ]
+            },
+            "description": "Triggers care context linking with ABDM Gateway."
+          }
+        },
+        {
+          "name": "View Consents & Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/hip/consents",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "hip",
+                "consents"
+              ]
+            },
+            "description": "Fetches list of active consent artefacts and audit logs."
+          }
+        },
+        {
+          "name": "Simulate/Register Consent (HIP Portal)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"consentId\": \"c-1111-2222-3333\",\n  \"abhaAddress\": \"{{abha_address}}\",\n  \"status\": \"GRANTED\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/hip/consents/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "hip",
+                "consents",
+                "register"
+              ]
+            },
+            "description": "Simulates consent notification registration on HIP."
+          }
+        },
+        {
+          "name": "Simulate Health Data Exchange",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"consentId\": \"c-1111-2222-3333\",\n  \"transactionId\": \"t-9999-8888-7777\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/hip/consents/exchange",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "hip",
+                "consents",
+                "exchange"
+              ]
+            },
+            "description": "Simulates encryption and POST of FHIR bundle to HIU push URL."
+          }
+        },
+        {
+          "name": "Simulate Patient Discovery",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"abhaAddress\": \"{{abha_address}}\",\n  \"mobile\": \"9876543210\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/hip/simulator/trigger-discovery",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "hip",
+                "simulator",
+                "trigger-discovery"
+              ]
+            },
+            "description": "Triggers local test of discovery callback."
+          }
+        },
+        {
+          "name": "Outbound Gateway - Link Care Contexts",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "X-CM-ID",
+                "value": "{{x_cm_id}}",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "REQUEST-ID",
+                "value": "11111111-2222-3333-4444-555555555555",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "TIMESTAMP",
+                "value": "2026-07-24T10:00:00.000Z",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"link\": {\n    \"accessToken\": \"{{user_token}}\",\n    \"patient\": {\n      \"referenceNumber\": \"P-1002\",\n      \"display\": \"John Doe\",\n      \"careContexts\": [\n        {\n          \"referenceNumber\": \"VISIT-2026-001\",\n          \"display\": \"OPD Consultation\"\n        }\n      ]\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{gateway_base_url}}/api/hiecm/gateway/v3/hip/link/care-contexts",
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "hiecm",
+                "gateway",
+                "v3",
+                "hip",
+                "link",
+                "care-contexts"
+              ]
+            },
+            "description": "Outbound API call to ABDM Gateway linking patient care context."
+          }
+        },
+        {
+          "name": "Outbound Gateway - On-Discover Response",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "X-CM-ID",
+                "value": "{{x_cm_id}}",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "REQUEST-ID",
+                "value": "11111111-2222-3333-4444-555555555555",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "TIMESTAMP",
+                "value": "2026-07-24T10:00:00.000Z",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transactionId\": \"t-123456\",\n  \"patient\": {\n    \"referenceNumber\": \"P-1002\",\n    \"display\": \"John Doe\",\n    \"careContexts\": [\n      {\n        \"referenceNumber\": \"VISIT-2026-001\",\n        \"display\": \"OPD Consultation\"\n      }\n    ]\n  },\n  \"resp\": {\n    \"requestId\": \"req-123456\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{gateway_base_url}}/api/hiecm/gateway/v3/hip/on-discover",
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "hiecm",
+                "gateway",
+                "v3",
+                "hip",
+                "on-discover"
+              ]
+            },
+            "description": "Sends patient matches back to Gateway."
+          }
+        }
+      ]
+    },
+    {
+      "name": "\ud83d\udce5 6. HIU (Health Information User - Consent & Health Records)",
+      "item": [
+        {
+          "name": "Create Consent Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientAbha\": \"{{abha_address}}\",\n  \"purpose\": \"REFERRAL\",\n  \"hiTypes\": [\n    \"Prescription\",\n    \"DiagnosticReport\"\n  ],\n  \"dateFrom\": \"2025-01-01T00:00:00Z\",\n  \"dateTo\": \"2026-07-24T00:00:00Z\",\n  \"expireDays\": 7\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/hiu/consent/request",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "hiu",
+                "consent",
+                "request"
+              ]
+            },
+            "description": "Submits a new consent request to ABDM Gateway."
+          }
+        },
+        {
+          "name": "Fetch Consent Artefact",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"consentId\": \"c-1111-2222-3333\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/hiu/consent/fetch/c-1111-2222-3333",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "hiu",
+                "consent",
+                "fetch",
+                "c-1111-2222-3333"
+              ]
+            },
+            "description": "Fetches signed consent artefact details from Gateway."
+          }
+        },
+        {
+          "name": "Request Health Data Transfer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"consentArtefactId\": \"c-1111-2222-3333\",\n  \"dateFrom\": \"2025-01-01T00:00:00Z\",\n  \"dateTo\": \"2026-07-24T00:00:00Z\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/hiu/health-information/request",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "hiu",
+                "health-information",
+                "request"
+              ]
+            },
+            "description": "Generates ECDH keys and requests encrypted FHIR data."
+          }
+        },
+        {
+          "name": "View Patient Health Records",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/hiu/records/{{abha_address}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "hiu",
+                "records",
+                "{{abha_address}}"
+              ]
+            },
+            "description": "Fetches decrypted FHIR clinical records for a patient."
+          }
+        },
+        {
+          "name": "Revoke Consent Locally",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/hiu/consent/revoke/c-1111-2222-3333",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "hiu",
+                "consent",
+                "revoke",
+                "c-1111-2222-3333"
+              ]
+            },
+            "description": "Revokes consent status locally."
+          }
+        },
+        {
+          "name": "Simulator - Approve Consent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"consentRequestId\": \"req-123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/hiu/simulator/approve-consent",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "hiu",
+                "simulator",
+                "approve-consent"
+              ]
+            },
+            "description": "Simulates approval callback from Consent Manager."
+          }
+        },
+        {
+          "name": "Simulator - Deny Consent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"consentRequestId\": \"req-123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/hiu/simulator/deny-consent",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "hiu",
+                "simulator",
+                "deny-consent"
+              ]
+            },
+            "description": "Simulates denial callback from Consent Manager."
+          }
+        },
+        {
+          "name": "Simulator - Revoke Consent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"consentId\": \"c-1111-2222-3333\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/hiu/simulator/revoke-consent",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "hiu",
+                "simulator",
+                "revoke-consent"
+              ]
+            },
+            "description": "Simulates revocation callback from Consent Manager."
+          }
+        },
+        {
+          "name": "Simulator - Push Health Data",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transactionId\": \"t-123456\",\n  \"entries\": []\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/hiu/simulator/push-health-data",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "hiu",
+                "simulator",
+                "push-health-data"
+              ]
+            },
+            "description": "Simulates pushing health data directly to HIU callback."
+          }
+        }
+      ]
+    },
+    {
+      "name": "\u26a1 7. ABDM Gateway Webhook Callbacks (v3 / api/v3)",
+      "item": [
+        {
+          "name": "Callback - HIP Discover Patient Care Contexts",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transactionId\": \"txn-001122\",\n  \"patient\": {\n    \"id\": \"{{abha_address}}\",\n    \"name\": \"John Doe\",\n    \"gender\": \"M\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v3/hip/discover",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v3",
+                "hip",
+                "discover"
+              ]
+            },
+            "description": "Incoming Webhook: Gateway queries HIP for patient care context matches."
+          }
+        },
+        {
+          "name": "Callback - HIP Link Initialization",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requestId\": \"req-9988\",\n  \"timestamp\": \"2026-07-24T10:00:00Z\",\n  \"patient\": {\n    \"id\": \"{{abha_address}}\",\n    \"referenceNumber\": \"P-1002\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v3/hip/link/init",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v3",
+                "hip",
+                "link",
+                "init"
+              ]
+            },
+            "description": "Incoming Webhook: Initiates patient linking and OTP verification."
+          }
+        },
+        {
+          "name": "Callback - HIP Link Confirmation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requestId\": \"req-9989\",\n  \"confirmation\": {\n    \"linkRefNumber\": \"L-101\",\n    \"token\": \"123456\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v3/hip/link/confirm",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v3",
+                "hip",
+                "link",
+                "confirm"
+              ]
+            },
+            "description": "Incoming Webhook: Confirms linking OTP and attaches care context."
+          }
+        },
+        {
+          "name": "Callback - HIP Consent Notification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notification\": {\n    \"consentId\": \"c-1111-2222-3333\",\n    \"status\": \"GRANTED\",\n    \"consentDetail\": {\n      \"patient\": {\n        \"id\": \"{{abha_address}}\"\n      }\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v3/consents/hip/notify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v3",
+                "consents",
+                "hip",
+                "notify"
+              ]
+            },
+            "description": "Incoming Webhook: Gateway notifies HIP of newly granted/revoked consent."
+          }
+        },
+        {
+          "name": "Callback - HIP Health Information Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transactionId\": \"t-123456\",\n  \"hiRequest\": {\n    \"consent\": {\n      \"id\": \"c-1111-2222-3333\"\n    },\n    \"dataPushUrl\": \"{{base_url}}/v3/health-information/on-request\",\n    \"keyMaterial\": {\n      \"cryptoAlg\": \"ECDH\",\n      \"curve\": \"Curve25519\",\n      \"dhPublicKey\": {\n        \"keyValue\": \"key123\"\n      },\n      \"nonce\": \"nonce123\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v3/health-information/hip/request",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v3",
+                "health-information",
+                "hip",
+                "request"
+              ]
+            },
+            "description": "Incoming Webhook: Gateway requests encrypted FHIR health data."
+          }
+        },
+        {
+          "name": "Callback - HIU Consent On-Init",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"consentRequest\": {\n    \"id\": \"req-123456\"\n  },\n  \"resp\": {\n    \"requestId\": \"original-req-id\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v3/consent/on-init",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v3",
+                "consent",
+                "on-init"
+              ]
+            },
+            "description": "Incoming Webhook: ABDM Gateway returns Consent Request ID."
+          }
+        },
+        {
+          "name": "Callback - HIU Consent Notify",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notification\": {\n    \"consentRequestId\": \"req-123456\",\n    \"status\": \"GRANTED\",\n    \"consentArtefacts\": [\n      {\n        \"id\": \"c-1111-2222-3333\"\n      }\n    ]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v3/consent/notify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v3",
+                "consent",
+                "notify"
+              ]
+            },
+            "description": "Incoming Webhook: ABDM Gateway notifies HIU that patient approved consent."
+          }
+        },
+        {
+          "name": "Callback - HIU Receive Health Data",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transactionId\": \"t-123456\",\n  \"pageNumber\": 1,\n  \"pageCount\": 1,\n  \"entries\": [\n    {\n      \"content\": \"encrypted-fhir-base64-data\",\n      \"media\": \"application/json\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v3/health-information/on-request",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v3",
+                "health-information",
+                "on-request"
+              ]
+            },
+            "description": "Incoming Webhook: Receives encrypted health data package from HIP."
+          }
+        }
+      ]
+    }
+  ]
+}

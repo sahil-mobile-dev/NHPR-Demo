@@ -155,7 +155,6 @@ $callbackRoutes = function () {
 Route::prefix('v3')->group($callbackRoutes);
 Route::prefix('api/v3')->group($callbackRoutes);
 
-
 // ── Toggle Live/Sandbox mode ──────────────────────────────────────
 // Route::post('/nhpr/register/toggle-mode', function () {
 //     $mode = request()->boolean('real_api_mode');

@@ -45,13 +45,13 @@ class HfrFacilityService
 
         $apiUrl = config('services.nhpr.api_url');
         $xCmId = config('services.nhpr.x_cm_id');
-        $endpoint = rtrim($apiUrl, '/') . '/v4/int/FacilityManagement/v1.5/facility/search';
+        $endpoint = rtrim($apiUrl, '/').'/v4/int/FacilityManagement/v1.5/facility/search';
 
         $requestId = (string) Str::uuid();
         $timestamp = now()->toIso8601String();
 
         $headers = [
-            'Authorization' => 'Bearer ' . $token,
+            'Authorization' => 'Bearer '.$token,
             'REQUEST-ID' => $requestId,
             'TIMESTAMP' => $timestamp,
             'X-CM-ID' => $xCmId,
@@ -69,7 +69,7 @@ class HfrFacilityService
             'resultsPerPage' => 10,
             'stateLGDCode' => '',
             'districtLGDCode' => '',
-        ], array_filter($searchParams, fn($val) => $val !== null && $val !== ''));
+        ], array_filter($searchParams, fn ($val) => $val !== null && $val !== ''));
 
         Log::info('HFR Facility Request: Search Facilities', [
             'url' => $endpoint,
@@ -78,7 +78,7 @@ class HfrFacilityService
         ]);
 
         try {
-            $response = Http::when(!config('services.nhpr.verify_ssl'), fn($q) => $q->withoutVerifying())
+            $response = Http::when(! config('services.nhpr.verify_ssl'), fn ($q) => $q->withoutVerifying())
                 ->withHeaders($headers)
                 ->connectTimeout(30)
                 ->timeout(30)
@@ -107,12 +107,12 @@ class HfrFacilityService
 
             $message = $body['error']['message'] ?? $body['message'] ?? 'Facility search request error.';
             if (isset($body['details']) && is_array($body['details'])) {
-                $detailMsgs = array_map(fn($d) => $d['message'] ?? '', $body['details']);
-                $message .= ' Details: ' . implode(', ', array_filter($detailMsgs));
+                $detailMsgs = array_map(fn ($d) => $d['message'] ?? '', $body['details']);
+                $message .= ' Details: '.implode(', ', array_filter($detailMsgs));
             }
             throw new Exception("HFR Facility search failed (HTTP {$statusCode}): {$message}");
         } catch (Exception $e) {
-            Log::error('HFR Facility Service Exception in searchFacility: ' . $e->getMessage());
+            Log::error('HFR Facility Service Exception in searchFacility: '.$e->getMessage());
             throw $e;
         }
     }
@@ -138,14 +138,14 @@ class HfrFacilityService
 
         $apiUrl = config('services.nhpr.api_url');
         $xCmId = config('services.nhpr.x_cm_id');
-        $endpoint = rtrim($apiUrl, '/') . '/v4/int/apis/v1/doctors/register-professional-new';
+        $endpoint = rtrim($apiUrl, '/').'/v4/int/apis/v1/doctors/register-professional-new';
 
         $requestId = (string) Str::uuid();
         $timestamp = now()->toIso8601String();
 
         $hprToken = $data['hprToken'] ?? '';
         $headers = [
-            'Authorization' => 'Bearer ' . $token,
+            'Authorization' => 'Bearer '.$token,
             'x-hprid-auth' => str_starts_with($hprToken, 'Bearer ') ? substr($hprToken, 7) : $hprToken,
             'HPIRId-auth' => str_starts_with($hprToken, 'Bearer ') ? substr($hprToken, 7) : $hprToken,
             'REQUEST-ID' => $requestId,
@@ -157,7 +157,7 @@ class HfrFacilityService
         // Mask credentials in payload logging
         $maskedPayload = $data;
         if (isset($maskedPayload['hprToken'])) {
-            $maskedPayload['hprToken'] = substr($maskedPayload['hprToken'], 0, 10) . '...[PROTECTED_HPR_TOKEN]...' . substr($maskedPayload['hprToken'], -10);
+            $maskedPayload['hprToken'] = substr($maskedPayload['hprToken'], 0, 10).'...[PROTECTED_HPR_TOKEN]...'.substr($maskedPayload['hprToken'], -10);
         }
         if (isset($maskedPayload['practitioner']['profilePhoto'])) {
             $maskedPayload['practitioner']['profilePhoto'] = '[IMAGE_BASE64_MASKED]';
@@ -187,7 +187,7 @@ class HfrFacilityService
         ]);
 
         try {
-            $response = Http::when(!config('services.nhpr.verify_ssl'), fn($q) => $q->withoutVerifying())
+            $response = Http::when(! config('services.nhpr.verify_ssl'), fn ($q) => $q->withoutVerifying())
                 ->withHeaders($headers)
                 ->connectTimeout(30)
                 ->timeout(30)
@@ -216,7 +216,7 @@ class HfrFacilityService
             $message = $body['error']['message'] ?? $body['message'] ?? 'Professional registration failed.';
             throw new Exception("HPR Professional registration failed (HTTP {$statusCode}): {$message}");
         } catch (Exception $e) {
-            Log::error('HfrFacilityService Exception in registerProfessional: ' . $e->getMessage());
+            Log::error('HfrFacilityService Exception in registerProfessional: '.$e->getMessage());
             throw $e;
         }
     }
@@ -237,13 +237,13 @@ class HfrFacilityService
 
         $apiUrl = config('services.nhpr.api_url');
         $xCmId = config('services.nhpr.x_cm_id');
-        $endpoint = rtrim($apiUrl, '/') . '/v4/int/apis/v1/masters/getAllMinistry';
+        $endpoint = rtrim($apiUrl, '/').'/v4/int/apis/v1/masters/getAllMinistry';
 
         $requestId = (string) Str::uuid();
         $timestamp = now()->toIso8601String();
 
         $headers = [
-            'Authorization' => 'Bearer ' . $token,
+            'Authorization' => 'Bearer '.$token,
             'REQUEST-ID' => $requestId,
             'TIMESTAMP' => $timestamp,
             'X-CM-ID' => $xCmId,
@@ -251,7 +251,7 @@ class HfrFacilityService
         ];
 
         try {
-            $response = Http::when(!config('services.nhpr.verify_ssl'), fn($q) => $q->withoutVerifying())
+            $response = Http::when(! config('services.nhpr.verify_ssl'), fn ($q) => $q->withoutVerifying())
                 ->withHeaders($headers)
                 ->timeout(10)
                 ->get($endpoint);
@@ -264,7 +264,7 @@ class HfrFacilityService
 
             return $this->getStaticMinistries();
         } catch (Exception $e) {
-            Log::error('HFR Facility Service Exception in getAllMinistries: ' . $e->getMessage());
+            Log::error('HFR Facility Service Exception in getAllMinistries: '.$e->getMessage());
 
             return $this->getStaticMinistries();
         }
@@ -292,14 +292,14 @@ class HfrFacilityService
         $hprToken = session('hpr_reg_hpr_token', 'mock-hpr-token-jwt-111');
 
         $apiUrl = config('services.nhpr.api_url', 'https://apihspsbx.abdm.gov.in');
-        $basicInfoEndpoint = rtrim($apiUrl, '/') . '/v4/int/v1.5/facility/basic-information';
-        $submitEndpoint = rtrim($apiUrl, '/') . '/v4/int/v1.5/facility/submit-facility';
+        $basicInfoEndpoint = rtrim($apiUrl, '/').'/v4/int/v1.5/facility/basic-information';
+        $submitEndpoint = rtrim($apiUrl, '/').'/v4/int/v1.5/facility/submit-facility';
 
         $requestId = (string) Str::uuid();
         $timestamp = now()->toIso8601String();
 
         $headers = [
-            'Authorization' => 'Bearer ' . $token,
+            'Authorization' => 'Bearer '.$token,
             'x-hprid-auth' => str_starts_with($hprToken, 'Bearer ') ? substr($hprToken, 7) : $hprToken,
             'HPIRId-auth' => str_starts_with($hprToken, 'Bearer ') ? substr($hprToken, 7) : $hprToken,
             'x-hpird-auth' => str_starts_with($hprToken, 'Bearer ') ? substr($hprToken, 7) : $hprToken,
@@ -393,7 +393,7 @@ class HfrFacilityService
 
         try {
             // Step 1: Submit Basic Information
-            $response = Http::when(!config('services.nhpr.verify_ssl'), fn($q) => $q->withoutVerifying())
+            $response = Http::when(! config('services.nhpr.verify_ssl'), fn ($q) => $q->withoutVerifying())
                 ->withHeaders($headers)
                 ->connectTimeout(30)
                 ->timeout(30)
@@ -408,7 +408,7 @@ class HfrFacilityService
                 'body' => $body,
             ]);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 $message = $body['message'] ?? $body['error']['message'] ?? 'Basic information creation failed.';
                 throw new Exception("HFR Basic Information failed (HTTP {$statusCode}): {$message}");
             }
@@ -431,7 +431,7 @@ class HfrFacilityService
                 'body' => $submitPayload,
             ]);
 
-            $submitResponse = Http::when(!config('services.nhpr.verify_ssl'), fn($q) => $q->withoutVerifying())
+            $submitResponse = Http::when(! config('services.nhpr.verify_ssl'), fn ($q) => $q->withoutVerifying())
                 ->withHeaders($headers)
                 ->connectTimeout(30)
                 ->timeout(30)
@@ -450,7 +450,7 @@ class HfrFacilityService
                 $responseBody = $submitBody['data'] ?? $submitBody;
 
                 return [
-                    'facilityId' => $responseBody['hfrId'] ?? $responseBody['facilityId'] ?? 'IN' . rand(1000000000, 9999999999),
+                    'facilityId' => $responseBody['hfrId'] ?? $responseBody['facilityId'] ?? 'IN'.rand(1000000000, 9999999999),
                     'facilityName' => $responseBody['facilityName'] ?? ($data['facilityName'] ?? ''),
                     'trackingId' => $trackingId,
                     'status' => $responseBody['status'] ?? 'PENDING_APPROVAL',
@@ -461,7 +461,7 @@ class HfrFacilityService
             $message = $submitBody['message'] ?? $submitBody['error']['message'] ?? 'Facility submit failed.';
             throw new Exception("HFR Submit Facility failed (HTTP {$submitStatusCode}): {$message}");
         } catch (Exception $e) {
-            Log::error('HfrFacilityService Exception in createFacility: ' . $e->getMessage());
+            Log::error('HfrFacilityService Exception in createFacility: '.$e->getMessage());
             throw $e;
         }
     }
@@ -487,13 +487,13 @@ class HfrFacilityService
 
         $apiUrl = config('services.nhpr.api_url');
         $xCmId = config('services.nhpr.x_cm_id');
-        $endpoint = rtrim($apiUrl, '/') . '/v1/bridges/MutipleHRPAddUpdateServices';
+        $endpoint = rtrim($apiUrl, '/').'/v1/bridges/MutipleHRPAddUpdateServices';
 
         $requestId = (string) Str::uuid();
         $timestamp = now()->toIso8601String();
 
         $headers = [
-            'Authorization' => 'Bearer ' . $token,
+            'Authorization' => 'Bearer '.$token,
             'REQUEST-ID' => $requestId,
             'TIMESTAMP' => $timestamp,
             'X-CM-ID' => $xCmId,
@@ -507,7 +507,7 @@ class HfrFacilityService
         ]);
 
         try {
-            $response = Http::when(!config('services.nhpr.verify_ssl'), fn($q) => $q->withoutVerifying())
+            $response = Http::when(! config('services.nhpr.verify_ssl'), fn ($q) => $q->withoutVerifying())
                 ->withHeaders($headers)
                 ->connectTimeout(30)
                 ->timeout(30)
@@ -532,7 +532,7 @@ class HfrFacilityService
             $message = $body['error']['message'] ?? $body['message'] ?? 'Bridge linkage failed.';
             throw new Exception("HFR Bridge linkage failed (HTTP {$statusCode}): {$message}");
         } catch (Exception $e) {
-            Log::error('HfrFacilityService Exception in linkBridgeToFacility: ' . $e->getMessage());
+            Log::error('HfrFacilityService Exception in linkBridgeToFacility: '.$e->getMessage());
             throw $e;
         }
     }
@@ -543,7 +543,7 @@ class HfrFacilityService
     public function getMasterTypes(): array
     {
         $realApiMode = session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false));
-        if (!$realApiMode) {
+        if (! $realApiMode) {
             return [
                 'masterTypes' => [
                     ['type' => 'MEDICINE', 'desc' => 'System Of Medicine'],
@@ -580,7 +580,7 @@ class HfrFacilityService
     public function getMasterData(string $type): array
     {
         $realApiMode = session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false));
-        if (!$realApiMode) {
+        if (! $realApiMode) {
             $upperType = strtoupper($type);
             $data = [];
 
@@ -625,7 +625,7 @@ class HfrFacilityService
     public function getLgdStates(): array
     {
         $realApiMode = session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false));
-        if (!$realApiMode) {
+        if (! $realApiMode) {
             return [
                 ['code' => '05', 'name' => 'Uttarakhand'],
                 ['code' => '33', 'name' => 'Tamil Nadu'],
@@ -642,7 +642,7 @@ class HfrFacilityService
     public function getLgdDistricts(string $stateCode): array
     {
         $realApiMode = session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false));
-        if (!$realApiMode) {
+        if (! $realApiMode) {
             if ($stateCode === '05') {
                 return [
                     ['code' => '060', 'name' => 'Dehradun'],
@@ -675,7 +675,7 @@ class HfrFacilityService
     public function getLgdSubdistricts(string $districtCode): array
     {
         $realApiMode = session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false));
-        if (!$realApiMode) {
+        if (! $realApiMode) {
             if ($districtCode === '060') {
                 return [
                     ['code' => '0501', 'name' => 'Dehradun Tehsil'],
@@ -705,7 +705,7 @@ class HfrFacilityService
     public function fetchFacilityType(string $ownershipCode, string $systemOfMedicineCode): array
     {
         $realApiMode = session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false));
-        if (!$realApiMode) {
+        if (! $realApiMode) {
             return [
                 'type' => 'FACILITY-TYPE',
                 'data' => [
@@ -730,7 +730,7 @@ class HfrFacilityService
     public function getOwnerSubtype(string $ownershipCode, ?string $ownerSubtypeCode = null): array
     {
         $realApiMode = session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false));
-        if (!$realApiMode) {
+        if (! $realApiMode) {
             return [
                 'type' => 'OWNER-SUBTYPE',
                 'data' => [
@@ -753,7 +753,7 @@ class HfrFacilityService
     public function getSpecialities(string $systemOfMedicineCode): array
     {
         $realApiMode = session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false));
-        if (!$realApiMode) {
+        if (! $realApiMode) {
             return [
                 'type' => 'SPECIALITIES',
                 'data' => [
@@ -777,7 +777,7 @@ class HfrFacilityService
     public function fetchFacilitySubtype(string $facilityTypeCode): array
     {
         $realApiMode = session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false));
-        if (!$realApiMode) {
+        if (! $realApiMode) {
             return [
                 'type' => 'FACILITY-SUB-TYPE',
                 'data' => [
@@ -806,14 +806,14 @@ class HfrFacilityService
         }
 
         $apiUrl = config('services.nhpr.api_url', 'https://apihspsbx.abdm.gov.in');
-        $endpointUrl = rtrim($apiUrl, '/') . $endpoint;
+        $endpointUrl = rtrim($apiUrl, '/').$endpoint;
 
         $requestId = (string) Str::uuid();
         $timestamp = now()->toIso8601String();
         $xCmId = config('services.nhpr.x_cm_id');
 
         $headers = [
-            'Authorization' => 'Bearer ' . $token,
+            'Authorization' => 'Bearer '.$token,
             'REQUEST-ID' => $requestId,
             'TIMESTAMP' => $timestamp,
             'X-CM-ID' => $xCmId,
@@ -827,7 +827,7 @@ class HfrFacilityService
         ]);
 
         try {
-            $response = Http::when(!config('services.nhpr.verify_ssl'), fn($q) => $q->withoutVerifying())
+            $response = Http::when(! config('services.nhpr.verify_ssl'), fn ($q) => $q->withoutVerifying())
                 ->withHeaders($headers)
                 ->connectTimeout(15)
                 ->timeout(15)
@@ -847,7 +847,7 @@ class HfrFacilityService
             $message = $body['error']['message'] ?? $body['message'] ?? 'HFR Master request failed.';
             throw new Exception("HFR Master request failed (HTTP {$statusCode}): {$message}");
         } catch (Exception $e) {
-            Log::error("HFR Master GET Exception for {$endpoint}: " . $e->getMessage());
+            Log::error("HFR Master GET Exception for {$endpoint}: ".$e->getMessage());
             throw $e;
         }
     }
@@ -863,14 +863,14 @@ class HfrFacilityService
         }
 
         $apiUrl = config('services.nhpr.api_url', 'https://apihspsbx.abdm.gov.in');
-        $endpointUrl = rtrim($apiUrl, '/') . $endpoint;
+        $endpointUrl = rtrim($apiUrl, '/').$endpoint;
 
         $requestId = (string) Str::uuid();
         $timestamp = now()->toIso8601String();
         $xCmId = config('services.nhpr.x_cm_id');
 
         $headers = [
-            'Authorization' => 'Bearer ' . $token,
+            'Authorization' => 'Bearer '.$token,
             'REQUEST-ID' => $requestId,
             'TIMESTAMP' => $timestamp,
             'X-CM-ID' => $xCmId,
@@ -885,7 +885,7 @@ class HfrFacilityService
         ]);
 
         try {
-            $response = Http::when(!config('services.nhpr.verify_ssl'), fn($q) => $q->withoutVerifying())
+            $response = Http::when(! config('services.nhpr.verify_ssl'), fn ($q) => $q->withoutVerifying())
                 ->withHeaders($headers)
                 ->connectTimeout(15)
                 ->timeout(15)
@@ -905,7 +905,7 @@ class HfrFacilityService
             $message = $body['error']['message'] ?? $body['message'] ?? 'HFR Master request failed.';
             throw new Exception("HFR Master request failed (HTTP {$statusCode}): {$message}");
         } catch (Exception $e) {
-            Log::error("HFR Master POST Exception: " . $e->getMessage());
+            Log::error('HFR Master POST Exception: '.$e->getMessage());
             throw $e;
         }
     }
@@ -918,7 +918,7 @@ class HfrFacilityService
         $token = $this->gatewayService->getValidToken();
         $xCmId = config('services.nhpr.x_cm_id');
         $baseUrl = config('services.nhpr.api_url');
-        $endpointUrl = rtrim($baseUrl, '/') . '/v4/int/v1.5/facility/search-by-tracking-id';
+        $endpointUrl = rtrim($baseUrl, '/').'/v4/int/v1.5/facility/search-by-tracking-id';
         $requestId = (string) Str::uuid();
         $timestamp = now()->toIso8601String();
 
@@ -926,7 +926,7 @@ class HfrFacilityService
         $rawHprToken = str_starts_with($hprToken, 'Bearer ') ? substr($hprToken, 7) : $hprToken;
 
         $headers = [
-            'Authorization' => 'Bearer ' . $token,
+            'Authorization' => 'Bearer '.$token,
             'x-hprid-auth' => $rawHprToken,
             'HPIRId-auth' => $rawHprToken,
             'x-hpird-auth' => $rawHprToken,
@@ -944,7 +944,7 @@ class HfrFacilityService
         ]);
 
         try {
-            $response = Http::when(!config('services.nhpr.verify_ssl'), fn($q) => $q->withoutVerifying())
+            $response = Http::when(! config('services.nhpr.verify_ssl'), fn ($q) => $q->withoutVerifying())
                 ->withHeaders($headers)
                 ->connectTimeout(15)
                 ->timeout(15)
@@ -965,7 +965,7 @@ class HfrFacilityService
             $message = $body['error']['message'] ?? $body['message'] ?? 'Track facility request failed.';
             throw new Exception("HFR Track Facility failed (HTTP {$statusCode}): {$message}");
         } catch (Exception $e) {
-            Log::error('HFR Track Facility Exception: ' . $e->getMessage());
+            Log::error('HFR Track Facility Exception: '.$e->getMessage());
             throw $e;
         }
     }
@@ -978,7 +978,7 @@ class HfrFacilityService
      * exist in the HFR API specification.
      *
      * @param  string  $facilityId  e.g. IN2710000059
-     * @return array   Raw API response with 'facilities' array and metadata.
+     * @return array Raw API response with 'facilities' array and metadata.
      *
      * @throws Exception
      */

@@ -185,12 +185,12 @@ class HfrController extends Controller
             $result = $this->hfrService->createFacility($data);
 
             return response()->json([
-                'success'     => true,
-                'facilityId'  => $result['facilityId'],
-                'facilityName'=> $result['facilityName'],
-                'trackingId'  => $result['trackingId'] ?? null,
-                'status'      => $result['status'] ?? 'PENDING_APPROVAL',
-                'message'     => $result['message'],
+                'success' => true,
+                'facilityId' => $result['facilityId'],
+                'facilityName' => $result['facilityName'],
+                'trackingId' => $result['trackingId'] ?? null,
+                'status' => $result['status'] ?? 'PENDING_APPROVAL',
+                'message' => $result['message'],
             ]);
         } catch (Exception $e) {
             return response()->json([
@@ -669,25 +669,25 @@ class HfrController extends Controller
             'facilityId' => 'required|string|min:3',
         ]);
 
-        $facilityId  = trim($request->input('facilityId'));
+        $facilityId = trim($request->input('facilityId'));
         $realApiMode = session('nhpr_real_api_mode', config('services.nhpr.real_api_mode', false));
 
         if (! $realApiMode) {
             return response()->json([
-                'success'    => true,
+                'success' => true,
                 'facilityId' => $facilityId,
-                'status'     => 'Submitted',
-                'message'    => 'Facility found in HFR registry (Simulated Mode).',
-                'facility'   => [
-                    'facilityId'   => $facilityId,
+                'status' => 'Submitted',
+                'message' => 'Facility found in HFR registry (Simulated Mode).',
+                'facility' => [
+                    'facilityId' => $facilityId,
                     'facilityName' => 'Sample Hospital (Simulated)',
                     'facilityStatus' => 'Submitted',
-                    'ownership'    => 'PRIVATE',
+                    'ownership' => 'PRIVATE',
                     'facilityType' => 'Hospital',
-                    'stateName'    => 'Gujarat',
+                    'stateName' => 'Gujarat',
                     'districtName' => 'Ahmedabad',
-                    'address'      => 'Vejalpur, Ahmedabad',
-                    'pincode'      => '380051',
+                    'address' => 'Vejalpur, Ahmedabad',
+                    'pincode' => '380051',
                 ],
             ]);
         }
@@ -705,11 +705,11 @@ class HfrController extends Controller
             }
 
             return response()->json([
-                'success'    => true,
+                'success' => true,
                 'facilityId' => $facilityId,
-                'status'     => $facility['facilityStatus'] ?? 'Unknown',
-                'message'    => $result['message'] ?? 'Facility found.',
-                'facility'   => $facility,
+                'status' => $facility['facilityStatus'] ?? 'Unknown',
+                'message' => $result['message'] ?? 'Facility found.',
+                'facility' => $facility,
             ]);
         } catch (Exception $e) {
             Log::error('HFR Controller - trackFacility: '.$e->getMessage());
